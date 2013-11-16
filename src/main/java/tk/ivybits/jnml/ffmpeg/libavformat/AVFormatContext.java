@@ -4,6 +4,7 @@ import com.sun.jna.Pointer;
 import com.sun.jna.Structure;
 import com.sun.jna.ptr.PointerByReference;
 import tk.ivybits.jnml.ffmpeg.libavutil.AVClass;
+import tk.ivybits.jnml.ffmpeg.libavutil.AVDictionary;
 import tk.ivybits.jnml.ffmpeg.libavutil.AVRational;
 
 import java.util.Arrays;
@@ -11,7 +12,7 @@ import java.util.List;
 
 /**
  * Wrapper around public parts of AVFormatContext.
- * Do NOT instiate from Java.
+ * Do NOT instantiate from Java.
  */
 public class AVFormatContext extends Structure {
     public static class ByReference extends AVFormatContext implements Structure.ByReference {}
@@ -21,7 +22,7 @@ public class AVFormatContext extends Structure {
     public AVInputFormat.ByReference iformat;
     public AVOutputFormat.ByReference oformat;
     public Pointer priv_data;
-    public AVIOContext pb;
+    public AVIOContext.ByReference pb;
     public int ctx_flags;
     public int nb_streams;
     public PointerByReference streams;
