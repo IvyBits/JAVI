@@ -15,7 +15,11 @@ import java.util.List;
  * Do NOT instantiate from Java.
  */
 public class AVFormatContext extends Structure {
-    public static class ByReference extends AVFormatContext implements Structure.ByReference {}
+    public static class ByReference extends AVFormatContext implements Structure.ByReference {
+        public ByReference(Pointer pointer) {
+            super(pointer);
+        }
+    }
     public static class ByValue extends AVFormatContext implements Structure.ByValue {}
 
     public AVClass.ByReference av_class;
