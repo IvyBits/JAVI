@@ -11,5 +11,6 @@ public class FFmpeg {
     static {
         // Register all codecs.
         libavformat.av_register_all();
+        libavcodec.avcodec_register_all();
     }
 }
