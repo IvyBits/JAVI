@@ -17,6 +17,6 @@ public interface LibAVFormat extends Library {
     int avformat_network_deinit();
 
     int avformat_open_input(PointerByReference ps, String filename, AVInputFormat.ByReference fmt, PointerByReference options);
-    int av_find_stream_info(AVFormatContext.ByReference ps);
+    int av_find_stream_info(Pointer ps);
     void av_dump_format(AVFormatContext.ByReference ps, int index, String url, int is_output);
 }
