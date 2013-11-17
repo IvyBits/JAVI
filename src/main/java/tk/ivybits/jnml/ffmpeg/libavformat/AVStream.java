@@ -21,18 +21,18 @@ public class AVStream extends Structure {
     public int id;
     public AVCodecContext.ByReference codec;
     public Pointer priv_data;
-    public AVFrac pts;
-    public AVRational time_base;
+    public AVFrac.ByValue pts;
+    public AVRational.ByValue time_base;
     public long start_time;
     public long duration;
     public long nb_frames;
     public int disposition;
     public int discard;
-    public AVRational sample_aspect_ratio;
+    public AVRational.ByValue sample_aspect_ratio;
     public AVDictionary metadata;
-    public AVRational avg_frame_rate;
-    public AVPacket attached_pic;
-    public info_struct info;
+    public AVRational.ByValue avg_frame_rate;
+    public AVPacket.ByValue attached_pic;
+    public /*info_struct.ByReference*/ Pointer info;
     @Deprecated
     public long do_not_use;
     public long first_dts;
@@ -44,12 +44,12 @@ public class AVStream extends Structure {
     public int /* AVStreamParseType */ need_parsing;
     public Pointer /* AVCodecParserContext */ parser;
     public AVPacketList.ByReference last_in_packet_buffer;
-    public AVProbeData probe_data;
-    public long[] pts_buffer = new long[MAX_REORDER_DELAY];
+    public AVProbeData.ByValue probe_data;
+    public long[] pts_buffer = new long[MAX_REORDER_DELAY+1];
     public Pointer /* AVIndexEntry */ index_entries;
     public int nb_index_entries;
     public int index_entries_allocated_size;
-    public AVRational r_frame_rate;
+    public AVRational.ByValue r_frame_rate;
     public int stream_identifier;
     public long interleaver_chunk_size;
     public long interleaver_chunk_duration;
@@ -102,15 +102,6 @@ public class AVStream extends Structure {
         }
     }
 
-    public AVStream(Pointer address) {
-        super(address);
-        read();
-    }
-
-    public AVStream() {
-        super();
-    }
-
     @Override
     protected List<String> getFieldOrder() {
         return Arrays.asList("index",
@@ -155,5 +146,14 @@ public class AVStream extends Structure {
                 "mux_ts_offset",
                 "pts_wrap_reference",
                 "pts_wrap_behavior");
+    }
+
+    public AVStream() {
+        super();
+    }
+
+    public AVStream(Pointer address) {
+        super(address);
+        read();
     }
 }

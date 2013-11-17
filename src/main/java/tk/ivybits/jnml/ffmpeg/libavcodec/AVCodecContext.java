@@ -47,7 +47,7 @@ public class AVCodecContext extends Structure {
     public int flags2;
     public Pointer extradata;
     public int extradata_size;
-    public AVRational time_base;
+    public AVRational.ByValue time_base;
     public int ticks_per_frame;
     public int delay;
     public int width;
@@ -76,7 +76,7 @@ public class AVCodecContext extends Structure {
     public int slice_count;
     public int prediction_method;
     public IntByReference slice_offset;
-    public AVRational sample_aspect_ratio;
+    public AVRational.ByValue sample_aspect_ratio;
     public int me_cmp;
     public int me_sub_cmp;
     public int mb_cmp;
@@ -225,7 +225,7 @@ public class AVCodecContext extends Structure {
     @Deprecated
     public AVPacket.ByReference pkt;
     public long vbv_delay;
-    public AVRational pkt_timebase;
+    public AVRational.ByValue pkt_timebase;
     public Pointer /*AVCodecDescriptor */ codec_descriptor;
     /*public int lowres;*/ // New feature in 56
     public long pts_correction_num_faulty_pts;
@@ -282,39 +282,6 @@ public class AVCodecContext extends Structure {
 
     @Override
     protected List getFieldOrder() {
-        return Arrays.asList("av_class", "log_level_offset", "codec_type", "codec", "codec_name", "codec_id",
-                "codec_tag", "stream_codec_tag", "priv_data", "internal", "opaque", "bit_rate", "bit_rate_tolerance",
-                "global_quality", "compression_level", "flags", "flags2", "extradata", "extradata_size", "time_base",
-                "ticks_per_frame", "delay", "width", "height", "coded_width", "coded_height", "gop_size", "pix_fmt",
-                "me_method", "draw_horiz_band", "get_format", "max_b_frames", "b_quant_factor", "rc_strategy",
-                "b_frame_strategy", "b_quant_offset", "has_b_frames", "mpeg_quant", "i_quant_factor", "i_quant_offset",
-                "lumi_masking", "temporal_cplx_masking", "spatial_cplx_masking", "p_masking", "dark_masking",
-                "slice_count", "prediction_method", "slice_offset", "sample_aspect_ratio", "me_cmp", "me_sub_cmp",
-                "mb_cmp", "ildct_cmp", "dia_size", "last_predictor_count", "pre_me", "me_pre_cmp", "pre_dia_size",
-                "me_subpel_quality", "dtg_active_format", "me_range", "intra_quant_bias", "inter_quant_bias",
-                "slice_flags", "xvmc_acceleration", "mb_decision", "intra_matrix", "inter_matrix",
-                "scenechange_threshold", "noise_reduction", "me_threshold", "mb_threshold", "intra_dc_precision",
-                "skip_top", "skip_bottom", "border_masking", "mb_lmin", "mb_lmax", "me_penalty_compensation",
-                "bidir_refine", "brd_scale", "keyint_min", "refs", "chromaoffset", "scenechange_factor",
-                "mv0_threshold", "b_sensitivity", "color_primaries", "color_trc", "colorspace", "color_range",
-                "chroma_sample_location", "slices", "field_order", "sample_rate", "channels", "sample_fmt",
-                "frame_size", "frame_number", "block_align", "cutoff", "request_channels", "channel_layout",
-                "request_channel_layout", "audio_service_type", "request_sample_fmt", "get_buffer", "release_buffer",
-                "reget_buffer", "get_buffer2", "refcounted_frames", "qcompress", "qblur", "qmin", "qmax", "max_qdiff",
-                "rc_qsquish", "rc_qmod_amp", "rc_qmod_freq", "rc_buffer_size", "rc_override_count", "rc_override",
-                "rc_eq", "rc_max_rate", "rc_min_rate", "rc_buffer_aggressivity", "rc_initial_cplx",
-                "rc_max_available_vbv_use", "rc_min_vbv_overflow_use", "rc_initial_buffer_occupancy", "coder_type",
-                "context_model", "lmin", "lmax", "frame_skip_threshold", "frame_skip_factor", "frame_skip_exp",
-                "frame_skip_cmp", "trellis", "min_prediction_order", "max_prediction_order", "timecode_frame_start",
-                "rtp_callback", "rtp_payload_size", "mv_bits", "header_bits", "i_tex_bits", "p_tex_bits", "i_count",
-                "p_count", "skip_count", "misc_bits", "frame_bits", "stats_out", "stats_in", "workaround_bugs",
-                "strict_std_compliance", "error_concealment", "debug", "debug_mv", "err_recognition",
-                "reordered_opaque", "hwaccel", "hwaccel_context", "error", "dct_algo", "idct_algo",
-                "bits_per_coded_sample", "bits_per_raw_sample", "lowres", "coded_frame", "thread_count",
-                "thread_type", "active_thread_type", "thread_safe_callbacks", "execute", "execute2", "thread_opaque",
-                "nsse_weight", "profile", "level", "skip_loop_filter", "skip_idct", "skip_frame", "subtitle_header",
-                "subtitle_header_size", "error_rate", "pkt", "vbv_delay", "pkt_timebase", "codec_descriptor",
-                "pts_correction_num_faulty_pts", "pts_correction_num_faulty_dts", "pts_correction_last_pts",
-                "pts_correction_last_dts", "sub_charenc", "sub_charenc_mode");
+        return Arrays.asList("av_class", "log_level_offset", "codec_type", "codec", "codec_nam", "codec_id", "codec_tag", "stream_codec_tag", "priv_data", "internal", "opaque", "bit_rate", "bit_rate_tolerance", "global_quality", "compression_level", "flags", "flags2", "extradata", "extradata_size", "time_base", "ticks_per_frame", "delay", "width", "height", "coded_width", "coded_height", "gop_size", "pix_fmt", "me_method", "draw_horix_band", "get_format", "max_b_frames", "b_quant_factor", "rc_strategy", "b_frame_strategy", "b_quant_offset", "has_b_frames", "mpeg_quant", "i_quant_factor", "i_quant_offset", "lumi_masking", "temporal_cplx_masking", "spatial_cplx_masking", "p_masking", "dark_masking", "slice_count", "prediction_method", "slice_offset", "sample_aspect_ratio", "me_cmp", "me_sub_cmp", "mb_cmp", "ildct_cmp", "dia_size", "last_predictor_count", "pre_me", "me_pre_cmp", "pre_dia_size", "me_subpel_quality", "dtg_active_format", "me_range", "intra_quant_bias", "inter_quant_bias", "slice_flags", "xvmc_acceleration", "mb_decision", "intra_matrix", "inter_matrix", "scenechange_threshold", "noise_reduction", "me_threshold", "mb_threshold", "intra_dc_precision", "skip_top", "skip_bottom", "border_masking", "mb_lmin", "mb_lmax", "me_penalty_compensation", "bidir_refine", "brd_scale", "keyint_min", "refs", "chromaoffset", "scenechange_factor", "mv0_threshold", "b_sensitivity", "color_primaries", "color_trc", "colorspace", "color_range", "chroma_sample_location", "slices", "field_order", "sample_rate", "channels", "sample_fmt", "frame_size", "frame_number", "block_align", "cutoff", "request_channels", "channel_layout", "request_channel_layout", "audio_service_type", "request_sample_fmt", "get_buffer", "release_buffer", "reget_buffer", "get_buffer2", "refcounted_frames", "qcompress", "qblur", "qmin", "qmax", "max_qdiff", "rc_qsquish", "rc_qmod_amp", "rc_qmod_freq", "rc_buffer_size", "rc_override_count", "rc_override", "rc_eq", "rc_max_rate", "rc_min_rate", "rc_buffer_aggressivity", "rc_initial_cplx", "rc_max_available_vbv_use", "rc_min_vbv_overflow_use", "rc_initial_buffer_occupancy", "coder_type", "context_model", "lmin", "lmax", "frame_skip_threshold", "frame_skip_factor", "frame_skip_exp", "frame_skip_cmp", "trellis", "min_prediction_order", "max_prediction_order", "timecode_frame_start", "rtp_callback", "rtp_payload_size", "mv_bits", "header_bits", "i_tex_bits", "p_tex_bits", "i_count", "p_count", "skip_count", "misc_bits", "frame_bits", "stats_out", "stats_in", "workaround_bugs", "strict_std_compliance", "error_concealment", "debug", "debug_mv", "err_recognition", "reordered_opaque", "hwaccel", "hwaccel_context", "error", "dct_algo", "idct_algo", "bits_per_coded_sample", "bits_per_raw_sample", "lowres", "coded_frame", "thread_count", "thread_type", "active_thread_type", "thread_safe_callbacks", "execute", "execute2", "thread_opaque", "nsse_weight", "profile", "level", "skip_loop_filter", "skip_idct", "skip_frame", "subtitle_header", "subtitle_header_size", "error_rate", "pkt", "vbv_delay", "pkt_timebase", "codec_descriptor", "pts_correction_num_faulty_pts", "pts_correction_num_faulty_dts", "pts_correction_last_pts", "pts_correction_last_dts", "sub_charenc", "sub_charenc_mode", "skip_alpha", "seek_preroll");
     }
 }

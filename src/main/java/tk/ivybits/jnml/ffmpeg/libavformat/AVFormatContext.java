@@ -25,7 +25,7 @@ public class AVFormatContext extends Structure {
     public AVIOContext.ByReference pb;
     public int ctx_flags;
     public int nb_streams;
-    public PointerByReference streams;
+    public Pointer streams; // AVStream ** array of pointers
     public byte[] filename = new byte[1024];
     public long start_time;
     public long duration;
@@ -73,7 +73,7 @@ public class AVFormatContext extends Structure {
     public AVPacketList parse_queue_end;
     public int raw_packet_buffer_remaining_size;
     public long offset;
-    public AVRational offset_timebase;
+    public AVRational.ByValue offset_timebase;
     public int io_repositioned;
 
     // And some private fields

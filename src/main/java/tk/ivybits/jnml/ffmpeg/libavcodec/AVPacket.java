@@ -32,6 +32,7 @@ public class AVPacket extends Structure {
     public int duration;
     public Pointer destruct;
     public Pointer priv;
+    public long pos;
     public long convergence_duration;
 
     public AVPacket(Pointer address) {
@@ -47,6 +48,6 @@ public class AVPacket extends Structure {
     protected List getFieldOrder() {
         return Arrays.asList("buf", "pts", "dts", "data", "size",
                 "stream_index", "flags", "side_data", "side_data_elems",
-                "duration", "destruct", "priv", "convergence_duration");
+                "duration", "destruct", "priv", "pos", "convergence_duration");
     }
 }

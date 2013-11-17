@@ -17,7 +17,9 @@ public class AVProbeData extends Structure {
     public static class ByValue extends AVProbeData implements Structure.ByValue {
     }
 
-    public String filename;
+    public Pointer filename;
+    public Pointer buf;
+    public int buf_size;
 
     public AVProbeData(Pointer address) {
         super(address);
@@ -30,6 +32,6 @@ public class AVProbeData extends Structure {
 
     @Override
     protected List<String> getFieldOrder() {
-        return Arrays.asList("filename");
+        return Arrays.asList("filename", "buf", "buf_size");
     }
 }

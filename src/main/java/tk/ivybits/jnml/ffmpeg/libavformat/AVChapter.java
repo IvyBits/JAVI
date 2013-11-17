@@ -13,7 +13,7 @@ public class AVChapter extends Structure {
     public static class ByValue extends AVChapter implements Structure.ByValue {}
 
     public int id;
-    public AVRational time_base;
+    public AVRational.ByValue time_base;
     public long start;
     public long end;
     public AVDictionary metadata;
