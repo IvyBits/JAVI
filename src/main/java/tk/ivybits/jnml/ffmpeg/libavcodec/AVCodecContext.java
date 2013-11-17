@@ -31,7 +31,7 @@ public class AVCodecContext extends Structure {
     public AVClass.ByReference av_class;
     public int log_level_offset;
     public int codec_type;
-    public /*AVCodec.ByReference*/ Pointer codec;
+    public AVCodec/*.ByReference*/ codec;
     public byte[] codec_nam = new byte[32];
     public int codec_id;
     public int codec_tag;
