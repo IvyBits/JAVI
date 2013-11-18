@@ -24,4 +24,6 @@ public interface LibAVFormat extends Library {
     void av_dump_format(Pointer ps, int index, String url, int is_output);
 
     int av_read_frame(Pointer s, Pointer pkt);
+
+    void av_free_packet(Pointer pkt);
 }

@@ -5,7 +5,9 @@ import com.sun.jna.Native;
 import com.sun.jna.Pointer;
 import com.sun.jna.ptr.ByteByReference;
 import com.sun.jna.ptr.IntByReference;
+import com.sun.jna.ptr.PointerByReference;
 import tk.ivybits.jnml.ffmpeg.libavcodec.AVCodec;
+import tk.ivybits.jnml.ffmpeg.libavcodec.AVCodecContext;
 import tk.ivybits.jnml.ffmpeg.libavutil.AVFrame;
 
 public interface LibAVCodec extends Library {
@@ -25,5 +27,7 @@ public interface LibAVCodec extends Library {
 
     int avpicture_fill(Pointer picture, Pointer ptr, int pix_fmt, int width, int height);
 
-    int avcodec_decode_video(Pointer avctx, AVFrame picture, IntByReference frameFinished, Pointer buf, int buf_size);
+    int  avcodec_decode_video2(Pointer avctx, Pointer picture, IntByReference frameFinished, Pointer pkt);
+
+    void av_init_packet(Pointer pointer);
 }

@@ -3,6 +3,7 @@ package tk.ivybits.jnml.ffmpeg;
 import com.sun.jna.Library;
 import com.sun.jna.Native;
 import com.sun.jna.Pointer;
+import com.sun.jna.ptr.ByteByReference;
 
 /**
  * Tudor
@@ -13,5 +14,5 @@ public interface LibSWScale extends Library {
 
     Pointer sws_getContext(int scrW, int srcH, int scrFormat, int dstW, int dstH, int dstFormat, int flags, Pointer srcFilter, Pointer dstFilter, Pointer param);
 
-    int sws_scale(Pointer c, Pointer src, int[] srcStride, int srcSliceY, int srcSliceH, byte[] dst, int[] dstStride);
+    int sws_scale(Pointer c, byte[] src, int[] srcStride, int srcSliceY, int srcSliceH, byte[] dst, int[] dstStride);
 }
