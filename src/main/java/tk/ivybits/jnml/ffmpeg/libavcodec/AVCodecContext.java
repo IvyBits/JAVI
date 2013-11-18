@@ -32,7 +32,7 @@ public class AVCodecContext extends Structure {
     public int log_level_offset;
     public int codec_type;
     public AVCodec/*.ByReference*/ codec;
-    public byte[] codec_nam = new byte[32];
+    public byte[] codec_name = new byte[32];
     public int codec_id;
     public int codec_tag;
     public int stream_codec_tag;
@@ -57,7 +57,7 @@ public class AVCodecContext extends Structure {
     public int gop_size;
     public int pix_fmt;
     public int me_method;
-    public draw_horix_band_callback draw_horix_band;
+    public draw_horiz_band_callback draw_horiz_band;
     public get_format_callback get_format;
     public int max_b_frames;
     public float b_quant_factor;
@@ -239,7 +239,7 @@ public class AVCodecContext extends Structure {
     /*public int debug_mv;*/ // New feature in 56
 
 
-    public interface draw_horix_band_callback extends Callback {
+    public interface draw_horiz_band_callback extends Callback {
         void apply(ByReference s, Pointer src, int[] offset, int y, int type, int height);
     }
 
@@ -273,6 +273,9 @@ public class AVCodecContext extends Structure {
 
     public AVCodecContext() {
         super();
+        for(String s: getFieldOrder()) {
+            System.out.printf("%20s: %d\n", s, fieldOffset(s));
+        }
     }
 
     public AVCodecContext(Pointer address) {
@@ -281,14 +284,14 @@ public class AVCodecContext extends Structure {
     }
 
     @Override
-    protected List getFieldOrder() {
+    protected List<String> getFieldOrder() {
         return Arrays.asList("av_class", "log_level_offset", "codec_type",
-                "codec", "codec_nam", "codec_id", "codec_tag", "stream_codec_tag",
+                "codec", "codec_name", "codec_id", "codec_tag", "stream_codec_tag",
                 "priv_data", "internal", "opaque", "bit_rate", "bit_rate_tolerance",
                 "global_quality", "compression_level", "flags", "flags2", "extradata",
                 "extradata_size", "time_base", "ticks_per_frame", "delay", "width",
                 "height", "coded_width", "coded_height", "gop_size", "pix_fmt",
-                "me_method", "draw_horix_band", "get_format", "max_b_frames",
+                "me_method", "draw_horiz_band", "get_format", "max_b_frames",
                 "b_quant_factor", "rc_strategy", "b_frame_strategy", "b_quant_offset",
                 "has_b_frames", "mpeg_quant", "i_quant_factor", "i_quant_offset",
                 "lumi_masking", "temporal_cplx_masking", "spatial_cplx_masking",

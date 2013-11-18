@@ -64,13 +64,13 @@ public class AVFormatContext extends Structure {
     public int correct_ts_overflow;
     public int seek2any;
     public int flush_packets;
-    public AVPacketList packet_buffer;
-    public AVPacketList packet_buffer_end;
+    public AVPacketList.ByReference packet_buffer;
+    public AVPacketList.ByReference packet_buffer_end;
     public long data_offset;
-    public AVPacketList raw_packet_buffer;
-    public AVPacketList raw_packet_buffer_end;
-    public AVPacketList parse_queue;
-    public AVPacketList parse_queue_end;
+    public AVPacketList.ByReference raw_packet_buffer;
+    public AVPacketList.ByReference raw_packet_buffer_end;
+    public AVPacketList.ByReference parse_queue;
+    public AVPacketList.ByReference parse_queue_end;
     public int raw_packet_buffer_remaining_size;
     public long offset;
     public AVRational.ByValue offset_timebase;
@@ -111,6 +111,9 @@ public class AVFormatContext extends Structure {
 
     public AVFormatContext() {
         super();
+        for(String s: getFieldOrder()) {
+            System.out.printf("%20s: %d\n", s, fieldOffset(s));
+        }
     }
 
     public AVFormatContext(Pointer address) {
