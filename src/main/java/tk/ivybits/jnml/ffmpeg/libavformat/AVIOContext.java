@@ -1,6 +1,7 @@
 package tk.ivybits.jnml.ffmpeg.libavformat;
 
 import com.sun.jna.Callback;
+import com.sun.jna.NativeLong;
 import com.sun.jna.Pointer;
 import com.sun.jna.Structure;
 import tk.ivybits.jnml.ffmpeg.libavutil.AVClass;
@@ -29,7 +30,7 @@ public class AVIOContext extends Structure {
     public int eof_reached;
     public int write_flag;
     public int max_packet_size;
-    public long checksum;
+    public NativeLong checksum;
     public Pointer checksum_ptr;
     public update_checksum_callback update_checksum;
     public int error;
@@ -52,7 +53,7 @@ public class AVIOContext extends Structure {
     }
 
     public interface update_checksum_callback extends Callback {
-        long apply(long checksum, Pointer buf, int size);
+        NativeLong apply(NativeLong checksum, Pointer buf, int size);
     }
 
     public interface read_pause_callback extends Callback {

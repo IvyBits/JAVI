@@ -67,6 +67,7 @@ public class AVFormatContext extends Structure {
     public int correct_ts_overflow;
     public int seek2any;
     public int flush_packets;
+    public int probe_score;
     public AVPacketList.ByReference packet_buffer;
     public AVPacketList.ByReference packet_buffer_end;
     public long data_offset;
@@ -117,7 +118,7 @@ public class AVFormatContext extends Structure {
                 "interrupt_callback", "debug", "ts_id", "audio_preload", "max_chunk_duration",
                 "max_chunk_size", "use_wallclock_as_timestamps", "avoid_negative_ts", "avio_flags",
                 "duration_estimation_method", "skip_initial_bytes", "correct_ts_overflow", "seek2any",
-                "flush_packets", "packet_buffer", "packet_buffer_end", "data_offset", "raw_packet_buffer",
+                "flush_packets", "probe_score", "packet_buffer", "packet_buffer_end", "data_offset", "raw_packet_buffer",
                 "raw_packet_buffer_end", "parse_queue", "parse_queue_end",
                 "raw_packet_buffer_remaining_size", "offset", "offset_timebase", "io_repositioned");
     }
