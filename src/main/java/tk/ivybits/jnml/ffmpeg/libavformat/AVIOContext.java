@@ -2,7 +2,6 @@ package tk.ivybits.jnml.ffmpeg.libavformat;
 
 import com.sun.jna.Callback;
 import com.sun.jna.Pointer;
-import com.sun.jna.PointerType;
 import com.sun.jna.Structure;
 import tk.ivybits.jnml.ffmpeg.libavutil.AVClass;
 
@@ -10,8 +9,11 @@ import java.util.Arrays;
 import java.util.List;
 
 public class AVIOContext extends Structure {
-    public static class ByReference extends AVIOContext implements Structure.ByReference {}
-    public static class ByValue extends AVIOContext implements Structure.ByValue {}
+    public static class ByReference extends AVIOContext implements Structure.ByReference {
+    }
+
+    public static class ByValue extends AVIOContext implements Structure.ByValue {
+    }
 
     public AVClass.ByReference av_class;
     public Pointer buffer;
@@ -36,15 +38,6 @@ public class AVIOContext extends Structure {
     public int seekable;
     public long maxsize;
     public int direct;
-
-    @Override
-    protected List getFieldOrder() {
-        return Arrays.asList("av_class", "buffer", "buffer_size", "buf_ptr", "buf_end",
-                "opaque", "read_packet", "write_packet", "seek", "pos",
-                "must_flush", "eof_reached", "write_flag", "max_packet_size",
-                "checksum", "checksum_ptr", "update_checksum", "error",
-                "read_pause", "read_seek", "seekable", "maxsize", "direct");
-    }
 
     public interface read_packet_callback extends Callback {
         int apply(Pointer opaque, Pointer buf, int buf_size);
@@ -77,5 +70,14 @@ public class AVIOContext extends Structure {
 
     public AVIOContext() {
         super();
+    }
+
+    @Override
+    protected List getFieldOrder() {
+        return Arrays.asList("av_class", "buffer", "buffer_size", "buf_ptr", "buf_end",
+                "opaque", "read_packet", "write_packet", "seek", "pos",
+                "must_flush", "eof_reached", "write_flag", "max_packet_size",
+                "checksum", "checksum_ptr", "update_checksum", "error",
+                "read_pause", "read_seek", "seekable", "maxsize", "direct");
     }
 }

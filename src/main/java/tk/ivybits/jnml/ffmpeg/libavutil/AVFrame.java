@@ -106,10 +106,6 @@ public class AVFrame extends Structure {
 
     public AVFrame() {
         super();
-
-        /*for(String s: getFieldOrder()) {
-            System.out.printf("%20s: %d.\n", s, fieldOffset(s));
-        }*/
     }
 
     @Override

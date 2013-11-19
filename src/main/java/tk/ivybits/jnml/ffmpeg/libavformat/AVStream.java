@@ -45,7 +45,7 @@ public class AVStream extends Structure {
     public Pointer /* AVCodecParserContext */ parser;
     public AVPacketList.ByReference last_in_packet_buffer;
     public AVProbeData.ByValue probe_data;
-    public long[] pts_buffer = new long[MAX_REORDER_DELAY+1];
+    public long[] pts_buffer = new long[MAX_REORDER_DELAY + 1];
     public Pointer /* AVIndexEntry */ index_entries;
     public int nb_index_entries;
     public int index_entries_allocated_size;
@@ -102,52 +102,6 @@ public class AVStream extends Structure {
         }
     }
 
-    @Override
-    protected List<String> getFieldOrder() {
-        return Arrays.asList("index",
-                "id",
-                "codec",
-                "priv_data",
-                "pts",
-                "time_base",
-                "start_time",
-                "duration",
-                "nb_frames",
-                "disposition",
-                "discard",
-                "sample_aspect_ratio",
-                "metadata",
-                "avg_frame_rate",
-                "attached_pic",
-                "info",
-                "do_not_use",
-                "first_dts",
-                "cur_dts",
-                "last_IP_pts",
-                "last_IP_duration",
-                "probe_packets",
-                "codec_info_nb_frames",
-                "need_parsing",
-                "parser",
-                "last_in_packet_buffer",
-                "probe_data",
-                "pts_buffer",
-                "index_entries",
-                "nb_index_entries",
-                "index_entries_allocated_size",
-                "r_frame_rate",
-                "stream_identifier",
-                "interleaver_chunk_size",
-                "interleaver_chunk_duration",
-                "request_probe",
-                "skip_to_keyframe",
-                "skip_samples",
-                "nb_decoded_frames",
-                "mux_ts_offset",
-                "pts_wrap_reference",
-                "pts_wrap_behavior");
-    }
-
     public AVStream() {
         super();
     }
@@ -155,5 +109,19 @@ public class AVStream extends Structure {
     public AVStream(Pointer address) {
         super(address);
         read();
+    }
+
+    @Override
+    protected List<String> getFieldOrder() {
+        return Arrays.asList("index", "id", "codec", "priv_data", "pts", "time_base", "start_time",
+                "duration", "nb_frames", "disposition", "discard",
+                "sample_aspect_ratio", "metadata", "avg_frame_rate", "attached_pic",
+                "info", "do_not_use", "first_dts", "cur_dts",
+                "last_IP_pts", "last_IP_duration", "probe_packets", "codec_info_nb_frames",
+                "need_parsing", "parser", "last_in_packet_buffer", "probe_data",
+                "pts_buffer", "index_entries", "nb_index_entries", "index_entries_allocated_size",
+                "r_frame_rate", "stream_identifier", "interleaver_chunk_size", "interleaver_chunk_duration",
+                "request_probe", "skip_to_keyframe", "skip_samples", "nb_decoded_frames",
+                "mux_ts_offset", "pts_wrap_reference", "pts_wrap_behavior");
     }
 }

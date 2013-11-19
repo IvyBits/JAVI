@@ -1,7 +1,6 @@
 package tk.ivybits.jnml.ffmpeg.libavutil;
 
 import com.sun.jna.Pointer;
-import com.sun.jna.PointerType;
 import com.sun.jna.Structure;
 
 import java.util.Arrays;
@@ -27,7 +26,7 @@ public class AVRational extends Structure {
     }
 
     @Override
-    protected List getFieldOrder() {
+    protected List<String> getFieldOrder() {
         return Arrays.asList("num", "den");
     }
 }

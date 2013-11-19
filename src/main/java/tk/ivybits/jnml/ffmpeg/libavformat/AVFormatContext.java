@@ -15,8 +15,11 @@ import java.util.List;
  * Do NOT instantiate from Java.
  */
 public class AVFormatContext extends Structure {
-    public static class ByReference extends AVFormatContext implements Structure.ByReference {}
-    public static class ByValue extends AVFormatContext implements Structure.ByValue {}
+    public static class ByReference extends AVFormatContext implements Structure.ByReference {
+    }
+
+    public static class ByValue extends AVFormatContext implements Structure.ByValue {
+    }
 
     public AVClass.ByReference av_class;
     public AVInputFormat.ByReference iformat;
@@ -94,30 +97,28 @@ public class AVFormatContext extends Structure {
     public static final int FF_FDEBUG_TS = 0x0001;
     public static final int RAW_PACKET_BUFFER_SIZE = 2500000;
 
-    protected List<String> getFieldOrder() {
-        return Arrays.asList("av_class", "iformat", "oformat", "priv_data", "pb", "ctx_flags", "nb_streams",
-                             "streams", "filename", "start_time", "duration", "bit_rate", "packet_size",
-                             "max_delay", "flags", "probesize", "max_analyze_duration", "key", "keylen",
-                             "nb_programs", "programs", "video_codec_id", "audio_codec_id",
-                             "subtitle_codec_id", "max_index_size", "max_picture_buffer", "nb_chapters",
-                             "chapters", "metadata", "start_time_realtime", "fps_probe_size", "error_recognition",
-                             "interrupt_callback", "debug", "ts_id", "audio_preload", "max_chunk_duration",
-                             "max_chunk_size", "use_wallclock_as_timestamps", "avoid_negative_ts", "avio_flags",
-                             "duration_estimation_method", "skip_initial_bytes", "correct_ts_overflow", "seek2any",
-                             "flush_packets", "packet_buffer", "packet_buffer_end", "data_offset", "raw_packet_buffer",
-                             "raw_packet_buffer_end", "parse_queue", "parse_queue_end",
-                             "raw_packet_buffer_remaining_size", "offset", "offset_timebase", "io_repositioned");
-    }
-
     public AVFormatContext() {
         super();
-        for(String s: getFieldOrder()) {
-            System.out.printf("%20s: %d\n", s, fieldOffset(s));
-        }
     }
 
     public AVFormatContext(Pointer address) {
         super(address);
         read();
+    }
+
+    @Override
+    protected List<String> getFieldOrder() {
+        return Arrays.asList("av_class", "iformat", "oformat", "priv_data", "pb", "ctx_flags", "nb_streams",
+                "streams", "filename", "start_time", "duration", "bit_rate", "packet_size",
+                "max_delay", "flags", "probesize", "max_analyze_duration", "key", "keylen",
+                "nb_programs", "programs", "video_codec_id", "audio_codec_id",
+                "subtitle_codec_id", "max_index_size", "max_picture_buffer", "nb_chapters",
+                "chapters", "metadata", "start_time_realtime", "fps_probe_size", "error_recognition",
+                "interrupt_callback", "debug", "ts_id", "audio_preload", "max_chunk_duration",
+                "max_chunk_size", "use_wallclock_as_timestamps", "avoid_negative_ts", "avio_flags",
+                "duration_estimation_method", "skip_initial_bytes", "correct_ts_overflow", "seek2any",
+                "flush_packets", "packet_buffer", "packet_buffer_end", "data_offset", "raw_packet_buffer",
+                "raw_packet_buffer_end", "parse_queue", "parse_queue_end",
+                "raw_packet_buffer_remaining_size", "offset", "offset_timebase", "io_repositioned");
     }
 }

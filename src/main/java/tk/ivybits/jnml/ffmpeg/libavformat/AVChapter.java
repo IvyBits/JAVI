@@ -9,8 +9,11 @@ import java.util.Arrays;
 import java.util.List;
 
 public class AVChapter extends Structure {
-    public static class ByReference extends AVChapter implements Structure.ByReference {}
-    public static class ByValue extends AVChapter implements Structure.ByValue {}
+    public static class ByReference extends AVChapter implements Structure.ByReference {
+    }
+
+    public static class ByValue extends AVChapter implements Structure.ByValue {
+    }
 
     public int id;
     public AVRational.ByValue time_base;

@@ -12,8 +12,11 @@ import java.util.List;
  * Wrapper around the public parts of AVOutputFormat. Please do not instantiate from Java.
  */
 public class AVOutputFormat extends Structure {
-    public static class ByReference extends AVOutputFormat implements Structure.ByReference {}
-    public static class ByValue extends AVOutputFormat implements Structure.ByValue {}
+    public static class ByReference extends AVOutputFormat implements Structure.ByReference {
+    }
+
+    public static class ByValue extends AVOutputFormat implements Structure.ByValue {
+    }
 
     public Pointer name;
     public Pointer long_name;
