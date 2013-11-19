@@ -31,7 +31,7 @@ public class AVCodecContext extends Structure {
     public AVClass.ByReference av_class;
     public int log_level_offset;
     public int codec_type;
-    public AVCodec/*.ByReference*/ codec;
+    public AVCodec.ByReference codec;
     public byte[] codec_name = new byte[32];
     public int codec_id;
     public int codec_tag;
@@ -273,9 +273,6 @@ public class AVCodecContext extends Structure {
 
     public AVCodecContext() {
         super();
-        for(String s: getFieldOrder()) {
-            System.out.printf("%20s: %d\n", s, fieldOffset(s));
-        }
     }
 
     public AVCodecContext(Pointer address) {
@@ -284,7 +281,7 @@ public class AVCodecContext extends Structure {
     }
 
     @Override
-    protected List<String> getFieldOrder() {
+    protected List getFieldOrder() {
         return Arrays.asList("av_class", "log_level_offset", "codec_type",
                 "codec", "codec_name", "codec_id", "codec_tag", "stream_codec_tag",
                 "priv_data", "internal", "opaque", "bit_rate", "bit_rate_tolerance",
