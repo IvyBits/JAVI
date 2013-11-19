@@ -14,4 +14,10 @@ public interface LibAVUtil extends Library {
     int avutil_version();
 
     Pointer av_malloc(int size);
+
+    void av_free(Pointer ram);
+
+    int av_log_get_level();
+
+    void av_log_set_level(int level);
 }

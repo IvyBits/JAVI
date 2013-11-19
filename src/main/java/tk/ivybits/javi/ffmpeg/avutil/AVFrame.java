@@ -22,7 +22,7 @@ public class AVFrame extends Structure {
     public static class ByValue extends AVFrame implements Structure.ByValue {
     }
 
-    public ByteByReference[] data = new ByteByReference[AV_NUM_DATA_POINTERS];
+    public Pointer[] data = new Pointer[AV_NUM_DATA_POINTERS];
     public int[] linesize = new int[AV_NUM_DATA_POINTERS];
     public Pointer extended_data;
     public int width, height;
