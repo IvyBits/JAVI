@@ -256,7 +256,7 @@ public class AVCodecContext extends Structure {
     }
 
     public interface execute_callback2 extends Callback {
-        int applt(ByReference c2, Pointer arg);
+        int apply(ByReference c2, Pointer arg);
     }
 
     public interface execute_callback extends Callback {
@@ -264,7 +264,7 @@ public class AVCodecContext extends Structure {
     }
 
     public interface execute2_callback2 extends Callback {
-        int applt(ByReference c2, Pointer arg, int jobnr, int threadnr);
+        int apply(ByReference c2, Pointer arg, int jobnr, int threadnr);
     }
 
     public interface execute2_callback extends Callback {
