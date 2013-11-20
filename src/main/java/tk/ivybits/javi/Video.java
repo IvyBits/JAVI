@@ -101,21 +101,37 @@ public class Video implements Closeable {
                 e.printStackTrace();
             }
             aCodecCtx.read();
+            mainloop:
             while (avformat.av_read_frame(format.getPointer(), packet.getPointer()) >= 0) {
                 packet.read();
                 if (packet.stream_index == audioStream.index) {
                     System.out.println("Audio: " + packet.size);
                     // Decode the video into our pFrame
-                    int err = avcodec.avcodec_decode_audio4(aCodecCtx.getPointer(), pFrame.getPointer(), frameFinished, packet.getPointer());
+                    int read = 0;
 
-                    if (err < 0) {
-                        System.err.println("Error reading audio frame " + packet.size + ": " + err);
-                        continue; // frame was not read
-                    } else
-                        System.out.println("Successfully read " + err + " bytes out of " + packet.size);
+                    // According to FFmpeg docs:
+                    // Some decoders may support multiple frames in a single AVPacket.
+                    // Such decoders would then just decode the first frame and the return value
+                    // would be less than the packet size. In this case, avcodec_decode_audio4 has
+                    // to be called again with an AVPacket containing the remaining data in order to
+                    // decode the second frame, etc... Even if no frames are returned, the packet needs
+                    // to be fed to the decoder with remaining data until it is completely consumed or
+                    // an error occurs.
+                    // Implemented the first two sentences. Not sure about the last.
+                    while (read < packet.size) {
+                        int err = avcodec.avcodec_decode_audio4(aCodecCtx.getPointer(), pFrame.getPointer(), frameFinished, packet.getPointer());
 
-                    if (frameFinished.getValue() != 0) {
-                        aBufferSize = avutil.av_samples_get_buffer_size(null, aCodecCtx.channels, pFrame.nb_samples, aCodecCtx.sample_fmt, 1);
+                        if (err < 0) {
+                            System.err.println("Error reading audio frame " + packet.size + ": " + err);
+                            continue mainloop; // frame was not read
+                        } else {
+                            read += err;
+                            System.out.println("Successfully read " + read + " bytes out of " + packet.size);
+                        }
+
+                        if (frameFinished.getValue() != 0) {
+                            aBufferSize = avutil.av_samples_get_buffer_size(null, aCodecCtx.channels, pFrame.nb_samples, aCodecCtx.sample_fmt, 1);
+                        }
                     }
                 } else if (packet.stream_index == videoStream.index) { // We only care about the video stream here
                     // Decode the video into our pFrame
