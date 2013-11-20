@@ -14,6 +14,7 @@ import tk.ivybits.javi.ffmpeg.avutil.AVMediaType;
 import javax.sound.sampled.AudioFormat;
 import javax.sound.sampled.AudioSystem;
 import javax.sound.sampled.SourceDataLine;
+import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.awt.image.DataBufferByte;
 import java.io.Closeable;
@@ -21,6 +22,7 @@ import java.io.File;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URLDecoder;
+import java.util.Arrays;
 
 import static tk.ivybits.javi.FFmpeg.*;
 import static tk.ivybits.javi.ffmpeg.avcodec.AVPixelFormat.AV_PIX_FMT_BGR24;
@@ -31,7 +33,8 @@ import static tk.ivybits.javi.ffmpeg.avcodec.AVPixelFormat.AV_PIX_FMT_BGR24;
  */
 public class Video implements Closeable {
     private final AVFormatContext format;
-    private final AVCodecContext.ByReference vCodecCtx, aCodecCtx;
+    private final AVCodecContext vCodecCtx, aCodecCtx;
+    private final AVCodec vCodec, aCodec;
     protected SafeBlockingQueue<BufferedImage> vEmptyQueue = new SafeBlockingQueue<>();
     protected SafeBlockingQueue<BufferedImage> vFilledQueue = new SafeBlockingQueue<>();
     protected SafeBlockingQueue<byte[]> aEmptyQueue = new SafeBlockingQueue<>();
@@ -97,6 +100,7 @@ public class Video implements Closeable {
             } catch (Exception e) {
                 e.printStackTrace();
             }
+            aCodecCtx.read();
             while (avformat.av_read_frame(format.getPointer(), packet.getPointer()) >= 0) {
                 packet.read();
                 if (packet.stream_index == audioStream.index) {
@@ -105,9 +109,10 @@ public class Video implements Closeable {
                     int err = avcodec.avcodec_decode_audio4(aCodecCtx.getPointer(), pFrame.getPointer(), frameFinished, packet.getPointer());
 
                     if (err < 0) {
-                        System.err.println("Error reading audio frame: " + err);
+                        System.err.println("Error reading audio frame " + packet.size + ": " + err);
                         continue; // frame was not read
-                    }
+                    } else
+                        System.out.println("Successfully read " + err + " bytes out of " + packet.size);
 
                     if (frameFinished.getValue() != 0) {
                         aBufferSize = avutil.av_samples_get_buffer_size(null, aCodecCtx.channels, pFrame.nb_samples, aCodecCtx.sample_fmt, 1);
@@ -181,7 +186,28 @@ public class Video implements Closeable {
         if (videoStream == null)
             throw new IOException("no video stream");
         vCodecCtx = videoStream.codec;
-        aCodecCtx = audioStream != null ? audioStream.codec : null;
+        vCodec = avcodec.avcodec_find_decoder(vCodecCtx.codec_id);
+        if (vCodec == null || avcodec.avcodec_open2(vCodecCtx.getPointer(), vCodec.getPointer(), null) < 0) {
+            System.err.println("Unsupported video codec!");
+            System.exit(2);
+        }
+        vCodecCtx.read();
+        vCodec.read();
+        System.out.println("Video codec: " + vCodec.long_name);
+        if (audioStream != null) {
+            aCodecCtx = audioStream.codec;
+            aCodec = avcodec.avcodec_find_decoder(aCodecCtx.codec_id);
+            if (aCodec == null || avcodec.avcodec_open2(aCodecCtx.getPointer(), aCodec.getPointer(), null) < 0) {
+                System.err.println("Unsupported video codec!");
+                System.exit(2);
+            }
+            aCodecCtx.read();
+            aCodec.read();
+            System.out.println("Audio codec: " + aCodec.long_name);
+        } else {
+            aCodecCtx = null;
+            aCodec = null;
+        }
     }
 
     public void stream() throws IOException {
@@ -214,5 +240,9 @@ public class Video implements Closeable {
     public void close() {
         if (streamer != null)
             streamer.stop();
+    }
+
+    public Dimension dimensions() {
+        return new Dimension(videoStream.codec.width, videoStream.codec.height);
     }
 }

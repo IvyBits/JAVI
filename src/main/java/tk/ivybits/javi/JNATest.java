@@ -19,7 +19,7 @@ public class JNATest {
                 avutil.avutil_version() >> 16);
         avutil.av_log_set_level(AVLogConstants.AV_LOG_QUIET);
 
-        final Video video = new Video(new File("C:/Users/Tudor/Desktop/Claymore - OP.mp4"));
+        final Video video = new Video(new File("ocanada.mp4"));
         video.stream();
 
         final JFrame frame = new JFrame("Rendering Test");
@@ -53,7 +53,7 @@ public class JNATest {
                 frame.repaint();
             }
         });
-        frame.setSize(640, 480);
+        frame.setSize(video.dimensions());
         repaintTimer.start();
         frame.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
         frame.setLocationRelativeTo(null);
