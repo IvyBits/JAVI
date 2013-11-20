@@ -6,6 +6,7 @@ import com.sun.jna.ptr.PointerByReference;
 import tk.ivybits.javi.ffmpeg.avcodec.AVCodec;
 import tk.ivybits.javi.ffmpeg.avcodec.AVCodecContext;
 import tk.ivybits.javi.ffmpeg.avcodec.AVPacket;
+import tk.ivybits.javi.ffmpeg.avcodec.AVSampleFormat;
 import tk.ivybits.javi.ffmpeg.avformat.AVFormatContext;
 import tk.ivybits.javi.ffmpeg.avformat.AVStream;
 import tk.ivybits.javi.ffmpeg.avutil.AVFrame;
@@ -22,7 +23,6 @@ import java.io.File;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URLDecoder;
-import java.util.Arrays;
 
 import static tk.ivybits.javi.FFmpeg.*;
 import static tk.ivybits.javi.ffmpeg.avcodec.AVPixelFormat.AV_PIX_FMT_BGR24;
@@ -70,7 +70,6 @@ public class Video implements Closeable {
         private AVFrame.ByReference pFrameRGB;
         private AVFrame.ByReference pFrame;
         private int vBufferSize;
-        private int aBufferSize;
 
         public StreamThread() throws IOException {
             pFrame = avcodec.avcodec_alloc_frame();
@@ -88,10 +87,33 @@ public class Video implements Closeable {
             IntByReference frameFinished = new IntByReference();
             AVPacket packet = new AVPacket();
             avcodec.av_init_packet(packet.getPointer());
-            Pointer pSwsContext = swscale.sws_getContext(vCodecCtx.width, vCodecCtx.height, vCodecCtx.pix_fmt, vCodecCtx.width, vCodecCtx.height, AV_PIX_FMT_BGR24, 0, null, null, null);
+            Pointer pSwsContext = swscale.sws_getContext(
+                    vCodecCtx.width,
+                    vCodecCtx.height,
+                    vCodecCtx.pix_fmt,
+                    vCodecCtx.width,
+                    vCodecCtx.height,
+                    AV_PIX_FMT_BGR24,
+                    0,
+                    null,
+                    null,
+                    null);
+            Pointer pSwrContext = swresample.swr_alloc_set_opts(
+                    null,
+                    3,
+                    AVSampleFormat.AV_SAMPLE_FMT_S16P,
+                    aCodecCtx.sample_rate,
+                    aCodecCtx.channel_layout,
+                    aCodecCtx.sample_fmt,
+                    aCodecCtx.sample_rate,
+                    0,
+                    null
+            );
+            swresample.swr_init(pSwrContext);
+            //System.out.println(aCodecCtx.sample_fmt);
+            //if(true)System.exit(0);
 
-
-            AudioFormat af = new AudioFormat(aCodecCtx.sample_rate, 16, 2, true, false);
+            AudioFormat af = new AudioFormat(aCodecCtx.sample_rate, 16, 1, true, false);
             SourceDataLine sdl = null;
             try {
                 sdl = AudioSystem.getSourceDataLine(af);
@@ -101,11 +123,10 @@ public class Video implements Closeable {
                 e.printStackTrace();
             }
             aCodecCtx.read();
-            mainloop:
+            _outer:
             while (avformat.av_read_frame(format.getPointer(), packet.getPointer()) >= 0) {
                 packet.read();
                 if (packet.stream_index == audioStream.index) {
-                    System.out.println("Audio: " + packet.size);
                     // Decode the video into our pFrame
                     int read = 0;
 
@@ -122,15 +143,33 @@ public class Video implements Closeable {
                         int err = avcodec.avcodec_decode_audio4(aCodecCtx.getPointer(), pFrame.getPointer(), frameFinished, packet.getPointer());
 
                         if (err < 0) {
-                            System.err.println("Error reading audio frame " + packet.size + ": " + err);
-                            continue mainloop; // frame was not read
+                            System.err.print("\rError reading audio frame " + packet.size + ": " + err + "\n");
+                            continue _outer; // frame was not read
                         } else {
                             read += err;
-                            System.out.println("Successfully read " + read + " bytes out of " + packet.size);
+                            System.err.print("\rSuccessfully read " + read + " / " + packet.size);
                         }
 
                         if (frameFinished.getValue() != 0) {
-                            aBufferSize = avutil.av_samples_get_buffer_size(null, aCodecCtx.channels, pFrame.nb_samples, aCodecCtx.sample_fmt, 1);
+                            pFrame.read();
+                            if (aCodecCtx.sample_fmt != AVSampleFormat.AV_SAMPLE_FMT_S16P) {
+                                PointerByReference dstData = new PointerByReference();
+                                IntByReference dstLinesize = new IntByReference();
+                                int ret = avutil.av_samples_alloc_array_and_samples(dstData, dstLinesize, pFrame.channels,
+                                        pFrame.nb_samples, AVSampleFormat.AV_SAMPLE_FMT_S16P, 0);
+                                if (ret < 0) {
+                                    throw new RuntimeException("failed to allocate destination buffer: " + ret);
+                                }
+                                int length = dstLinesize.getValue();
+                                ret = swresample.swr_convert(pSwrContext, dstData.getValue(), length,
+                                        pFrame.extended_data, pFrame.nb_samples);
+                                if(ret < 0)
+                                    throw new RuntimeException("failed to transcode audio: " + ret);
+
+                             sdl.write(dstData.getValue().getPointer(0).getByteArray(0, length), 0, length);
+                            }
+                        } else {
+                            sdl.write(pFrame.data[0].getByteArray(0, pFrame.linesize[0]), 0, pFrame.linesize[0]);
                         }
                     }
                 } else if (packet.stream_index == videoStream.index) { // We only care about the video stream here
@@ -236,9 +275,6 @@ public class Video implements Closeable {
         for (int i = 0; i != 3; i++) {
             vEmptyQueue.put(new BufferedImage(videoStream.codec.width, videoStream.codec.height, BufferedImage.TYPE_3BYTE_BGR));
         }
-        for (int i = 0; i != 3; i++) {
-            aEmptyQueue.put(new byte[65536]);
-        }
         streamer = new StreamThread();
         streamer.start();
     }
@@ -253,6 +289,7 @@ public class Video implements Closeable {
         return new AudioFormat(aCodecCtx.sample_rate, 16, 2, true, false);
     }
 
+    @Override
     public void close() {
         if (streamer != null)
             streamer.stop();
@@ -260,5 +297,17 @@ public class Video implements Closeable {
 
     public Dimension dimensions() {
         return new Dimension(videoStream.codec.width, videoStream.codec.height);
+    }
+
+    public int width() {
+        return videoStream.codec.width;
+    }
+
+    public int height() {
+        return videoStream.codec.width;
+    }
+
+    public float aspectRatio() {
+        return width() / (float) height();
     }
 }
