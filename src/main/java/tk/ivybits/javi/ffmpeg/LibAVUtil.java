@@ -20,4 +20,6 @@ public interface LibAVUtil extends Library {
     int av_log_get_level();
 
     void av_log_set_level(int level);
+
+    int av_samples_get_buffer_size(Pointer linesize, int nb_channels, int nb_samples, int sample_fmt, int align);
 }

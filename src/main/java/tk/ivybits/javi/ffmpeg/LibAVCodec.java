@@ -24,7 +24,11 @@ public interface LibAVCodec extends Library {
 
     int avpicture_fill(Pointer picture, Pointer ptr, int pix_fmt, int width, int height);
 
-    int  avcodec_decode_video2(Pointer avctx, Pointer picture, IntByReference frameFinished, Pointer pkt);
+    int avcodec_decode_video2(Pointer avctx, Pointer picture, IntByReference frameFinished, Pointer pkt);
+
+    int avcodec_decode_audio4(Pointer avctx, Pointer frame, IntByReference frameFinished, Pointer pkt);
 
     void av_init_packet(Pointer pointer);
+
+    void av_free_packet(Pointer pointer);
 }
