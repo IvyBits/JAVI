@@ -169,6 +169,7 @@ public class Video implements Closeable {
 
                                 System.out.println(Arrays.toString(dstData.getValue().getPointerArray(0, 2)));
                                 sdl.write(dstData.getValue().getPointer(0).getByteArray(0, length), 0, length);
+                                avutil.av_free(dstData.getValue().getPointer(0));
                             } else {
                                 sdl.write(pFrame.data[0].getByteArray(0, pFrame.linesize[0]), 0, pFrame.linesize[0]);
                             }
