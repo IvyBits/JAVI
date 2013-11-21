@@ -7,8 +7,6 @@ import com.sun.jna.ptr.PointerByReference;
 import tk.ivybits.javi.ffmpeg.avformat.AVInputFormat;
 
 public interface LibAVFormat extends Library {
-    LibAVFormat INSTANCE = (LibAVFormat) Native.loadLibrary("avformat-55", LibAVFormat.class);
-
     int avformat_version();
 
     void av_register_all();

@@ -8,8 +8,6 @@ import tk.ivybits.javi.ffmpeg.avcodec.AVCodec;
 import tk.ivybits.javi.ffmpeg.avutil.AVFrame;
 
 public interface LibAVCodec extends Library {
-    LibAVCodec INSTANCE = (LibAVCodec) Native.loadLibrary("avcodec-55", LibAVCodec.class);
-
     int avcodec_version();
 
     AVCodec avcodec_find_decoder(int id);

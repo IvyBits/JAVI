@@ -11,8 +11,6 @@ import com.sun.jna.ptr.PointerByReference;
  * 2013-11-17
  */
 public interface LibAVUtil extends Library {
-    LibAVUtil INSTANCE = (LibAVUtil) Native.loadLibrary("avutil-52", LibAVUtil.class);
-
     int avutil_version();
 
     Pointer av_malloc(int size);

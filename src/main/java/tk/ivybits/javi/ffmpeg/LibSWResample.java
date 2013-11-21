@@ -10,8 +10,6 @@ import com.sun.jna.ptr.PointerByReference;
  * 2013-11-17
  */
 public interface LibSWResample extends Library {
-    LibSWResample INSTANCE = (LibSWResample) Native.loadLibrary("swresample-0", LibSWResample.class);
-
     Pointer swr_alloc();
 
     int swr_init(Pointer s);
