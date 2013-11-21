@@ -2,7 +2,7 @@ package tk.ivybits.javi.ffmpeg.avutil;
 
 public class Macros {
     public static int makeBETag(char a, char b, char c, char d) {
-        return ((int) a) | (((int) b) << 8) | (((int) b) << 16) | (((int) b) << 24);
+        return ((int) a & 0xFF) | (((int) b & 0xFF) << 8) | (((int) c & 0xFF) << 16) | (((int) d & 0xFF) << 24);
     }
 
     public static int makeBETag(String str) {
