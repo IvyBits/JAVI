@@ -8,18 +8,21 @@ import java.awt.event.ActionEvent;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
+import java.net.URI;
+import java.net.URISyntaxException;
 
 import static tk.ivybits.javi.FFmpeg.*;
 
 public class JNATest {
-    public static void main(String[] args) throws IOException {
+    public static void main(String[] args) throws IOException, URISyntaxException {
         System.out.printf("Running avcodec %s, avformat %s, avutil %s.\n",
                 avcodec.avcodec_version() >> 16,
                 avformat.avformat_version() >> 16,
                 avutil.avutil_version() >> 16);
         avutil.av_log_set_level(AVLogConstants.AV_LOG_QUIET);
 
-        final Video video = new Video(new File("ocanada.mp4"));
+        avformat.avformat_network_init();
+        final Video video = new Video(new URI("http://dl.dropboxusercontent.com/u/36712017/music/ocanada.mp4"));
         video.stream();
 
         final JFrame frame = new JFrame("Rendering Test");

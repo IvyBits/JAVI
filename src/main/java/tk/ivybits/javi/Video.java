@@ -23,6 +23,7 @@ import java.io.File;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URLDecoder;
+import java.util.Arrays;
 
 import static tk.ivybits.javi.FFmpeg.*;
 import static tk.ivybits.javi.ffmpeg.avcodec.AVPixelFormat.AV_PIX_FMT_BGR24;
@@ -101,7 +102,7 @@ public class Video implements Closeable {
             Pointer pSwrContext = swresample.swr_alloc_set_opts(
                     null,
                     3,
-                    AVSampleFormat.AV_SAMPLE_FMT_S16P,
+                    AVSampleFormat.AV_SAMPLE_FMT_S16,
                     aCodecCtx.sample_rate,
                     aCodecCtx.channel_layout,
                     aCodecCtx.sample_fmt,
@@ -113,7 +114,7 @@ public class Video implements Closeable {
             //System.out.println(aCodecCtx.sample_fmt);
             //if(true)System.exit(0);
 
-            AudioFormat af = new AudioFormat(aCodecCtx.sample_rate, 16, 1, true, false);
+            AudioFormat af = new AudioFormat(aCodecCtx.sample_rate, 16, 2, true, false);
             SourceDataLine sdl = null;
             try {
                 sdl = AudioSystem.getSourceDataLine(af);
@@ -152,11 +153,11 @@ public class Video implements Closeable {
 
                         if (frameFinished.getValue() != 0) {
                             pFrame.read();
-                            if (aCodecCtx.sample_fmt != AVSampleFormat.AV_SAMPLE_FMT_S16P) {
+                            if (aCodecCtx.sample_fmt != AVSampleFormat.AV_SAMPLE_FMT_S16) {
                                 PointerByReference dstData = new PointerByReference();
                                 IntByReference dstLinesize = new IntByReference();
                                 int ret = avutil.av_samples_alloc_array_and_samples(dstData, dstLinesize, pFrame.channels,
-                                        pFrame.nb_samples, AVSampleFormat.AV_SAMPLE_FMT_S16P, 0);
+                                        pFrame.nb_samples, AVSampleFormat.AV_SAMPLE_FMT_S16, 0);
                                 if (ret < 0) {
                                     throw new RuntimeException("failed to allocate destination buffer: " + ret);
                                 }
@@ -166,10 +167,11 @@ public class Video implements Closeable {
                                 if(ret < 0)
                                     throw new RuntimeException("failed to transcode audio: " + ret);
 
-                             sdl.write(dstData.getValue().getPointer(0).getByteArray(0, length), 0, length);
+                                System.out.println(Arrays.toString(dstData.getValue().getPointerArray(0, 2)));
+                                sdl.write(dstData.getValue().getPointer(0).getByteArray(0, length), 0, length);
+                            } else {
+                                sdl.write(pFrame.data[0].getByteArray(0, pFrame.linesize[0]), 0, pFrame.linesize[0]);
                             }
-                        } else {
-                            sdl.write(pFrame.data[0].getByteArray(0, pFrame.linesize[0]), 0, pFrame.linesize[0]);
                         }
                     }
                 } else if (packet.stream_index == videoStream.index) { // We only care about the video stream here
