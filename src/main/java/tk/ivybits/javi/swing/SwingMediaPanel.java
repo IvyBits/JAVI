@@ -33,7 +33,8 @@ public class SwingMediaPanel extends JPanel {
                         try {
                             AudioFormat af = media.audioFormat();
                             sdl = AudioSystem.getSourceDataLine(af);
-                            sdl.open(af);
+                            sdl.open(af, 512000);
+                            System.out.println(sdl.getBufferSize());
                             sdl.start();
                         } catch (LineUnavailableException e) {
                             throw new IllegalStateException("failed to initialize audio line");
