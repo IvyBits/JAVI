@@ -51,9 +51,11 @@ public class SwingMediaPanel extends JPanel {
                 })
                 .video(new MediaHandler<BufferedImage>() {
                     @Override
-                    public void handle(BufferedImage buffer) {
+                    public void handle(BufferedImage buffer, long duration) {
+                        if (duration < 0)
+                            return;
                         try {
-                            Thread.sleep(1000 / 45);
+                            Thread.sleep(duration);
                         } catch (InterruptedException e) {
                         }
                         nextFrame = buffer;

@@ -29,6 +29,7 @@ public class MediaStream extends Thread {
     private AVFrame.ByReference pFrame;
 
     private AVCodec videoCodec, audioCodec;
+    private long last_frame = 0;
 
     MediaStream(Media media, MediaHandler<byte[]> audioHandler, MediaHandler<BufferedImage> videoHandler) throws IOException {
         this.media = media;
@@ -86,6 +87,12 @@ public class MediaStream extends Thread {
         BufferedImage imageBuffer = new BufferedImage(width, height, BufferedImage.TYPE_3BYTE_BGR);
         byte[] audioBuffer = new byte[16 * ac.channels * 64]; // Estimate common size
 
+        media.videoStream.read();
+        media.videoContext.read();
+        System.out.printf("Time Base: %d/%d\n", media.videoStream.time_base.num, media.videoStream.time_base.den);
+        System.out.printf("Average Frame Rate: %d/%d\n", media.videoStream.avg_frame_rate.num, media.videoStream.avg_frame_rate.den);
+        System.out.printf("Real Frame Rate: %d/%d\n", media.videoStream.r_frame_rate.num, media.videoStream.r_frame_rate.den);
+        last_frame = System.nanoTime();
         _outer:
         while (av_read_frame(media.formatContext.getPointer(), packet.getPointer()) >= 0) {
             packet.read();
@@ -173,7 +180,12 @@ public class MediaStream extends Thread {
                     byte[] raster = ((DataBufferByte) imageBuffer.getRaster().getDataBuffer()).getData();
                     pBGRFrame.data[0].read(0, raster, 0, raster.length);
 
-                    videoHandler.handle(imageBuffer);
+                    long duration = pFrame.pkt_duration * 1000 * media.videoStream.time_base.num / media.videoStream.time_base.den;
+                    long time = System.nanoTime();
+                    duration -= (time - last_frame) / 1000000;
+                    System.out.println("Duration: " + pFrame.pkt_duration + " " + duration);
+                    videoHandler.handle(imageBuffer, duration);
+                    last_frame = time;
                 }
             }
             // Free the packet that av_read_frame allocated
