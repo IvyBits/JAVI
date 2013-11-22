@@ -21,17 +21,17 @@ public class AVStream extends Structure {
     public int id;
     public AVCodecContext.ByReference codec;
     public Pointer priv_data;
-    public AVFrac.ByValue pts;
-    public AVRational.ByValue time_base;
+    public AVFrac pts;
+    public AVRational time_base;
     public long start_time;
     public long duration;
     public long nb_frames;
     public int disposition;
     public int discard;
-    public AVRational.ByValue sample_aspect_ratio;
+    public AVRational sample_aspect_ratio;
     public AVDictionary metadata;
-    public AVRational.ByValue avg_frame_rate;
-    public AVPacket.ByValue attached_pic;
+    public AVRational avg_frame_rate;
+    public AVPacket attached_pic;
     public info_struct.ByReference info;
     @Deprecated
     public long do_not_use;
@@ -44,12 +44,12 @@ public class AVStream extends Structure {
     public int /* AVStreamParseType */ need_parsing;
     public Pointer /* AVCodecParserContext */ parser;
     public AVPacketList.ByReference last_in_packet_buffer;
-    public AVProbeData.ByValue probe_data;
+    public AVProbeData probe_data;
     public long[] pts_buffer = new long[MAX_REORDER_DELAY + 1];
     public Pointer /* AVIndexEntry */ index_entries;
     public int nb_index_entries;
     public int index_entries_allocated_size;
-    public AVRational.ByValue r_frame_rate;
+    public AVRational r_frame_rate;
     public int stream_identifier;
     public long interleaver_chunk_size;
     public long interleaver_chunk_duration;
@@ -109,6 +109,12 @@ public class AVStream extends Structure {
     public AVStream(Pointer address) {
         super(address);
         read();
+    }
+
+    public double getFPS() {
+        Pointer ptr = new Pointer(Pointer.nativeValue(getPointer()) + fieldOffset("avg_frame_rate"));
+        System.out.println(Arrays.toString(ptr.getIntArray(0, 2)));
+        return 0;
     }
 
     @Override

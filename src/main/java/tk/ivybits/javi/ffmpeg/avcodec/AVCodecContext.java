@@ -47,7 +47,7 @@ public class AVCodecContext extends Structure {
     public int flags2;
     public Pointer extradata;
     public int extradata_size;
-    public AVRational.ByValue time_base;
+    public AVRational time_base;
     public int ticks_per_frame;
     public int delay;
     public int width;
@@ -76,7 +76,7 @@ public class AVCodecContext extends Structure {
     public int slice_count;
     public int prediction_method;
     public IntByReference slice_offset;
-    public AVRational.ByValue sample_aspect_ratio;
+    public AVRational sample_aspect_ratio;
     public int me_cmp;
     public int me_sub_cmp;
     public int mb_cmp;
@@ -225,7 +225,7 @@ public class AVCodecContext extends Structure {
     @Deprecated
     public AVPacket.ByReference pkt;
     public long vbv_delay;
-    public AVRational.ByValue pkt_timebase;
+    public AVRational pkt_timebase;
     public Pointer /*AVCodecDescriptor */ codec_descriptor;
     /*public int lowres;*/ // New feature in 56
     public long pts_correction_num_faulty_pts;

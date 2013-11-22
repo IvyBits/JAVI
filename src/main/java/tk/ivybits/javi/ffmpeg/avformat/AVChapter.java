@@ -16,7 +16,7 @@ public class AVChapter extends Structure {
     }
 
     public int id;
-    public AVRational.ByValue time_base;
+    public AVRational time_base;
     public long start;
     public long end;
     public AVDictionary metadata;

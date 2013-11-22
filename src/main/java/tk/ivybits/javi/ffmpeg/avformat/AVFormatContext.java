@@ -53,7 +53,7 @@ public class AVFormatContext extends Structure {
     public long start_time_realtime;
     public int fps_probe_size;
     public int error_recognition;
-    public AVIOInterruptCB.ByValue interrupt_callback;
+    public AVIOInterruptCB interrupt_callback;
     public int debug;
     public int ts_id;
     public int audio_preload;
@@ -77,7 +77,7 @@ public class AVFormatContext extends Structure {
     public AVPacketList.ByReference parse_queue_end;
     public int raw_packet_buffer_remaining_size;
     public long offset;
-    public AVRational.ByValue offset_timebase;
+    public AVRational offset_timebase;
     public int io_repositioned;
 
     // And some private fields

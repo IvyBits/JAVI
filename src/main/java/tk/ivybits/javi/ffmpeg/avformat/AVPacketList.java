@@ -14,7 +14,7 @@ public class AVPacketList extends Structure {
     public static class ByValue extends AVPacketList implements Structure.ByValue {
     }
 
-    public AVPacket.ByValue pkt;
+    public AVPacket pkt;
     public Pointer next;
 
     public AVPacketList(Pointer address) {
