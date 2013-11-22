@@ -185,6 +185,13 @@ public class MediaStream extends Thread {
                     duration -= time - last_frame;
                     //System.out.println("Duration: " + pFrame.pkt_duration + " " + duration);
                     videoHandler.handle(imageBuffer, duration / 1000000);
+                    // Add in duration, which is the time that is spent waiting for the frame to render, so we get
+                    // the time when this frame is rendered, and set it as the last frame.
+                    // If duration is NEGATIVE, nothing will be rendered. We basically are subtracting the overdue
+                    // time from time we started handling this frame, so we get the time on which the current frame
+                    // should be rendered. If multiple frames are skipped, this still works, as the last_frame will
+                    // advance by the length of each lost frame until it goes back to sync,
+                    // i.e. duration is back to positive.
                     last_frame = time + duration;
                 }
             }
