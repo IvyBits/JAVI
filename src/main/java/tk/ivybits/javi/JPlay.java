@@ -8,6 +8,8 @@ import tk.ivybits.javi.swing.SwingMediaPanel;
 
 import javax.swing.*;
 import java.awt.*;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
 import java.io.File;
 import java.io.IOException;
 
@@ -32,7 +34,7 @@ public class JPlay {
         JFrame frame = new JFrame(videoFile.getName());
         frame.setLayout(new BorderLayout());
 
-        SwingMediaPanel videoPanel = new SwingMediaPanel(media);
+        final SwingMediaPanel videoPanel = new SwingMediaPanel(media);
         videoPanel.setBackground(Color.BLACK);
         frame.add(BorderLayout.CENTER, videoPanel);
 
@@ -40,6 +42,11 @@ public class JPlay {
         frame.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
         frame.setLocationRelativeTo(null);
         frame.setVisible(true);
+        frame.addWindowListener(new WindowAdapter() {
+            public void windowClosing(WindowEvent e) {
+                System.out.printf("Frame loss: %.2f%%\n", videoPanel.frameLossRate() * 100);
+            }
+        });
         videoPanel.start();
     }
 }

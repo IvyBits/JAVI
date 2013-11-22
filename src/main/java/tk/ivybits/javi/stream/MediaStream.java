@@ -183,7 +183,7 @@ public class MediaStream extends Thread {
                     long duration = pFrame.pkt_duration * 1000 * media.videoStream.time_base.num / media.videoStream.time_base.den;
                     long time = System.nanoTime();
                     duration -= (time - last_frame) / 1000000;
-                    System.out.println("Duration: " + pFrame.pkt_duration + " " + duration);
+                    //System.out.println("Duration: " + pFrame.pkt_duration + " " + duration);
                     videoHandler.handle(imageBuffer, duration);
                     last_frame = time;
                 }

@@ -17,6 +17,7 @@ public class SwingMediaPanel extends JPanel {
     private final Media media;
     private MediaStream stream;
     private BufferedImage nextFrame;
+    private int frames = 0, lost = 0;
 
     public SwingMediaPanel(Media media) {
         this.media = media;
@@ -52,8 +53,11 @@ public class SwingMediaPanel extends JPanel {
                 .video(new MediaHandler<BufferedImage>() {
                     @Override
                     public void handle(BufferedImage buffer, long duration) {
-                        if (duration < 0)
+                        ++frames;
+                        if (duration < 0) {
+                            ++lost;
                             return;
+                        }
                         try {
                             Thread.sleep(duration);
                         } catch (InterruptedException e) {
@@ -96,5 +100,9 @@ public class SwingMediaPanel extends JPanel {
             // Center it in the space given
             g.drawImage(nextFrame, Math.abs(boundary.width - bwidth) / 2, Math.abs(boundary.height - bheight) / 2, bwidth, bheight, null);
         }
+    }
+
+    public double frameLossRate() {
+        return lost / (double) frames;
     }
 }
