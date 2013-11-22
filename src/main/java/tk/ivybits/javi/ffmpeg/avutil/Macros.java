@@ -6,7 +6,7 @@ public class Macros {
     }
 
     public static int makeBETag(String str) {
-        if(str.length() != 4)
+        if (str.length() != 4)
             throw new IllegalArgumentException("invalid string length for 32 bit tag");
         return makeBETag(str.charAt(0), str.charAt(1), str.charAt(2), str.charAt(3));
     }

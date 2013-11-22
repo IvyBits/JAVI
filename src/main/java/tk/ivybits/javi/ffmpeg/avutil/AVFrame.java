@@ -108,6 +108,14 @@ public class AVFrame extends Structure {
         super();
     }
 
+    public Pointer getPointerToOffset(int offset) {
+        return new Pointer(Pointer.nativeValue(getPointer()) + offset);
+    }
+
+    public Pointer getPointerToOffset(String name) {
+        return getPointerToOffset(fieldOffset(name));
+    }
+
     @Override
     protected List<String> getFieldOrder() {
         return Arrays.asList("data", "linesize", "extended_data", "width", "height", "nb_samples", "format",

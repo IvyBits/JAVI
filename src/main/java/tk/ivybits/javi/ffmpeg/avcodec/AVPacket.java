@@ -11,8 +11,11 @@ import java.util.List;
  * 16/11/13
  */
 public class AVPacket extends Structure {
-    public static class ByReference extends AVPacket implements Structure.ByReference {}
-    public static class ByValue extends AVPacket implements Structure.ByValue {}
+    public static class ByReference extends AVPacket implements Structure.ByReference {
+    }
+
+    public static class ByValue extends AVPacket implements Structure.ByValue {
+    }
 
     public Pointer buf;
     public long pts;

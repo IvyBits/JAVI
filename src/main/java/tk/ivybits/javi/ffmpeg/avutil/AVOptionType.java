@@ -1,6 +1,6 @@
 package tk.ivybits.javi.ffmpeg.avutil;
 
-import static tk.ivybits.javi.ffmpeg.avutil.Macros.*;
+import static tk.ivybits.javi.ffmpeg.avutil.Macros.makeBETag;
 
 public interface AVOptionType {
     int AV_OPT_TYPE_FLAGS = 0;
@@ -12,11 +12,11 @@ public interface AVOptionType {
     int AV_OPT_TYPE_RATIONAL = 6;
     int AV_OPT_TYPE_BINARY = 7;
     int AV_OPT_TYPE_CONST = 128;
-    int AV_OPT_TYPE_IMAGE_SIZE     = makeBETag("SIZE");
-    int AV_OPT_TYPE_PIXEL_FMT      = makeBETag("PFMT");
-    int AV_OPT_TYPE_SAMPLE_FMT     = makeBETag("SFMT");
-    int AV_OPT_TYPE_VIDEO_RATE     = makeBETag("VRAT");
-    int AV_OPT_TYPE_DURATION       = makeBETag("DUR ");
-    int AV_OPT_TYPE_COLOR          = makeBETag("COLR");
+    int AV_OPT_TYPE_IMAGE_SIZE = makeBETag("SIZE");
+    int AV_OPT_TYPE_PIXEL_FMT = makeBETag("PFMT");
+    int AV_OPT_TYPE_SAMPLE_FMT = makeBETag("SFMT");
+    int AV_OPT_TYPE_VIDEO_RATE = makeBETag("VRAT");
+    int AV_OPT_TYPE_DURATION = makeBETag("DUR ");
+    int AV_OPT_TYPE_COLOR = makeBETag("COLR");
     int AV_OPT_TYPE_CHANNEL_LAYOUT = makeBETag("CHLA");
 }

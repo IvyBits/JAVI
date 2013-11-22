@@ -10,18 +10,22 @@ import com.sun.jna.ptr.PointerByReference;
  * Tudor
  * 2013-11-17
  */
-public interface LibAVUtil extends Library {
-    int avutil_version();
+public class LibAVUtil {
+    public static native int avutil_version();
 
-    Pointer av_malloc(int size);
+    public static native Pointer av_malloc(int size);
 
-    void av_free(Pointer ram);
+    public static native void av_free(Pointer ram);
 
-    int av_log_get_level();
+    public static native int av_log_get_level();
 
-    void av_log_set_level(int level);
+    public static native void av_log_set_level(int level);
 
-    int av_samples_get_buffer_size(IntByReference linesize, int nb_channels, int nb_samples, int sample_fmt, int align);
+    public static native int av_samples_get_buffer_size(IntByReference linesize, int nb_channels, int nb_samples, int sample_fmt, int align);
 
-    int av_samples_alloc_array_and_samples(PointerByReference audio_data, IntByReference linesize, int nb_channels, int nb_samples, int sample_fmt, int align);
+    public static native  int av_samples_alloc_array_and_samples(PointerByReference audio_data, IntByReference linesize, int nb_channels, int nb_samples, int sample_fmt, int align);
+
+    static {
+        Native.register("avutil-52");
+    }
 }
