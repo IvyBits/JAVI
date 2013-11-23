@@ -38,7 +38,15 @@ public class JPlay {
         videoPanel.setBackground(Color.BLACK);
         frame.add(BorderLayout.CENTER, videoPanel);
 
-        frame.setSize(media.width(), media.height());
+        int width = media.width();
+        int height = media.height();
+        Dimension screen = Toolkit.getDefaultToolkit().getScreenSize();
+        if (width > screen.width - 20 || height > screen.height - 60) {
+            width = screen.width - 20;
+            height = screen.height - 60;
+        }
+
+        frame.setSize(width, height);
         frame.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
         frame.setLocationRelativeTo(null);
         frame.setVisible(true);
