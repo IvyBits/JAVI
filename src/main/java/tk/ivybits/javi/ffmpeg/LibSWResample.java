@@ -4,10 +4,6 @@ import com.sun.jna.Native;
 import com.sun.jna.Pointer;
 import com.sun.jna.ptr.PointerByReference;
 
-/**
- * Tudor
- * 2013-11-17
- */
 public class LibSWResample {
     public static native Pointer swr_alloc();
 

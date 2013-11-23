@@ -11,10 +11,6 @@ import tk.ivybits.javi.ffmpeg.avcodec.AVCodecContext;
 import java.util.Arrays;
 import java.util.List;
 
-/**
- * Tudor
- * 17/11/13
- */
 public class AVFrame extends Structure {
     public static class ByReference extends AVFrame implements Structure.ByReference {
     }

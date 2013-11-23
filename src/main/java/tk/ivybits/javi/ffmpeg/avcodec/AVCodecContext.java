@@ -12,10 +12,6 @@ import tk.ivybits.javi.ffmpeg.avutil.AVRational;
 import java.util.Arrays;
 import java.util.List;
 
-/**
- * Tudor
- * 16/11/13
- */
 public class AVCodecContext extends Structure {
     public static final int AV_NUM_DATA_POINTERS = 8;
 

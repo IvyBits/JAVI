@@ -6,10 +6,6 @@ import com.sun.jna.Structure;
 import java.util.Arrays;
 import java.util.List;
 
-/**
- * Tudor
- * 16/11/13
- */
 public class AVFrac extends Structure {
     public static class ByReference extends AVFrac implements Structure.ByReference {
     }

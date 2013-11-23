@@ -8,7 +8,6 @@ import com.sun.jna.ptr.PointerByReference;
 import java.util.Arrays;
 import java.util.List;
 
-
 public class AVClass extends Structure {
     public static class ByReference extends AVClass implements Structure.ByReference {
     }
