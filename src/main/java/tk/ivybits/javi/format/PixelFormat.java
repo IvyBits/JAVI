@@ -1,5 +1,11 @@
 package tk.ivybits.javi.format;
 
+/**
+ * Pixel formats.
+ *
+ * @version 1.0
+ * @since 1.0
+ */
 public enum PixelFormat {
     YUV420P,
     YUYV422,

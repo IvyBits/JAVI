@@ -1,4 +1,4 @@
-package tk.ivybits.javi.stream;
+package tk.ivybits.javi.media;
 
 import com.sun.jna.Pointer;
 import com.sun.jna.ptr.IntByReference;
@@ -13,13 +13,23 @@ import java.awt.image.DataBufferByte;
 import java.io.IOException;
 
 import static tk.ivybits.javi.ffmpeg.LibAVCodec.*;
-import static tk.ivybits.javi.ffmpeg.LibAVFormat.*;
-import static tk.ivybits.javi.ffmpeg.LibAVUtil.*;
+import static tk.ivybits.javi.ffmpeg.LibAVFormat.av_read_frame;
+import static tk.ivybits.javi.ffmpeg.LibAVUtil.av_malloc;
+import static tk.ivybits.javi.ffmpeg.LibAVUtil.av_samples_alloc_array_and_samples;
 import static tk.ivybits.javi.ffmpeg.LibSWResample.*;
-import static tk.ivybits.javi.ffmpeg.LibSWScale.*;
-import static tk.ivybits.javi.format.PixelFormat.*;
-import static tk.ivybits.javi.format.SampleFormat.*;
+import static tk.ivybits.javi.ffmpeg.LibSWScale.sws_getContext;
+import static tk.ivybits.javi.ffmpeg.LibSWScale.sws_scale;
+import static tk.ivybits.javi.format.PixelFormat.BGR24;
+import static tk.ivybits.javi.format.SampleFormat.SIGNED_16BIT;
 
+/**
+ * A media stream.
+ * </p>
+ * Cannot be instantiated directly: use {@link MediaStream.Builder}.
+ *
+ * @version 1.0
+ * @since 1.0
+ */
 public class MediaStream extends Thread {
     private final Media media;
     private MediaHandler<byte[]> audioHandler;
@@ -63,6 +73,12 @@ public class MediaStream extends Thread {
         pFrame = avcodec_alloc_frame();
     }
 
+    /**
+     * Starts synchronous streaming.
+     *
+     * @version 1.0
+     * @since 1.0
+     */
     public void run() {
         IntByReference frameFinished = new IntByReference();
         AVPacket packet = new AVPacket();
@@ -148,7 +164,7 @@ public class MediaStream extends Thread {
                         audioHandler.handle(audioBuffer);
                     }
                 }
-            } else if (packet.stream_index == media.videoStream.index) { // We only care about the media stream here
+            } else if (packet.stream_index == media.videoStream.index) { // We only care about the media media here
                 // Decode the media into our pFrame
                 int err = avcodec_decode_video2(media.videoContext.getPointer(), pFrame.getPointer(), frameFinished, packet.getPointer());
                 // If the return of avcodec_decode_video2 is negative, an error occurred.
@@ -202,25 +218,63 @@ public class MediaStream extends Thread {
         audioHandler.end();
     }
 
+    /**
+     * Builder for generating valid {@link MediaStream} objects.
+     *
+     * @version 1.0
+     * @since 1.0
+     */
     public static class Builder {
         private Media media;
         private MediaHandler<byte[]> audioHandler;
         private MediaHandler<BufferedImage> videoHandler;
 
+        /**
+         * Creates a MediaStream builder for the specified {@link Media} object.
+         *
+         * @param media The container designated for streaming.
+         */
         public Builder(Media media) {
             this.media = media;
         }
 
+        /**
+         * Specifies the audio stream handler.
+         *
+         * @param audioHandler The audio handler. Should accept byte arrays of arbitrary size as
+         *                     signed 16-bit PCM audio data. Frequency and channels may be obtained
+         *                     from the source media container.
+         * @return The current Builder.
+         * @version 1.0
+         * @since 1.0
+         */
         public Builder audio(MediaHandler<byte[]> audioHandler) {
             this.audioHandler = audioHandler;
             return this;
         }
 
+        /**
+         * Specifies the video stream handler.
+         *
+         * @param videoHandler The audio handler. Should accept BufferedImages of arbitrary sizes.
+         * @return The current Builder.
+         * @version 1.0
+         * @since 1.0
+         */
         public Builder video(MediaHandler<BufferedImage> videoHandler) {
             this.videoHandler = videoHandler;
             return this;
         }
 
+        /**
+         * Finalize creation of a {@link MediaStream}.
+         *
+         * @return The aforementioned stream.
+         * @throws IOException           Thrown if a stream could not be established.
+         * @throws IllegalStateException Thrown if no stream handlers have been specified.
+         * @version 1.0
+         * @since 1.0
+         */
         public MediaStream create() throws IOException {
             if (audioHandler == null && videoHandler == null)
                 throw new IllegalStateException("no media handlers specified");

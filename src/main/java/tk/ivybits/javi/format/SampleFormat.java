@@ -1,5 +1,11 @@
 package tk.ivybits.javi.format;
 
+/**
+ * Sample formats.
+ *
+ * @version 1.0
+ * @since 1.0
+ */
 public enum SampleFormat {
     UNSIGNED_8BIT,
     SIGNED_16BIT,

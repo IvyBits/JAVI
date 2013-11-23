@@ -1,4 +1,4 @@
-package tk.ivybits.javi.ffmpeg;
+package tk.ivybits.javi.debug;
 
 import com.sun.jna.Structure;
 

@@ -1,7 +1,6 @@
-package tk.ivybits.javi;
+package tk.ivybits.javi.debug;
 
 import com.sun.jna.Structure;
-import tk.ivybits.javi.ffmpeg.StructureUtilities;
 
 public class NativeSizes {
 

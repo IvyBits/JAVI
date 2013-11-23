@@ -1,7 +1,7 @@
-package tk.ivybits.javi;
+package tk.ivybits.javi.debug;
 
 import com.sun.jna.Structure;
-import tk.ivybits.javi.ffmpeg.StructureUtilities;
+import tk.ivybits.javi.debug.StructureUtilities;
 
 public class JNADebug {
     public static final String[] classes = {

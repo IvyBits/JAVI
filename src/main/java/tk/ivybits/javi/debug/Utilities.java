@@ -1,4 +1,4 @@
-package tk.ivybits.javi.ffmpeg;
+package tk.ivybits.javi.debug;
 
 public class Utilities {
     public static final int AV_TIME_BASE = 1000000;
