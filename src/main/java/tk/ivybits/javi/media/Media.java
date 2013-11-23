@@ -34,7 +34,6 @@ public class Media {
      *
      * @param source The media source.
      * @throws IOException Thrown if the source could not be opened (or doesn't exist)
-     * @version 1.0
      * @since 1.0
      */
     public Media(File source) throws IOException {
@@ -46,7 +45,6 @@ public class Media {
      *
      * @param source The URL of the media source.
      * @throws IOException Thrown if the source could not be opened (or doesn't exist)
-     * @version 1.0
      * @since 1.0
      */
     public Media(URI source) throws IOException {
@@ -89,7 +87,6 @@ public class Media {
      *
      * @param type The stream type to search for.
      * @return true if a stream does exist, false otherwise.
-     * @version 1.0
      * @since 1.0
      */
     public boolean hasStream(StreamType type) {
@@ -107,7 +104,6 @@ public class Media {
      *
      * @return The stream's format.
      * @throws IllegalArgumentException Thrown if the container does not have an audio stream.
-     * @version 1.0
      * @since 1.0
      */
     public AudioFormat audioFormat() {
@@ -122,7 +118,6 @@ public class Media {
      * from this function may not be correct for the entire video.</b>
      *
      * @return Video width.
-     * @version 1.0
      * @since 1.0
      */
     public int width() {
@@ -135,7 +130,6 @@ public class Media {
      * from this function may not be correct for the entire video.</b>
      *
      * @return Video height.
-     * @version 1.0
      * @since 1.0
      */
     public int height() {
@@ -146,7 +140,6 @@ public class Media {
      * Prepares video for streaming.
      *
      * @return A Builder object to configure the way the video will be streamed.
-     * @version 1.0
      * @since 1.0
      */
     public MediaStream.Builder stream() {

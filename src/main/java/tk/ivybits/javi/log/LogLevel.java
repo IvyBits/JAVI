@@ -28,7 +28,6 @@ public enum LogLevel {
      * Sets the FFmpeg logging level.
      *
      * @param level The level to set to.
-     * @version 1.0
      * @since 1.0
      */
     public static void setLogLevel(LogLevel level) {
@@ -39,7 +38,6 @@ public enum LogLevel {
      * Fetches the current logging level.
      *
      * @return The level.
-     * @version 1.0
      * @since 1.0
      */
     public static LogLevel getLogLevel() {

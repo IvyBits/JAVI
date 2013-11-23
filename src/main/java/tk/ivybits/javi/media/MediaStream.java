@@ -76,7 +76,6 @@ public class MediaStream extends Thread {
     /**
      * Starts synchronous streaming.
      *
-     * @version 1.0
      * @since 1.0
      */
     public void run() {
@@ -221,7 +220,6 @@ public class MediaStream extends Thread {
     /**
      * Builder for generating valid {@link MediaStream} objects.
      *
-     * @version 1.0
      * @since 1.0
      */
     public static class Builder {
@@ -233,6 +231,7 @@ public class MediaStream extends Thread {
          * Creates a MediaStream builder for the specified {@link Media} object.
          *
          * @param media The container designated for streaming.
+         * @since 1.0
          */
         public Builder(Media media) {
             this.media = media;
@@ -245,7 +244,6 @@ public class MediaStream extends Thread {
          *                     signed 16-bit PCM audio data. Frequency and channels may be obtained
          *                     from the source media container.
          * @return The current Builder.
-         * @version 1.0
          * @since 1.0
          */
         public Builder audio(MediaHandler<byte[]> audioHandler) {
@@ -258,7 +256,6 @@ public class MediaStream extends Thread {
          *
          * @param videoHandler The audio handler. Should accept BufferedImages of arbitrary sizes.
          * @return The current Builder.
-         * @version 1.0
          * @since 1.0
          */
         public Builder video(MediaHandler<BufferedImage> videoHandler) {
@@ -272,7 +269,6 @@ public class MediaStream extends Thread {
          * @return The aforementioned stream.
          * @throws IOException           Thrown if a stream could not be established.
          * @throws IllegalStateException Thrown if no stream handlers have been specified.
-         * @version 1.0
          * @since 1.0
          */
         public MediaStream create() throws IOException {
