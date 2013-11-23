@@ -3,10 +3,32 @@ JAVI - Java Audio/Video Interface
 
 Media integration for Java.
 
-Compilation
------------
+Website: [http://dev.ivybits.tk/projects/javi](http://dev.ivybits.tk/projects/javi)
+<br>
+Issues: [http://dev.ivybits.tk/projects/javi/issues](http://dev.ivybits.tk/projects/javi/issues)
 
-We use [Maven](http://maven.apache.org/download.html) to handle our dependencies.
+As a Maven Dependency
+---------------------
+
+The easiest way to get started with JAVI is with it as a dependency in your [Maven](http://maven.apache.org/download.html) project.
+You must first add our Maven repository, then add JAVI as a dependency.
+
+```xml
+<dependencies>
+    <dependency>
+        <groupId>tk.ivybits.javi</groupId>
+        <artifactId>javi</artifactId>
+        <version>1.0-SNAPSHOT</version>
+    </dependency>
+</dependencies>
+
+<repositories>
+    <repository>
+        <id>IvyBits</id>
+        <url>http://maven.ivybits.tk</url>
+    </repository>
+</repositories>
+```
 
 Coding and Pull Requests Guidelines
 -----------------------------------
