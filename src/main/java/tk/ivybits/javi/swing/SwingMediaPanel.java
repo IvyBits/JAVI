@@ -42,69 +42,72 @@ public class SwingMediaPanel extends JPanel {
      * @throws IOException Thrown if a media stream could not be established.
      */
     public void start() throws IOException {
-        stream = media
-                .stream()
-                .audio(new MediaHandler<byte[]>() {
-                    private SourceDataLine sdl;
+        if (stream != null)
+            stream.start();
+        else
+            stream = media
+                    .stream()
+                    .audio(new MediaHandler<byte[]>() {
+                        private SourceDataLine sdl;
 
-                    {
-                        try {
-                            AudioFormat af = media.audioFormat();
-                            sdl = AudioSystem.getSourceDataLine(af);
-                            // Use a large buffer, such that sdl.write has a lower
-                            // chance of blocking
-                            sdl.open(af, 512000);
-                            System.out.println(sdl.getBufferSize());
-                            sdl.start();
-                        } catch (LineUnavailableException e) {
-                            throw new IllegalStateException("failed to initialize audio line");
+                        {
+                            try {
+                                AudioFormat af = media.audioFormat();
+                                sdl = AudioSystem.getSourceDataLine(af);
+                                // Use a large buffer, such that sdl.write has a lower
+                                // chance of blocking
+                                sdl.open(af, 512000);
+                                System.out.println(sdl.getBufferSize());
+                                sdl.start();
+                            } catch (LineUnavailableException e) {
+                                throw new IllegalStateException("failed to initialize audio line");
+                            }
                         }
-                    }
 
-                    @Override
-                    public void handle(byte[] buffer) {
-                        if (sdl == null) {// Audio failed to initialize; ignore this buffer
-                            return;
+                        @Override
+                        public void handle(byte[] buffer) {
+                            if (sdl == null) {// Audio failed to initialize; ignore this buffer
+                                return;
+                            }
+                            int written = 0;
+                            // sdl.write is not guaranteed to write our entire buffer.
+                            // Therefore, we keep writing until out buffer has been fully
+                            // written, to prevent audio skips
+                            while (written < buffer.length) {
+                                written += sdl.write(buffer, written, buffer.length);
+                            }
                         }
-                        int written = 0;
-                        // sdl.write is not guaranteed to write our entire buffer.
-                        // Therefore, we keep writing until out buffer has been fully
-                        // written, to prevent audio skips
-                        while (written < buffer.length) {
-                            written += sdl.write(buffer, written, buffer.length);
+                    })
+                    .video(new MediaHandler<BufferedImage>() {
+                        @Override
+                        public void handle(BufferedImage buffer, long duration) {
+                            ++frames;
+                            if (duration < 0) {
+                                // Video is behind audio; skip frame
+                                ++lost;
+                                return;
+                            }
+                            try {
+                                Thread.sleep(duration);
+                            } catch (InterruptedException e) {
+                            }
+                            // Set our current frame to the passed buffer,
+                            // and repaint immediately. Because we do not use repaint(), we
+                            // have a guarantee that each frame will be drawn separately. repaint() tends
+                            // to squash multiple paints into one, giving a jerkish appearance to the video.
+                            nextFrame = buffer;
+                            paintImmediately(getBounds());
                         }
-                    }
-                })
-                .video(new MediaHandler<BufferedImage>() {
-                    @Override
-                    public void handle(BufferedImage buffer, long duration) {
-                        ++frames;
-                        if (duration < 0) {
-                            // Video is behind audio; skip frame
-                            ++lost;
-                            return;
-                        }
-                        try {
-                            Thread.sleep(duration);
-                        } catch (InterruptedException e) {
-                        }
-                        // Set our current frame to the passed buffer,
-                        // and repaint immediately. Because we do not use repaint(), we
-                        // have a guarantee that each frame will be drawn separately. repaint() tends
-                        // to squash multiple paints into one, giving a jerkish appearance to the video.
-                        nextFrame = buffer;
-                        paintImmediately(getBounds());
-                    }
 
-                    @Override
-                    public void end() {
-                        // We've finished the video: set the frame to null such that on the next repaint,
-                        // we won't draw the final frame of the video.
-                        nextFrame = null;
-                        paintImmediately(getBounds());
-                    }
-                })
-                .create();
+                        @Override
+                        public void end() {
+                            // We've finished the video: set the frame to null such that on the next repaint,
+                            // we won't draw the final frame of the video.
+                            nextFrame = null;
+                            paintImmediately(getBounds());
+                        }
+                    })
+                    .create();
         stream.start();
     }
 
@@ -144,5 +147,44 @@ public class SwingMediaPanel extends JPanel {
      */
     public double frameLossRate() {
         return lost / (double) frames;
+    }
+
+    /**
+     * Checks if the stream is running.
+     *
+     * @return True if so, false otherwise.
+     * @throws IllegalStateException Thrown if the stream is not started.
+     * @since 1.0
+     */
+    public boolean isPlaying() {
+        if (stream == null)
+            throw new IllegalStateException("stream not started");
+        return stream.isPlaying();
+    }
+
+    /**
+     * Sets the current state of the stream.
+     *
+     * @param flag If true, the stream will be played. Otherwise, it will be paused.
+     * @throws IllegalStateException Thrown if the stream is not started.
+     * @since 1.0
+     */
+    public void setPlaying(boolean flag) {
+        if (stream == null)
+            throw new IllegalStateException("stream not started");
+        stream.setPlaying(flag);
+    }
+
+    /**
+     * Checks if the stream has been completed.
+     *
+     * @return True if so, false otherwise.
+     * @throws IllegalStateException Thrown if the stream was never started.
+     * @since 1.0
+     */
+    public boolean isFinished() {
+        if (stream == null)
+            throw new IllegalStateException("stream not started");
+        return nextFrame == null;
     }
 }

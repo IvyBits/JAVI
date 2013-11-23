@@ -8,6 +8,8 @@ import tk.ivybits.javi.swing.SwingMediaPanel;
 
 import javax.swing.*;
 import java.awt.*;
+import java.awt.event.KeyAdapter;
+import java.awt.event.KeyEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.io.File;
@@ -53,6 +55,14 @@ public class JPlay {
 
         final SwingMediaPanel videoPanel = new SwingMediaPanel(media);
         videoPanel.setBackground(Color.BLACK);
+        frame.addKeyListener(new KeyAdapter() {
+            @Override
+            public void keyReleased(KeyEvent e) {
+                if (e.getKeyCode() == KeyEvent.VK_SPACE) {
+                    videoPanel.setPlaying(!videoPanel.isPlaying());
+                }
+            }
+        });
         frame.add(BorderLayout.CENTER, videoPanel);
 
         int width = media.width();

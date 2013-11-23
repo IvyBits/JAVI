@@ -40,6 +40,11 @@ public class MediaStream extends Thread {
 
     private AVCodec videoCodec, audioCodec;
     private long last_frame = 0;
+    private boolean running = false;
+
+    public void pause() {
+        running = false;
+    }
 
     MediaStream(Media media, MediaHandler<byte[]> audioHandler, MediaHandler<BufferedImage> videoHandler) throws IOException {
         this.media = media;
@@ -73,6 +78,12 @@ public class MediaStream extends Thread {
         pFrame = avcodec_alloc_frame();
     }
 
+    @Override
+    public synchronized void start() {
+        super.start();
+        running = true;
+    }
+
     /**
      * Starts synchronous streaming.
      *
@@ -104,12 +115,19 @@ public class MediaStream extends Thread {
 
         media.videoStream.read();
         media.videoContext.read();
-        System.out.printf("Time Base: %d/%d\n", media.videoStream.time_base.num, media.videoStream.time_base.den);
-        System.out.printf("Average Frame Rate: %d/%d\n", media.videoStream.avg_frame_rate.num, media.videoStream.avg_frame_rate.den);
-        System.out.printf("Real Frame Rate: %d/%d\n", media.videoStream.r_frame_rate.num, media.videoStream.r_frame_rate.den);
+
         last_frame = System.nanoTime();
         _outer:
         while (av_read_frame(media.formatContext.getPointer(), packet.getPointer()) >= 0) {
+            synchronized (this) {
+                if (!running)
+                    try {
+                        wait();
+                        last_frame = System.nanoTime();
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+            }
             packet.read();
 
             if (packet.stream_index == media.audioStream.index) {
@@ -216,6 +234,28 @@ public class MediaStream extends Thread {
         videoHandler.end();
         audioHandler.end();
     }
+
+    /**
+     * Checks if the stream is running.
+     *
+     * @return True if so, false otherwise.
+     * @since 1.0
+     */
+    public boolean isPlaying() {
+        return running;
+    }
+
+    /**
+     * Sets the current state of the stream.
+     *
+     * @param flag If true, the stream will be played. Otherwise, it will be paused.
+     * @since 1.0
+     */
+    public synchronized void setPlaying(boolean flag) {
+        running = flag;
+        notify();
+    }
+
 
     /**
      * Builder for generating valid {@link MediaStream} objects.
