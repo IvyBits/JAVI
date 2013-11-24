@@ -67,10 +67,12 @@ public class Media {
             AVStream stream = new AVStream(formatContext.streams.getPointer(i * Pointer.SIZE));
             switch (StreamType.values()[stream.codec.codec_type]) {
                 case STREAM_VIDEO:
-                    videoStream = stream;
+                    if (videoStream == null)
+                        videoStream = stream;
                     break;
                 case STREAM_AUDIO:
-                    audioStream = stream;
+                    if (audioStream == null)
+                        audioStream = stream;
                     break;
             }
         }
