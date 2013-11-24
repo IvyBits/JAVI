@@ -259,7 +259,7 @@ public class MediaStream extends Thread {
      *
      * @param to The position to seek to.
      * @throws IllegalArgumentException Thrown if the seek position is invalid.
-     * @throws IOException Thrown if the seek failed
+     * @throws IOException Thrown if the seek failed.
      * @since 1.0
      */
     public void seek(long to) throws IOException {
@@ -268,7 +268,7 @@ public class MediaStream extends Thread {
         if (to > media.length())
             throw new IllegalArgumentException("position greater then video length");
         if (av_seek_frame(media.formatContext.getPointer(), -1, to * 1000, 0) == 0)
-            throw new IOException("Failed to seek video");
+            throw new IOException("failed to seek video");
         lastFrame = System.nanoTime();
     }
 
