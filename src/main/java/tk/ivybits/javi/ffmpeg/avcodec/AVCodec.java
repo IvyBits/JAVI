@@ -10,10 +10,10 @@ import java.util.Arrays;
 import java.util.List;
 
 public class AVCodec extends Structure {
-    public static class ByReference extends AVPacket implements Structure.ByReference {
+    public static class ByReference extends AVCodec implements Structure.ByReference {
     }
 
-    public static class ByValue extends AVPacket implements Structure.ByValue {
+    public static class ByValue extends AVCodec implements Structure.ByValue {
     }
 
     public String name;
