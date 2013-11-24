@@ -60,7 +60,11 @@ public class JPlay {
                 double ratio = e.getX() / (double) videoPanel.getWidth();
                 long position = (long) (length * ratio);
                 System.err.printf("Seek to %s milliseconds (%s seconds).\n", position, position / 1000.0);
-                videoPanel.seek(position);
+                try {
+                    videoPanel.seek(position);
+                } catch (IOException e1) {
+                    System.err.println("Seek failed.");
+                }
             }
         });
         frame.addKeyListener(new KeyAdapter() {

@@ -76,7 +76,7 @@ public class MediaStream extends Thread {
     }
 
     @Override
-    public synchronized void start() {
+    public void start() {
         super.start();
         playing = true;
     }
@@ -249,7 +249,7 @@ public class MediaStream extends Thread {
      * @param flag If true, the stream will be played. Otherwise, it will be paused.
      * @since 1.0
      */
-    public synchronized void setPlaying(boolean flag) {
+    public void setPlaying(boolean flag) {
         playing = flag;
         notify();
     }
@@ -271,7 +271,6 @@ public class MediaStream extends Thread {
             throw new IOException("failed to seek video");
         lastFrame = System.nanoTime();
     }
-
 
     /**
      * Builder for generating valid {@link MediaStream} objects.

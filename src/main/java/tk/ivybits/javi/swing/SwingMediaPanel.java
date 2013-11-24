@@ -195,13 +195,9 @@ public class SwingMediaPanel extends JPanel {
      * @throws IllegalStateException Thrown if the stream was never started.
      * @since 1.0
      */
-    public void seek(long to) {
+    public void seek(long to) throws IOException {
         if (stream == null)
             throw new IllegalStateException("stream not started");
-        try {
-            stream.seek(to);
-        } catch (IOException e) {
-            System.err.println("Seeking failed");
-        }
+        stream.seek(to);
     }
 }
