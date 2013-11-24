@@ -12,18 +12,23 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
+import java.util.ArrayList;
 
 /**
  * Media component for Swing.
  * <p/>
  * Uses JavaSound's {@link javax.sound.sampled.SourceDataLine} to output audio, and paints outside of the EDT to minimize overhead.
  * Handles audio-video sync.
+ *
+ * @version 1.0
+ * @since 1.0
  */
 public class SwingMediaPanel extends JPanel {
     private final Media media;
     private MediaStream stream;
     private BufferedImage nextFrame;
     private int frames = 0, lost = 0;
+    private ArrayList<StreamListener> listeners = new ArrayList<>();
 
     /**
      * Creates a new SwingMediaPanel component.
@@ -104,6 +109,10 @@ public class SwingMediaPanel extends JPanel {
                             // we won't draw the final frame of the video.
                             nextFrame = null;
                             paintImmediately(getBounds());
+
+                            for (StreamListener listener : listeners) {
+                                listener.onEnd();
+                            }
                         }
                     })
                     .create();
@@ -201,5 +210,13 @@ public class SwingMediaPanel extends JPanel {
         if (stream == null)
             throw new IllegalStateException("stream not started");
         stream.seek(to);
+    }
+
+    public void addStreamListener(StreamListener listener) {
+        listeners.add(listener);
+    }
+
+    public void removeStreamListener(StreamListener listener) {
+        listeners.remove(listener);
     }
 }

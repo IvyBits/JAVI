@@ -5,6 +5,7 @@ import tk.ivybits.javi.ffmpeg.LibAVCodec;
 import tk.ivybits.javi.ffmpeg.LibAVFormat;
 import tk.ivybits.javi.ffmpeg.LibAVUtil;
 import tk.ivybits.javi.media.Media;
+import tk.ivybits.javi.swing.StreamListener;
 import tk.ivybits.javi.swing.SwingMediaPanel;
 
 import javax.swing.*;
@@ -50,7 +51,7 @@ public class JPlay {
         final long length = media.length();
         System.err.printf("Video is %s milliseconds (%s seconds) long.", length, length / 1000.0);
 
-        JFrame frame = new JFrame(videoFile.getName());
+        final JFrame frame = new JFrame(videoFile.getName());
         frame.setLayout(new BorderLayout());
 
         final SwingMediaPanel videoPanel = new SwingMediaPanel(media);
@@ -93,6 +94,16 @@ public class JPlay {
         frame.addWindowListener(new WindowAdapter() {
             public void windowClosing(WindowEvent e) {
                 System.err.printf("Frame loss: %.2f%%\n", videoPanel.frameLossRate() * 100);
+            }
+        });
+
+        videoPanel.addStreamListener(new StreamListener() {
+            @Override
+            public void onEnd() {
+                System.out.println("Playback finished.");
+                frame.remove(videoPanel);
+                frame.add(BorderLayout.CENTER, new JLabel("Playback finished.", JLabel.CENTER));
+                frame.revalidate();
             }
         });
         videoPanel.start();
