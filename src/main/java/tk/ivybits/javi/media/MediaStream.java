@@ -3,6 +3,7 @@ package tk.ivybits.javi.media;
 import com.sun.jna.Pointer;
 import com.sun.jna.ptr.IntByReference;
 import com.sun.jna.ptr.PointerByReference;
+import tk.ivybits.javi.exc.StreamException;
 import tk.ivybits.javi.ffmpeg.avcodec.AVCodec;
 import tk.ivybits.javi.ffmpeg.avcodec.AVCodecContext;
 import tk.ivybits.javi.ffmpeg.avcodec.AVPacket;
@@ -42,6 +43,7 @@ public class MediaStream extends Thread {
     private AVCodec videoCodec, audioCodec;
     private long lastFrame = 0;
     private boolean playing = false;
+    private boolean started;
 
     MediaStream(Media media, MediaHandler<byte[]> audioHandler, MediaHandler<BufferedImage> videoHandler) throws IOException {
         this.media = media;
@@ -84,9 +86,11 @@ public class MediaStream extends Thread {
     /**
      * Starts synchronous streaming.
      *
+     * @throws StreamException Thrown if an error occurs while decoding.
      * @since 1.0
      */
     public void run() {
+        started = true;
         IntByReference frameFinished = new IntByReference();
         AVPacket packet = new AVPacket();
         av_init_packet(packet.getPointer());
@@ -122,7 +126,7 @@ public class MediaStream extends Thread {
                         wait();
                         lastFrame = System.nanoTime();
                     } catch (InterruptedException e) {
-                        e.printStackTrace();
+                        throw new StreamException("interrupted while waiting for play");
                     }
             }
 
@@ -160,13 +164,13 @@ public class MediaStream extends Thread {
                             err = av_samples_alloc_array_and_samples(dstData, dstLinesize, pFrame.channels,
                                     pFrame.nb_samples, SIGNED_16BIT.ordinal(), 0);
                             if (err < 0) {
-                                throw new RuntimeException("failed to allocate destination buffer: " + err);
+                                throw new StreamException("failed to allocate destination buffer: " + err);
                             }
                             int length = dstLinesize.getValue();
                             err = swr_convert(pSwrContext, dstData.getValue(), length,
                                     pFrame.extended_data, pFrame.nb_samples);
                             if (err < 0)
-                                throw new RuntimeException("failed to transcode audio: " + err);
+                                throw new StreamException("failed to transcode audio: " + err);
                             if (audioBuffer.length < length)
                                 audioBuffer = new byte[length];
                             dstData.getValue().getPointer(0).read(0, audioBuffer, 0, length);
@@ -247,9 +251,12 @@ public class MediaStream extends Thread {
      * Sets the current state of the stream.
      *
      * @param flag If true, the stream will be played. Otherwise, it will be paused.
+     * @throws StreamException Thrown if called when called on a stream that is not started.
      * @since 1.0
      */
     public void setPlaying(boolean flag) {
+        if (!started)
+            throw new StreamException("stream not started");
         playing = flag;
         notify();
     }
@@ -259,16 +266,20 @@ public class MediaStream extends Thread {
      *
      * @param to The position to seek to.
      * @throws IllegalArgumentException Thrown if the seek position is invalid.
-     * @throws IOException              Thrown if the seek failed.
+     * @throws StreamException          Thrown if the seek failed.
+     * @throws StreamException          Thrown if called when called on a stream that is not started.
      * @since 1.0
      */
-    public void seek(long to) throws IOException {
+    public void seek(long to) {
+        if (!started)
+            throw new StreamException("stream not started");
         if (to < 0)
             throw new IllegalArgumentException("negative position");
         if (to > media.length())
             throw new IllegalArgumentException("position greater then video length");
-        if (av_seek_frame(media.formatContext.getPointer(), -1, to * 1000, 0) < 0)
-            throw new IOException("failed to seek video");
+        int err = av_seek_frame(media.formatContext.getPointer(), -1, to * 1000, 0);
+        if (err < 0)
+            throw new StreamException("failed to seek video: error " + err);
         lastFrame = System.nanoTime();
     }
 

@@ -57,7 +57,6 @@ public class SwingMediaPanel extends JPanel {
                                 // Use a large buffer, such that sdl.write has a lower
                                 // chance of blocking
                                 sdl.open(af, 512000);
-                                System.out.println(sdl.getBufferSize());
                                 sdl.start();
                             } catch (LineUnavailableException e) {
                                 throw new IllegalStateException("failed to initialize audio line");
@@ -193,9 +192,12 @@ public class SwingMediaPanel extends JPanel {
      *
      * @param to The position to seek to, in milliseconds.
      * @throws IllegalStateException Thrown if the stream was never started.
+     * @throws tk.ivybits.javi.exc.StreamException
+     *                               Thrown if seek failed.
+     * @throws IllegalStateException Thrown if called when called on a stream that is not started.
      * @since 1.0
      */
-    public void seek(long to) throws IOException {
+    public void seek(long to) {
         if (stream == null)
             throw new IllegalStateException("stream not started");
         stream.seek(to);

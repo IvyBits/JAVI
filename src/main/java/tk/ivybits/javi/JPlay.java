@@ -1,5 +1,6 @@
 package tk.ivybits.javi;
 
+import tk.ivybits.javi.exc.StreamException;
 import tk.ivybits.javi.ffmpeg.LibAVCodec;
 import tk.ivybits.javi.ffmpeg.LibAVFormat;
 import tk.ivybits.javi.ffmpeg.LibAVUtil;
@@ -33,7 +34,7 @@ public class JPlay {
         LibAVCodec.avcodec_register_all();
         LibAVFormat.avformat_network_init();
 
-        System.out.printf("Running avcodec %s, avformat %s, avutil %s.\n",
+        System.err.printf("Running avcodec %s, avformat %s, avutil %s.\n",
                 LibAVCodec.avcodec_version() >> 16,
                 LibAVFormat.avformat_version() >> 16,
                 LibAVUtil.avutil_version() >> 16);
@@ -62,7 +63,7 @@ public class JPlay {
                 System.err.printf("Seek to %s milliseconds (%s seconds).\n", position, position / 1000.0);
                 try {
                     videoPanel.seek(position);
-                } catch (IOException e1) {
+                } catch (StreamException seekFailed) {
                     System.err.println("Seek failed.");
                 }
             }
@@ -91,7 +92,7 @@ public class JPlay {
         frame.setVisible(true);
         frame.addWindowListener(new WindowAdapter() {
             public void windowClosing(WindowEvent e) {
-                System.out.printf("Frame loss: %.2f%%\n", videoPanel.frameLossRate() * 100);
+                System.err.printf("Frame loss: %.2f%%\n", videoPanel.frameLossRate() * 100);
             }
         });
         videoPanel.start();
