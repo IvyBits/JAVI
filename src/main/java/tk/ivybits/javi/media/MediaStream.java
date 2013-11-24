@@ -267,7 +267,7 @@ public class MediaStream extends Thread {
             throw new IllegalArgumentException("negative position");
         if (to > media.length())
             throw new IllegalArgumentException("position greater then video length");
-        if (av_seek_frame(media.formatContext.getPointer(), -1, to * 1000, 0) == 0)
+        if (av_seek_frame(media.formatContext.getPointer(), -1, to * 1000, 0) < 0)
             throw new IOException("failed to seek video");
         lastFrame = System.nanoTime();
     }
