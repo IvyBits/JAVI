@@ -66,7 +66,7 @@ public class SwingMediaPanel extends JPanel {
 
                         @Override
                         public void handle(byte[] buffer) {
-                            if (sdl == null || true) {// Audio failed to initialize; ignore this buffer
+                            if (sdl == null) {// Audio failed to initialize; ignore this buffer
                                 return;
                             }
                             int written = 0;
@@ -198,6 +198,10 @@ public class SwingMediaPanel extends JPanel {
     public void seek(long to) {
         if (stream == null)
             throw new IllegalStateException("stream not started");
-        stream.seek(to);
+        try {
+            stream.seek(to);
+        } catch (IOException e) {
+            System.err.println("Seeking failed");
+        }
     }
 }
