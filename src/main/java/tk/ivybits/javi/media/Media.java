@@ -145,4 +145,16 @@ public class Media {
     public MediaStream.Builder stream() {
         return new MediaStream.Builder(this);
     }
+
+    /**
+     * Fetches the length of the video.
+     *
+     * @return The length of the video in milliseconds.
+     * @since 1.0
+     */
+    public long length() {
+        if (formatContext.duration == Long.MIN_VALUE)
+            return 0;
+        return formatContext.duration / 1000;
+    }
 }

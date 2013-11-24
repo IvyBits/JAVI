@@ -8,10 +8,7 @@ import tk.ivybits.javi.swing.SwingMediaPanel;
 
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.KeyAdapter;
-import java.awt.event.KeyEvent;
-import java.awt.event.WindowAdapter;
-import java.awt.event.WindowEvent;
+import java.awt.event.*;
 import java.io.File;
 import java.io.IOException;
 
@@ -49,12 +46,23 @@ public class JPlay {
     public static void play(String source) throws IOException {
         File videoFile = new File(source);
         Media media = new Media(videoFile);
+        final long length = media.length();
+        System.err.printf("Video is %s milliseconds (%s seconds) long.", length, length / 1000.0);
 
         JFrame frame = new JFrame(videoFile.getName());
         frame.setLayout(new BorderLayout());
 
         final SwingMediaPanel videoPanel = new SwingMediaPanel(media);
         videoPanel.setBackground(Color.BLACK);
+        videoPanel.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                double ratio = e.getX() / (double) videoPanel.getWidth();
+                long position = (long) (length * ratio);
+                System.err.printf("Seek to %s milliseconds (%s seconds).\n", position, position / 1000.0);
+                videoPanel.seek(position);
+            }
+        });
         frame.addKeyListener(new KeyAdapter() {
             @Override
             public void keyReleased(KeyEvent e) {

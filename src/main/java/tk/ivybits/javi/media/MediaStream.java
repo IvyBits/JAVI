@@ -14,6 +14,7 @@ import java.io.IOException;
 
 import static tk.ivybits.javi.ffmpeg.LibAVCodec.*;
 import static tk.ivybits.javi.ffmpeg.LibAVFormat.av_read_frame;
+import static tk.ivybits.javi.ffmpeg.LibAVFormat.av_seek_frame;
 import static tk.ivybits.javi.ffmpeg.LibAVUtil.av_malloc;
 import static tk.ivybits.javi.ffmpeg.LibAVUtil.av_samples_alloc_array_and_samples;
 import static tk.ivybits.javi.ffmpeg.LibSWResample.*;
@@ -39,12 +40,8 @@ public class MediaStream extends Thread {
     private AVFrame.ByReference pFrame;
 
     private AVCodec videoCodec, audioCodec;
-    private long last_frame = 0;
-    private boolean running = false;
-
-    public void pause() {
-        running = false;
-    }
+    private long lastFrame = 0;
+    private boolean playing = false;
 
     MediaStream(Media media, MediaHandler<byte[]> audioHandler, MediaHandler<BufferedImage> videoHandler) throws IOException {
         this.media = media;
@@ -81,7 +78,7 @@ public class MediaStream extends Thread {
     @Override
     public synchronized void start() {
         super.start();
-        running = true;
+        playing = true;
     }
 
     /**
@@ -116,18 +113,19 @@ public class MediaStream extends Thread {
         media.videoStream.read();
         media.videoContext.read();
 
-        last_frame = System.nanoTime();
+        lastFrame = System.nanoTime();
         _outer:
         while (av_read_frame(media.formatContext.getPointer(), packet.getPointer()) >= 0) {
             synchronized (this) {
-                if (!running)
+                if (!playing)
                     try {
                         wait();
-                        last_frame = System.nanoTime();
+                        lastFrame = System.nanoTime();
                     } catch (InterruptedException e) {
                         e.printStackTrace();
                     }
             }
+
             packet.read();
 
             if (packet.stream_index == media.audioStream.index) {
@@ -215,17 +213,17 @@ public class MediaStream extends Thread {
 
                     long duration = pFrame.pkt_duration * 1000000000 * media.videoStream.time_base.num / media.videoStream.time_base.den;
                     long time = System.nanoTime();
-                    duration -= time - last_frame;
+                    duration -= time - lastFrame;
                     //System.out.println("Duration: " + pFrame.pkt_duration + " " + duration);
                     videoHandler.handle(imageBuffer, duration / 1000000);
                     // Add in duration, which is the time that is spent waiting for the frame to render, so we get
                     // the time when this frame is rendered, and set it as the last frame.
                     // If duration is NEGATIVE, nothing will be rendered. We basically are subtracting the overdue
                     // time from time we started handling this frame, so we get the time on which the current frame
-                    // should be rendered. If multiple frames are skipped, this still works, as the last_frame will
+                    // should be rendered. If multiple frames are skipped, this still works, as the lastFrame will
                     // advance by the length of each lost frame until it goes back to sync,
                     // i.e. duration is back to positive.
-                    last_frame = time + duration;
+                    lastFrame = time + duration;
                 }
             }
             // Free the packet that av_read_frame allocated
@@ -236,13 +234,13 @@ public class MediaStream extends Thread {
     }
 
     /**
-     * Checks if the stream is running.
+     * Checks if the stream is playing.
      *
      * @return True if so, false otherwise.
      * @since 1.0
      */
     public boolean isPlaying() {
-        return running;
+        return playing;
     }
 
     /**
@@ -252,8 +250,26 @@ public class MediaStream extends Thread {
      * @since 1.0
      */
     public synchronized void setPlaying(boolean flag) {
-        running = flag;
+        playing = flag;
         notify();
+    }
+
+    /**
+     * Sets the current position of the stream, in milliseconds.
+     *
+     * @param to The position to seek to.
+     * @throws IllegalArgumentException Thrown if the seek position is invalid.
+     * @since 1.0
+     */
+    public void seek(long to) {
+        if (to < 0)
+            throw new IllegalArgumentException("negative position");
+        if (to > media.length())
+            throw new IllegalArgumentException("position greater then video length");
+        to *= (1000000 / 20000);
+        av_seek_frame(media.formatContext.getPointer(), media.videoStream.index, to, 0x4000000);
+        av_seek_frame(media.formatContext.getPointer(), media.audioStream.index, to, 0x4000000);
+        lastFrame = System.nanoTime();
     }
 
 
