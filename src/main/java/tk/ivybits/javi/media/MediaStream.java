@@ -259,7 +259,7 @@ public class MediaStream extends Thread {
      *
      * @param to The position to seek to.
      * @throws IllegalArgumentException Thrown if the seek position is invalid.
-     * @throws IOException Thrown if the seek failed.
+     * @throws IOException              Thrown if the seek failed.
      * @since 1.0
      */
     public void seek(long to) throws IOException {
