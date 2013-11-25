@@ -10,21 +10,9 @@ public class AVProbeData extends Structure {
     public static class ByReference extends AVProbeData implements Structure.ByReference {
     }
 
-    public static class ByValue extends AVProbeData implements Structure.ByValue {
-    }
-
     public Pointer filename;
     public Pointer buf;
     public int buf_size;
-
-    public AVProbeData(Pointer address) {
-        super(address);
-        read();
-    }
-
-    public AVProbeData() {
-        super();
-    }
 
     @Override
     protected List<String> getFieldOrder() {

@@ -3,7 +3,6 @@ package tk.ivybits.javi.ffmpeg.avformat;
 import com.sun.jna.Pointer;
 import com.sun.jna.Structure;
 import com.sun.jna.ptr.PointerByReference;
-import tk.ivybits.javi.ffmpeg.avutil.AVClass;
 import tk.ivybits.javi.ffmpeg.avutil.AVDictionary;
 import tk.ivybits.javi.ffmpeg.avutil.AVRational;
 
@@ -18,14 +17,11 @@ public class AVFormatContext extends Structure {
     public static class ByReference extends AVFormatContext implements Structure.ByReference {
     }
 
-    public static class ByValue extends AVFormatContext implements Structure.ByValue {
-    }
-
-    public AVClass.ByReference av_class;
-    public AVInputFormat.ByReference iformat;
-    public AVOutputFormat.ByReference oformat;
+    public Pointer /* AVClass.ByReference */ av_class;
+    public Pointer /* AVInputFormat.ByReference */ iformat;
+    public Pointer /* AVOutputFormat.ByReference */ oformat;
     public Pointer priv_data;
-    public AVIOContext.ByReference pb;
+    public Pointer /* AVIOContext.ByReference */ pb;
     public int ctx_flags;
     public int nb_streams;
     public Pointer streams; // AVStream ** array of pointers
@@ -53,7 +49,10 @@ public class AVFormatContext extends Structure {
     public long start_time_realtime;
     public int fps_probe_size;
     public int error_recognition;
-    public AVIOInterruptCB interrupt_callback;
+
+    public Pointer interrupt_callback;
+    public Pointer interrupt_opaque;
+
     public int debug;
     public int ts_id;
     public int audio_preload;
@@ -68,35 +67,19 @@ public class AVFormatContext extends Structure {
     public int seek2any;
     public int flush_packets;
     public int probe_score;
-    public AVPacketList.ByReference packet_buffer;
-    public AVPacketList.ByReference packet_buffer_end;
+    public Pointer /* AVPacketList.ByReference */ packet_buffer;
+    public Pointer /* AVPacketList.ByReference */ packet_buffer_end;
     public long data_offset;
-    public AVPacketList.ByReference raw_packet_buffer;
-    public AVPacketList.ByReference raw_packet_buffer_end;
-    public AVPacketList.ByReference parse_queue;
-    public AVPacketList.ByReference parse_queue_end;
+    public Pointer /* AVPacketList.ByReference */ raw_packet_buffer;
+    public Pointer /* AVPacketList.ByReference */ raw_packet_buffer_end;
+    public Pointer /* AVPacketList.ByReference */ parse_queue;
+    public Pointer /* AVPacketList.ByReference */ parse_queue_end;
     public int raw_packet_buffer_remaining_size;
     public long offset;
     public AVRational offset_timebase;
     public int io_repositioned;
 
     // And some private fields
-
-    public static final int AVFMT_FLAG_GENPTS = 0x0001;
-    public static final int AVFMT_FLAG_IGNIDX = 0x0002;
-    public static final int AVFMT_FLAG_NONBLOCK = 0x0004;
-    public static final int AVFMT_FLAG_IGNDTS = 0x0008;
-    public static final int AVFMT_FLAG_NOFILLIN = 0x0010;
-    public static final int AVFMT_FLAG_NOPARSE = 0x0020;
-    public static final int AVFMT_FLAG_NOBUFFER = 0x0040;
-    public static final int AVFMT_FLAG_CUSTOM_IO = 0x0080;
-    public static final int AVFMT_FLAG_DISCARD_CORRUPT = 0x0100;
-    public static final int AVFMT_FLAG_MP4A_LATM = 0x8000;
-    public static final int AVFMT_FLAG_SORT_DTS = 0x10000;
-    public static final int AVFMT_FLAG_PRIV_OPT = 0x20000;
-    public static final int AVFMT_FLAG_KEEP_SIDE_DATA = 0x40000;
-    public static final int FF_FDEBUG_TS = 0x0001;
-    public static final int RAW_PACKET_BUFFER_SIZE = 2500000;
 
     public AVFormatContext() {
         super();
@@ -115,7 +98,7 @@ public class AVFormatContext extends Structure {
                 "nb_programs", "programs", "video_codec_id", "audio_codec_id",
                 "subtitle_codec_id", "max_index_size", "max_picture_buffer", "nb_chapters",
                 "chapters", "metadata", "start_time_realtime", "fps_probe_size", "error_recognition",
-                "interrupt_callback", "debug", "ts_id", "audio_preload", "max_chunk_duration",
+                "interrupt_callback", "interrupt_opaque", "debug", "ts_id", "audio_preload", "max_chunk_duration",
                 "max_chunk_size", "use_wallclock_as_timestamps", "avoid_negative_ts", "avio_flags",
                 "duration_estimation_method", "skip_initial_bytes", "correct_ts_overflow", "seek2any",
                 "flush_packets", "probe_score", "packet_buffer", "packet_buffer_end", "data_offset", "raw_packet_buffer",

@@ -14,9 +14,6 @@ public class AVStream extends Structure {
     public static class ByReference extends AVStream implements Structure.ByReference {
     }
 
-    public static class ByValue extends AVStream implements Structure.ByValue {
-    }
-
     public int index;
     public int id;
     public AVCodecContext.ByReference codec;
@@ -43,7 +40,7 @@ public class AVStream extends Structure {
     public int codec_info_nb_frames;
     public int /* AVStreamParseType */ need_parsing;
     public Pointer /* AVCodecParserContext */ parser;
-    public AVPacketList.ByReference last_in_packet_buffer;
+    public Pointer /* AVPacketList.ByReference */ last_in_packet_buffer;
     public AVProbeData probe_data;
     public long[] pts_buffer = new long[MAX_REORDER_DELAY + 1];
     public Pointer /* AVIndexEntry */ index_entries;

@@ -6,7 +6,6 @@ import com.sun.jna.Structure;
 import com.sun.jna.ptr.ByteByReference;
 import com.sun.jna.ptr.IntByReference;
 import com.sun.jna.ptr.ShortByReference;
-import tk.ivybits.javi.ffmpeg.avutil.AVClass;
 import tk.ivybits.javi.ffmpeg.avutil.AVRational;
 
 import java.util.Arrays;
@@ -24,7 +23,7 @@ public class AVCodecContext extends Structure {
     public static class ByValue extends AVCodecContext implements Structure.ByValue {
     }
 
-    public AVClass.ByReference av_class;
+    public Pointer /* AVClass.ByReference */ av_class;
     public int log_level_offset;
     public int codec_type;
     public AVCodec.ByReference codec;

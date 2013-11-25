@@ -10,9 +10,6 @@ public class AVPacket extends Structure {
     public static class ByReference extends AVPacket implements Structure.ByReference {
     }
 
-    public static class ByValue extends AVPacket implements Structure.ByValue {
-    }
-
     public Pointer buf;
     public long pts;
     public long dts;
@@ -33,11 +30,6 @@ public class AVPacket extends Structure {
     public Pointer priv;
     public long pos;
     public long convergence_duration;
-
-    public AVPacket(Pointer address) {
-        super(address);
-        read();
-    }
 
     public AVPacket() {
         super();

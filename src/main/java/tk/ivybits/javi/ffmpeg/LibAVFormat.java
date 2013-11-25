@@ -3,7 +3,6 @@ package tk.ivybits.javi.ffmpeg;
 import com.sun.jna.Native;
 import com.sun.jna.Pointer;
 import com.sun.jna.ptr.PointerByReference;
-import tk.ivybits.javi.ffmpeg.avformat.AVInputFormat;
 
 public class LibAVFormat {
     public static native int avformat_version();
@@ -14,7 +13,7 @@ public class LibAVFormat {
 
     public static native int avformat_network_deinit();
 
-    public static native int avformat_open_input(PointerByReference ps, String filename, AVInputFormat.ByReference fmt, PointerByReference options);
+    public static native int avformat_open_input(PointerByReference ps, String filename, Pointer fmt, PointerByReference options);
 
     public static native int av_find_stream_info(Pointer ps);
 

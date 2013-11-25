@@ -3,7 +3,6 @@ package tk.ivybits.javi.ffmpeg.avcodec;
 import com.sun.jna.Pointer;
 import com.sun.jna.Structure;
 import com.sun.jna.ptr.LongByReference;
-import tk.ivybits.javi.ffmpeg.avutil.AVClass;
 import tk.ivybits.javi.ffmpeg.avutil.AVRational;
 
 import java.util.Arrays;
@@ -30,7 +29,7 @@ public class AVCodec extends Structure {
     public Pointer sample_fmts;
     public LongByReference channel_layouts;
     public byte max_lowres;
-    public AVClass.ByReference priv_class;
+    public Pointer /* AVClass.ByReference */ priv_class;
     public Pointer /* AVProfile.ByReference */ profiles;
 
     public AVCodec(Pointer address) {

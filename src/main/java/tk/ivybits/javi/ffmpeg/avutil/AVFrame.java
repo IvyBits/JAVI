@@ -15,9 +15,6 @@ public class AVFrame extends Structure {
     public static class ByReference extends AVFrame implements Structure.ByReference {
     }
 
-    public static class ByValue extends AVFrame implements Structure.ByValue {
-    }
-
     public Pointer[] data = new Pointer[AV_NUM_DATA_POINTERS];
     public int[] linesize = new int[AV_NUM_DATA_POINTERS];
     public Pointer extended_data;
