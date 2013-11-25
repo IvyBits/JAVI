@@ -16,6 +16,8 @@ import java.awt.event.*;
 import java.io.File;
 import java.io.IOException;
 
+import static tk.ivybits.javi.debug.Utilities.getVersion;
+
 /**
  * Minimalistic media player.
  * <p/>
@@ -38,9 +40,9 @@ public class JPlay {
         LibAVFormat.avformat_network_init();
 
         System.err.printf("Running avcodec-%s, avformat-%s, avutil-%s.\n",
-                LibAVCodec.avcodec_version() >> 16,
-                LibAVFormat.avformat_version() >> 16,
-                LibAVUtil.avutil_version() >> 16);
+                getVersion(LibAVCodec.avcodec_version()),
+                getVersion(LibAVFormat.avformat_version()),
+                getVersion(LibAVUtil.avutil_version()));
 
         for (String source : args) {
             play(source);
