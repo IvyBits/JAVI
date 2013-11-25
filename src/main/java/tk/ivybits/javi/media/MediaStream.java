@@ -36,6 +36,8 @@ public class MediaStream extends Thread {
     private final Media media;
     private MediaHandler<byte[]> audioHandler;
     private MediaHandler<BufferedImage> videoHandler;
+    private AudioStream audioStream;
+    private VideoStream videoStream;
 
     private AVFrame.ByReference pBGRFrame;
     private AVFrame.ByReference pFrame;
@@ -49,32 +51,40 @@ public class MediaStream extends Thread {
         this.media = media;
         this.audioHandler = audioHandler;
         this.videoHandler = videoHandler;
-        if (videoHandler != null && media.hasStream(StreamType.STREAM_VIDEO)) {
-            videoCodec = avcodec_find_decoder(media.videoContext.codec_id);
-            if (videoCodec == null || avcodec_open2(media.videoContext.getPointer(), videoCodec.getPointer(), null) < 0) {
-                throw new IOException("unsupported video codec");
-            }
-            media.videoContext.read();
-            videoCodec.read();
-
-            pBGRFrame = avcodec_alloc_frame();
-            int size = avpicture_get_size(BGR24.ordinal(), media.width(), media.height());
-
-            Pointer buffer = av_malloc(size);
-            int ret = avpicture_fill(pBGRFrame.getPointer(), buffer, BGR24.ordinal(), media.width(), media.height());
-            if (ret < 0 || ret != size)
-                throw new IOException("failed to fill frame buffer");
-        }
-        if (audioHandler != null && media.hasStream(StreamType.STREAM_AUDIO)) {
-            audioCodec = avcodec_find_decoder(media.audioContext.codec_id);
-            if (audioCodec == null || avcodec_open2(media.audioContext.getPointer(), audioCodec.getPointer(), null) < 0) {
-                throw new IOException("unsupported video codec");
-            }
-            media.audioContext.read();
-            audioCodec.read();
-        }
-
         pFrame = avcodec_alloc_frame();
+    }
+
+    public VideoStream setVideoStream(VideoStream stream) {
+        if (stream.container() != media)
+            throw new IllegalArgumentException("stream not from same container");
+        VideoStream pre = videoStream;
+        if (videoCodec != null) {
+            // TODO: Close codec
+        }
+
+        // TODO: free pBGRFrame if it existed
+        pBGRFrame = avcodec_alloc_frame();
+        int size = avpicture_get_size(BGR24.ordinal(), stream.width(), stream.height());
+
+        Pointer buffer = av_malloc(size);
+        int ret = avpicture_fill(pBGRFrame.getPointer(), buffer, BGR24.ordinal(), stream.width(), stream.height());
+        if (ret < 0 || ret != size)
+            throw new StreamException("failed to fill frame buffer");
+        videoCodec = stream.codec;
+        videoStream = stream;
+        return pre;
+    }
+
+    public AudioStream setAudioStream(AudioStream stream) {
+        if (stream.container() != media)
+            throw new IllegalArgumentException("stream not from same container");
+        AudioStream pre = audioStream;
+        if (audioCodec != null) {
+            // TODO: Close codec
+        }
+        audioCodec = stream.codec;
+        audioStream = stream;
+        return pre;
     }
 
     @Override
@@ -94,10 +104,10 @@ public class MediaStream extends Thread {
         IntByReference frameFinished = new IntByReference();
         AVPacket packet = new AVPacket();
         av_init_packet(packet.getPointer());
-        int width = media.width();
-        int height = media.height();
-        AVCodecContext ac = media.audioContext;
-        AVCodecContext vc = media.videoContext;
+        int width = videoStream.width();
+        int height = videoStream.height();
+        AVCodecContext ac = audioStream.ffstream.codec;
+        AVCodecContext vc = videoStream.ffstream.codec;
 
         Pointer pSwsContext = sws_getContext(
                 width, height, vc.pix_fmt,
@@ -110,12 +120,10 @@ public class MediaStream extends Thread {
                 ac.sample_rate, 0, null);
         swr_init(pSwrContext);
         ac.read();
+        vc.read();
 
         BufferedImage imageBuffer = new BufferedImage(width, height, BufferedImage.TYPE_3BYTE_BGR);
         byte[] audioBuffer = new byte[16 * ac.channels * 64]; // Estimate common size
-
-        media.videoStream.read();
-        media.videoContext.read();
 
         lastFrame = System.nanoTime();
         _outer:
@@ -132,7 +140,7 @@ public class MediaStream extends Thread {
 
             packet.read();
 
-            if (packet.stream_index == media.audioStream.index) {
+            if (packet.stream_index == audioStream.index()) {
                 // Decode the media into our pFrame
                 int read = 0;
 
@@ -149,7 +157,7 @@ public class MediaStream extends Thread {
                     int err = avcodec_decode_audio4(ac.getPointer(), pFrame.getPointer(), frameFinished, packet.getPointer());
 
                     if (err < 0) {
-                        continue _outer; // handle was not read
+                        throw new StreamException("error while decoding audio stream: " + err);
                     } else {
                         read += err;
                     }
@@ -183,13 +191,13 @@ public class MediaStream extends Thread {
                         audioHandler.handle(audioBuffer);
                     }
                 }
-            } else if (packet.stream_index == media.videoStream.index) { // We only care about the media media here
+            } else if (packet.stream_index == videoStream.index()) { // We only care about the media media here
                 // Decode the media into our pFrame
-                int err = avcodec_decode_video2(media.videoContext.getPointer(), pFrame.getPointer(), frameFinished, packet.getPointer());
+                int err = avcodec_decode_video2(videoStream.ffstream.codec.getPointer(), pFrame.getPointer(), frameFinished, packet.getPointer());
                 // If the return of avcodec_decode_video2 is negative, an error occurred.
                 // Fun fact: the error is actually the negative of an ASCII string in little-endian order.
                 if (err < 0) {
-                    continue; // handle was not read
+                    throw new StreamException("error while decoding video stream: " + err);
                 }
                 if (frameFinished.getValue() != 0) {
                     pFrame.read();
@@ -215,10 +223,10 @@ public class MediaStream extends Thread {
                     byte[] raster = ((DataBufferByte) imageBuffer.getRaster().getDataBuffer()).getData();
                     pBGRFrame.data[0].read(0, raster, 0, raster.length);
 
-                    long duration = pFrame.pkt_duration * 1000000000 * media.videoStream.time_base.num / media.videoStream.time_base.den;
+                    long duration = (long) (pFrame.pkt_duration * 1000000000 *
+                            videoStream.ffstream.time_base.num / videoStream.ffstream.time_base.den);
                     long time = System.nanoTime();
                     duration -= time - lastFrame;
-                    //System.out.println("Duration: " + pFrame.pkt_duration + " " + duration);
                     videoHandler.handle(imageBuffer, duration / 1000000);
                     // Add in duration, which is the time that is spent waiting for the frame to render, so we get
                     // the time when this frame is rendered, and set it as the last frame.
@@ -320,7 +328,7 @@ public class MediaStream extends Thread {
         /**
          * Specifies the video stream handler.
          *
-         * @param videoHandler The audio handler. Should accept BufferedImages of arbitrary sizes.
+         * @param videoHandler The video handler. Should accept BufferedImages of arbitrary sizes.
          * @return The current Builder.
          * @since 1.0
          */

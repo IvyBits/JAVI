@@ -4,7 +4,9 @@ import tk.ivybits.javi.exc.StreamException;
 import tk.ivybits.javi.ffmpeg.LibAVCodec;
 import tk.ivybits.javi.ffmpeg.LibAVFormat;
 import tk.ivybits.javi.ffmpeg.LibAVUtil;
+import tk.ivybits.javi.media.AudioStream;
 import tk.ivybits.javi.media.Media;
+import tk.ivybits.javi.media.VideoStream;
 import tk.ivybits.javi.swing.SwingMediaPanel;
 
 import javax.swing.*;
@@ -45,15 +47,41 @@ public class JPlay {
     }
 
     public static void play(String source) throws IOException {
+        try {
+            UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
+        } catch (ClassNotFoundException | InstantiationException | IllegalAccessException | UnsupportedLookAndFeelException e) {
+        }
         File videoFile = new File(source);
         Media media = new Media(videoFile);
         final long length = media.length();
-        System.err.printf("Video is %s milliseconds (%s seconds) long.", length, length / 1000.0);
+        System.err.printf("Video is %s milliseconds (%s seconds) long.\n", length, length / 1000.0);
 
         JFrame frame = new JFrame(videoFile.getName());
         frame.setLayout(new BorderLayout());
 
         final SwingMediaPanel videoPanel = new SwingMediaPanel(media);
+
+        System.err.println("Streams");
+        int area = 0;
+        VideoStream video = null;
+        for (final VideoStream str : media.videoStreams()) {
+            int size = str.width() * str.height();
+            if (size > area) {
+                area = size;
+                video = str;
+            }
+            System.err.printf("\tStream #%s: (%sx%s) - %s (%s)\n",
+                    str.index(), str.width(), str.height(), str.codecName(), str.longCodecName());
+        }
+        for (final AudioStream str : media.audioStreams()) {
+            System.err.printf("\tStream #%s: %s - %s (%s)\n",
+                    str.index(), str.audioFormat(), str.codecName(), str.longCodecName());
+        }
+
+        videoPanel.setVideoStream(video);
+        if (!media.audioStreams().isEmpty())
+            videoPanel.setAudioStream(media.audioStreams().get(0));
+
         videoPanel.setBackground(Color.BLACK);
         videoPanel.addMouseListener(new MouseAdapter() {
             @Override
@@ -78,8 +106,8 @@ public class JPlay {
         });
         frame.add(BorderLayout.CENTER, videoPanel);
 
-        int width = media.width();
-        int height = media.height();
+        int width = video.width();
+        int height = video.height();
         Dimension screen = Toolkit.getDefaultToolkit().getScreenSize();
         if (width > screen.width - 20 || height > screen.height - 60) {
             width = screen.width - 20;
