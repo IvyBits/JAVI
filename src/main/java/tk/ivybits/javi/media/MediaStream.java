@@ -32,7 +32,7 @@ import static tk.ivybits.javi.format.SampleFormat.SIGNED_16BIT;
  * @version 1.0
  * @since 1.0
  */
-public class MediaStream extends Thread {
+public class MediaStream implements Runnable {
     private final Media media;
     private MediaHandler<byte[]> audioHandler;
     private MediaHandler<BufferedImage> videoHandler;
@@ -54,6 +54,14 @@ public class MediaStream extends Thread {
         pFrame = avcodec_alloc_frame();
     }
 
+    /**
+     * Sets a video stream to be played.
+     *
+     * @param stream The stream to play.
+     * @return The stream perviously playing, null if none.
+     * @throws IllegalArgumentException Thrown if the stream does not belong to the parent container.
+     * @throws StreamException          Thrown if an error occurs while allocating stream buffers.
+     */
     public VideoStream setVideoStream(VideoStream stream) {
         if (stream.container() != media)
             throw new IllegalArgumentException("stream not from same container");
@@ -75,6 +83,14 @@ public class MediaStream extends Thread {
         return pre;
     }
 
+    /**
+     * Sets a audio stream to be played.
+     *
+     * @param stream The stream to play.
+     * @return The stream perviously playing, null if none.
+     * @throws IllegalArgumentException Thrown if the stream does not belong to the parent container.
+     * @throws StreamException          Thrown if an error occurs while allocating stream buffers.
+     */
     public AudioStream setAudioStream(AudioStream stream) {
         if (stream.container() != media)
             throw new IllegalArgumentException("stream not from same container");
@@ -87,12 +103,6 @@ public class MediaStream extends Thread {
         return pre;
     }
 
-    @Override
-    public void start() {
-        super.start();
-        playing = true;
-    }
-
     /**
      * Starts synchronous streaming.
      *
@@ -100,7 +110,7 @@ public class MediaStream extends Thread {
      * @since 1.0
      */
     public void run() {
-        started = true;
+        started = playing = true;
         IntByReference frameFinished = new IntByReference();
         AVPacket packet = new AVPacket();
         av_init_packet(packet.getPointer());
@@ -314,9 +324,8 @@ public class MediaStream extends Thread {
         /**
          * Specifies the audio stream handler.
          *
-         * @param audioHandler The audio handler. Should accept byte arrays of arbitrary size as
-         *                     signed 16-bit PCM audio data. Frequency and channels may be obtained
-         *                     from the source media container.
+         * @param audioHandler The audio handler. Should accept byte arrays of arbitrary size as signed 16-bit PCM audio
+         *                     data. Frequency and channels may be obtained from the source media container.
          * @return The current Builder.
          * @since 1.0
          */

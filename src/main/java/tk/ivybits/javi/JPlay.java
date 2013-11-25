@@ -57,7 +57,7 @@ public class JPlay {
         final long length = media.length();
         System.err.printf("Video is %s milliseconds (%s seconds) long.", length, length / 1000.0);
 
-        JFrame frame = new JFrame(videoFile.getName());
+        final JFrame frame = new JFrame(videoFile.getName());
         frame.setLayout(new BorderLayout());
 
         final SwingMediaPanel videoPanel = new SwingMediaPanel(media);
@@ -107,8 +107,8 @@ public class JPlay {
         });
         frame.add(BorderLayout.CENTER, videoPanel);
 
-        int width = media.width();
-        int height = media.height();
+        int width = video.width();
+        int height = video.height();
         Dimension screen = Toolkit.getDefaultToolkit().getScreenSize();
         if (width > screen.width - 20 || height > screen.height - 60) {
             width = screen.width - 20;
