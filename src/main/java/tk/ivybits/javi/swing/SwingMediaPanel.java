@@ -14,18 +14,23 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
+import java.util.ArrayList;
 
 /**
  * Media component for Swing.
  * <p/>
  * Uses JavaSound's {@link javax.sound.sampled.SourceDataLine} to output audio, and paints outside of the EDT to minimize overhead.
  * Handles audio-video sync.
+ *
+ * @version 1.0
+ * @since 1.0
  */
 public class SwingMediaPanel extends JPanel {
     private final Media media;
     private MediaStream stream;
     private BufferedImage nextFrame;
     private int frames = 0, lost = 0;
+    private ArrayList<StreamListener> listeners = new ArrayList<>();
 
     /**
      * Creates a new SwingMediaPanel component.
@@ -34,7 +39,7 @@ public class SwingMediaPanel extends JPanel {
      *              In the case that a video media does not exist, this component
      *              will act like a normal <code>JPanel</code> while playing available streams.
      */
-    public SwingMediaPanel(final Media media) throws IOException {
+    public SwingMediaPanel(Media media) {
         this.media = media;
         stream = media
                 .stream()
@@ -106,6 +111,75 @@ public class SwingMediaPanel extends JPanel {
      * @throws IOException Thrown if a media stream could not be established.
      */
     public void start() throws IOException {
+        if (stream != null)
+            stream.start();
+        else
+            stream = media
+                    .stream()
+                    .audio(new MediaHandler<byte[]>() {
+                        private SourceDataLine sdl;
+
+                        {
+                            try {
+                                AudioFormat af = media.audioFormat();
+                                sdl = AudioSystem.getSourceDataLine(af);
+                                // Use a large buffer, such that sdl.write has a lower
+                                // chance of blocking
+                                sdl.open(af, 512000);
+                                sdl.start();
+                            } catch (LineUnavailableException e) {
+                                throw new IllegalStateException("failed to initialize audio line");
+                            }
+                        }
+
+                        @Override
+                        public void handle(byte[] buffer) {
+                            if (sdl == null) {// Audio failed to initialize; ignore this buffer
+                                return;
+                            }
+                            int written = 0;
+                            // sdl.write is not guaranteed to write our entire buffer.
+                            // Therefore, we keep writing until out buffer has been fully
+                            // written, to prevent audio skips
+                            while (written < buffer.length) {
+                                written += sdl.write(buffer, written, buffer.length);
+                            }
+                        }
+                    })
+                    .video(new MediaHandler<BufferedImage>() {
+                        @Override
+                        public void handle(BufferedImage buffer, long duration) {
+                            ++frames;
+                            if (duration < 0) {
+                                // Video is behind audio; skip frame
+                                ++lost;
+                                return;
+                            }
+                            try {
+                                Thread.sleep(duration);
+                            } catch (InterruptedException e) {
+                            }
+                            // Set our current frame to the passed buffer,
+                            // and repaint immediately. Because we do not use repaint(), we
+                            // have a guarantee that each frame will be drawn separately. repaint() tends
+                            // to squash multiple paints into one, giving a jerkish appearance to the video.
+                            nextFrame = buffer;
+                            paintImmediately(getBounds());
+                        }
+
+                        @Override
+                        public void end() {
+                            // We've finished the video: set the frame to null such that on the next repaint,
+                            // we won't draw the final frame of the video.
+                            nextFrame = null;
+                            paintImmediately(getBounds());
+
+                            for (StreamListener listener : listeners) {
+                                listener.onEnd();
+                            }
+                        }
+                    })
+                    .create();
         stream.start();
     }
 
@@ -208,5 +282,13 @@ public class SwingMediaPanel extends JPanel {
 
     public VideoStream setVideoStream(VideoStream videoStream) {
         return stream.setVideoStream(videoStream);
+    }
+
+    public void addStreamListener(StreamListener listener) {
+        listeners.add(listener);
+    }
+
+    public void removeStreamListener(StreamListener listener) {
+        listeners.remove(listener);
     }
 }

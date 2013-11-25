@@ -6,6 +6,7 @@ import tk.ivybits.javi.ffmpeg.LibAVFormat;
 import tk.ivybits.javi.ffmpeg.LibAVUtil;
 import tk.ivybits.javi.media.AudioStream;
 import tk.ivybits.javi.media.Media;
+import tk.ivybits.javi.swing.StreamListener;
 import tk.ivybits.javi.media.VideoStream;
 import tk.ivybits.javi.swing.SwingMediaPanel;
 
@@ -54,7 +55,7 @@ public class JPlay {
         File videoFile = new File(source);
         Media media = new Media(videoFile);
         final long length = media.length();
-        System.err.printf("Video is %s milliseconds (%s seconds) long.\n", length, length / 1000.0);
+        System.err.printf("Video is %s milliseconds (%s seconds) long.", length, length / 1000.0);
 
         JFrame frame = new JFrame(videoFile.getName());
         frame.setLayout(new BorderLayout());
@@ -106,8 +107,8 @@ public class JPlay {
         });
         frame.add(BorderLayout.CENTER, videoPanel);
 
-        int width = video.width();
-        int height = video.height();
+        int width = media.width();
+        int height = media.height();
         Dimension screen = Toolkit.getDefaultToolkit().getScreenSize();
         if (width > screen.width - 20 || height > screen.height - 60) {
             width = screen.width - 20;
@@ -121,6 +122,16 @@ public class JPlay {
         frame.addWindowListener(new WindowAdapter() {
             public void windowClosing(WindowEvent e) {
                 System.err.printf("Frame loss: %.2f%%\n", videoPanel.frameLossRate() * 100);
+            }
+        });
+
+        videoPanel.addStreamListener(new StreamListener() {
+            @Override
+            public void onEnd() {
+                System.out.println("Playback finished.");
+                frame.remove(videoPanel);
+                frame.add(BorderLayout.CENTER, new JLabel("Playback finished.", JLabel.CENTER));
+                frame.revalidate();
             }
         });
         videoPanel.start();
