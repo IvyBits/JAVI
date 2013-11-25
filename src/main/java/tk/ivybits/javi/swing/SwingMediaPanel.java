@@ -121,13 +121,14 @@ public class SwingMediaPanel extends JPanel {
      * {@inheritDoc}
      */
     @Override
-    public void paint(Graphics g) {
-        super.paint(g);
+    public void paintComponent(Graphics g) {
+        Dimension boundary = getSize();
         if (nextFrame != null) {
             int width = nextFrame.getWidth();
             int height = nextFrame.getHeight();
-
-            Dimension boundary = getSize();
+            /* Graphics2D g2d = nextFrame.createGraphics();
+            g2d.setColor(Color.WHITE);
+            g2d.drawString("HEIL UNS SELBSTS!", 50, 50); */
 
             // Scale image dimensions with aspect ratio to fit inside the panel
             int bwidth;
@@ -142,7 +143,21 @@ public class SwingMediaPanel extends JPanel {
             }
 
             // Center it in the space given
-            g.drawImage(nextFrame, Math.abs(boundary.width - bwidth) / 2, Math.abs(boundary.height - bheight) / 2, bwidth, bheight, null);
+            int x = Math.abs(boundary.width - bwidth) / 2;
+            int y = Math.abs(boundary.height - bheight) / 2;
+            g.drawImage(nextFrame, x, y, bwidth, bheight, null);
+            // Now draw the black sizes on the side or the top
+            g.setColor(getBackground());
+            if (bheight == boundary.height) {
+                g.fillRect(0, 0, x, boundary.height);
+                g.fillRect(x + bwidth, 0, x + 1, boundary.height);
+            } else {
+                g.fillRect(0, 0, boundary.width, y);
+                g.fillRect(0, y + bheight, boundary.width, y + 1);
+            }
+        } else {
+            g.setColor(getBackground());
+            g.fillRect(0, 0, boundary.width, boundary.height);
         }
     }
 

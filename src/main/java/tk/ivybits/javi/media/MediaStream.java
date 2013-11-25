@@ -12,6 +12,7 @@ import tk.ivybits.javi.ffmpeg.avutil.AVFrame;
 import java.awt.image.BufferedImage;
 import java.awt.image.DataBufferByte;
 import java.io.IOException;
+import java.util.concurrent.Semaphore;
 
 import static tk.ivybits.javi.ffmpeg.LibAVCodec.*;
 import static tk.ivybits.javi.ffmpeg.LibAVFormat.av_read_frame;
@@ -46,6 +47,7 @@ public class MediaStream implements Runnable {
     private long lastFrame = 0;
     private boolean playing = false;
     private boolean started;
+    private final Semaphore mutex = new Semaphore(1);
 
     MediaStream(Media media, MediaHandler<byte[]> audioHandler, MediaHandler<BufferedImage> videoHandler) throws IOException {
         this.media = media;
@@ -114,43 +116,49 @@ public class MediaStream implements Runnable {
         IntByReference frameFinished = new IntByReference();
         AVPacket packet = new AVPacket();
         av_init_packet(packet.getPointer());
-        int width = videoStream.width();
-        int height = videoStream.height();
-        AVCodecContext ac = audioStream.ffstream.codec;
-        AVCodecContext vc = videoStream.ffstream.codec;
+        int width = 0, height = 0;
+        AVCodecContext ac = audioStream != null ? audioStream.ffstream.codec : null;
+        AVCodecContext vc = videoStream != null ? videoStream.ffstream.codec : null;
 
-        Pointer pSwsContext = sws_getContext(
-                width, height, vc.pix_fmt,
-                width, height, BGR24.ordinal(),
-                0, null, null, null);
+        Pointer pSwsContext = null;
+        BufferedImage imageBuffer = null;
+        if (videoStream != null) {
+            width = videoStream.width();
+            height = videoStream.height();
+            imageBuffer = new BufferedImage(width, height, BufferedImage.TYPE_3BYTE_BGR);
 
-        Pointer pSwrContext = swr_alloc_set_opts(
-                null, 3, SIGNED_16BIT.ordinal(),
-                ac.sample_rate, ac.channel_layout, ac.sample_fmt,
-                ac.sample_rate, 0, null);
-        swr_init(pSwrContext);
-        ac.read();
-        vc.read();
+            pSwsContext = sws_getContext(
+                    width, height, vc.pix_fmt,
+                    width, height, BGR24.ordinal(),
+                    0, null, null, null);
+            vc.read();
+        }
 
-        BufferedImage imageBuffer = new BufferedImage(width, height, BufferedImage.TYPE_3BYTE_BGR);
-        byte[] audioBuffer = new byte[16 * ac.channels * 64]; // Estimate common size
+        Pointer pSwrContext = null;
+        byte[] audioBuffer = null;
+        if (audioStream != null) {
+            audioBuffer = new byte[16 * ac.channels * 64]; // Estimate common size
+
+            pSwrContext = swr_alloc_set_opts(
+                    null, 3, SIGNED_16BIT.ordinal(),
+                    ac.sample_rate, ac.channel_layout, ac.sample_fmt,
+                    ac.sample_rate, 0, null);
+            swr_init(pSwrContext);
+            ac.read();
+        }
 
         lastFrame = System.nanoTime();
         _outer:
         while (av_read_frame(media.formatContext.getPointer(), packet.getPointer()) >= 0) {
-            synchronized (this) {
-                if (!playing)
-                    try {
-                        wait();
-                        lastFrame = System.nanoTime();
-                    } catch (InterruptedException e) {
-                        throw new StreamException("interrupted while waiting for play");
-                    }
+            try {
+                mutex.acquire();
+            } catch (InterruptedException e) {
+                throw new StreamException("could not acquire mutex");
             }
 
             packet.read();
 
-            if (packet.stream_index == audioStream.index()) {
+            if (audioStream != null && packet.stream_index == audioStream.index()) {
                 // Decode the media into our pFrame
                 int read = 0;
 
@@ -201,7 +209,7 @@ public class MediaStream implements Runnable {
                         audioHandler.handle(audioBuffer);
                     }
                 }
-            } else if (packet.stream_index == videoStream.index()) { // We only care about the media media here
+            } else if (videoStream != null && packet.stream_index == videoStream.index()) { // We only care about the media media here
                 // Decode the media into our pFrame
                 int err = avcodec_decode_video2(videoStream.ffstream.codec.getPointer(), pFrame.getPointer(), frameFinished, packet.getPointer());
                 // If the return of avcodec_decode_video2 is negative, an error occurred.
@@ -233,8 +241,8 @@ public class MediaStream implements Runnable {
                     byte[] raster = ((DataBufferByte) imageBuffer.getRaster().getDataBuffer()).getData();
                     pBGRFrame.data[0].read(0, raster, 0, raster.length);
 
-                    long duration = (long) (pFrame.pkt_duration * 1000000000 *
-                            videoStream.ffstream.time_base.num / videoStream.ffstream.time_base.den);
+                    long duration = pFrame.pkt_duration * 1000000000 *
+                            videoStream.ffstream.time_base.num / videoStream.ffstream.time_base.den;
                     long time = System.nanoTime();
                     duration -= time - lastFrame;
                     videoHandler.handle(imageBuffer, duration / 1000000);
@@ -250,6 +258,7 @@ public class MediaStream implements Runnable {
             }
             // Free the packet that av_read_frame allocated
             av_free_packet(packet.getPointer());
+            mutex.release();
         }
         videoHandler.end();
         audioHandler.end();
@@ -276,7 +285,16 @@ public class MediaStream implements Runnable {
         if (!started)
             throw new StreamException("stream not started");
         playing = flag;
-        notify();
+        if (!playing)
+            try {
+                mutex.acquire();
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        else {
+            lastFrame = System.nanoTime();
+            mutex.release();
+        }
     }
 
     /**

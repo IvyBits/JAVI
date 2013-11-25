@@ -6,8 +6,8 @@ import tk.ivybits.javi.ffmpeg.LibAVFormat;
 import tk.ivybits.javi.ffmpeg.LibAVUtil;
 import tk.ivybits.javi.media.AudioStream;
 import tk.ivybits.javi.media.Media;
-import tk.ivybits.javi.swing.StreamListener;
 import tk.ivybits.javi.media.VideoStream;
+import tk.ivybits.javi.swing.StreamListener;
 import tk.ivybits.javi.swing.SwingMediaPanel;
 
 import javax.swing.*;
@@ -37,7 +37,7 @@ public class JPlay {
         LibAVCodec.avcodec_register_all();
         LibAVFormat.avformat_network_init();
 
-        System.err.printf("Running avcodec %s, avformat %s, avutil %s.\n",
+        System.err.printf("Running avcodec-%s, avformat-%s, avutil-%s.\n",
                 LibAVCodec.avcodec_version() >> 16,
                 LibAVFormat.avformat_version() >> 16,
                 LibAVUtil.avutil_version() >> 16);
@@ -55,7 +55,7 @@ public class JPlay {
         File videoFile = new File(source);
         Media media = new Media(videoFile);
         final long length = media.length();
-        System.err.printf("Video is %s milliseconds (%s seconds) long.", length, length / 1000.0);
+        System.err.printf("Video is %s milliseconds (%s seconds) long.\n", length, length / 1000.0);
 
         final JFrame frame = new JFrame(videoFile.getName());
         frame.setLayout(new BorderLayout());
@@ -79,7 +79,8 @@ public class JPlay {
                     str.index(), str.audioFormat(), str.codecName(), str.longCodecName());
         }
 
-        videoPanel.setVideoStream(video);
+        if (video != null)
+            videoPanel.setVideoStream(video);
         if (!media.audioStreams().isEmpty())
             videoPanel.setAudioStream(media.audioStreams().get(0));
 
@@ -106,13 +107,18 @@ public class JPlay {
             }
         });
         frame.add(BorderLayout.CENTER, videoPanel);
-
-        int width = video.width();
-        int height = video.height();
-        Dimension screen = Toolkit.getDefaultToolkit().getScreenSize();
-        if (width > screen.width - 20 || height > screen.height - 60) {
-            width = screen.width - 20;
-            height = screen.height - 60;
+        int width, height;
+        if (video != null) {
+            width = video.width();
+            height = video.height();
+            Dimension screen = Toolkit.getDefaultToolkit().getScreenSize();
+            if (width > screen.width - 20 || height > screen.height - 60) {
+                width = screen.width - 20;
+                height = screen.height - 60;
+            }
+        } else {
+            width = 640;
+            height = 480;
         }
 
         frame.setSize(width, height);
@@ -128,7 +134,7 @@ public class JPlay {
         videoPanel.addStreamListener(new StreamListener() {
             @Override
             public void onEnd() {
-                System.out.println("Playback finished.");
+                System.err.println("Playback finished.");
                 frame.remove(videoPanel);
                 frame.add(BorderLayout.CENTER, new JLabel("Playback finished.", JLabel.CENTER));
                 frame.revalidate();
