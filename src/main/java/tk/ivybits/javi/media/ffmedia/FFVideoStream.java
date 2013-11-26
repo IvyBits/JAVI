@@ -1,14 +1,16 @@
-package tk.ivybits.javi.media;
+package tk.ivybits.javi.media.ffmedia;
 
 import tk.ivybits.javi.ffmpeg.avformat.AVStream;
+import tk.ivybits.javi.media.stream.VideoStream;
 
-public class VideoStream extends Stream {
-    VideoStream(Media container, AVStream ffstream) {
+public class FFVideoStream extends FFStream implements VideoStream {
+    FFVideoStream(FFMedia container, AVStream ffstream) {
         super(container, ffstream);
     }
 
     /**
      * Fetches video stream width.
+     * <p/>
      * <b>Note: some codecs support the arbitrary changing of frame size, so the value returned
      * from this function may not be correct for the entire video.</b>
      *
@@ -21,6 +23,7 @@ public class VideoStream extends Stream {
 
     /**
      * Fetches video stream height.
+     * <p/>
      * <b>Note: some codecs support the arbitrary changing of frame size, so the value returned
      * from this function may not be correct for the entire video.</b>
      *

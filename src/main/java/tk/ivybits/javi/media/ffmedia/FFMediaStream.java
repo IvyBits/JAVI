@@ -1,4 +1,4 @@
-package tk.ivybits.javi.media;
+package tk.ivybits.javi.media.ffmedia;
 
 import com.sun.jna.Pointer;
 import com.sun.jna.ptr.IntByReference;
@@ -8,6 +8,10 @@ import tk.ivybits.javi.ffmpeg.avcodec.AVCodec;
 import tk.ivybits.javi.ffmpeg.avcodec.AVCodecContext;
 import tk.ivybits.javi.ffmpeg.avcodec.AVPacket;
 import tk.ivybits.javi.ffmpeg.avutil.AVFrame;
+import tk.ivybits.javi.media.*;
+import tk.ivybits.javi.media.stream.AudioStream;
+import tk.ivybits.javi.media.stream.MediaStream;
+import tk.ivybits.javi.media.stream.VideoStream;
 
 import java.awt.image.BufferedImage;
 import java.awt.image.DataBufferByte;
@@ -28,28 +32,28 @@ import static tk.ivybits.javi.format.SampleFormat.SIGNED_16BIT;
 /**
  * A media stream.
  * </p>
- * Cannot be instantiated directly: use {@link MediaStream.Builder}.
+ * Cannot be instantiated directly: use {@link tk.ivybits.javi.media.stream.MediaStream.Builder}.
  *
  * @version 1.0
  * @since 1.0
  */
-public class MediaStream implements Runnable {
-    private final Media media;
-    private MediaHandler<byte[]> audioHandler;
-    private MediaHandler<BufferedImage> videoHandler;
-    private AudioStream audioStream;
-    private VideoStream videoStream;
+public class FFMediaStream implements MediaStream {
+    public final FFMedia media;
+    public MediaHandler<byte[]> audioHandler;
+    public MediaHandler<BufferedImage> videoHandler;
+    public FFAudioStream audioStream;
+    public FFVideoStream videoStream;
 
-    private AVFrame.ByReference pBGRFrame;
-    private AVFrame.ByReference pFrame;
+    public AVFrame.ByReference pBGRFrame;
+    public AVFrame.ByReference pFrame;
 
-    private AVCodec videoCodec, audioCodec;
-    private long lastFrame = 0;
-    private boolean playing = false;
-    private boolean started;
+    public AVCodec videoCodec, audioCodec;
+    public long lastFrame = 0;
+    public boolean playing = false;
+    public boolean started;
     private final Semaphore mutex = new Semaphore(1);
 
-    MediaStream(Media media, MediaHandler<byte[]> audioHandler, MediaHandler<BufferedImage> videoHandler) throws IOException {
+    FFMediaStream(FFMedia media, MediaHandler<byte[]> audioHandler, MediaHandler<BufferedImage> videoHandler) throws IOException {
         this.media = media;
         this.audioHandler = audioHandler;
         this.videoHandler = videoHandler;
@@ -80,8 +84,8 @@ public class MediaStream implements Runnable {
         int ret = avpicture_fill(pBGRFrame.getPointer(), buffer, BGR24.ordinal(), stream.width(), stream.height());
         if (ret < 0 || ret != size)
             throw new StreamException("failed to fill frame buffer");
-        videoCodec = stream.codec;
-        videoStream = stream;
+        videoStream = (FFVideoStream) stream;
+        videoCodec = videoStream.codec;
         return pre;
     }
 
@@ -100,8 +104,8 @@ public class MediaStream implements Runnable {
         if (audioCodec != null) {
             // TODO: Close codec
         }
-        audioCodec = stream.codec;
-        audioStream = stream;
+        audioStream = (FFAudioStream) stream;
+        audioCodec = audioStream.codec;
         return pre;
     }
 
@@ -325,10 +329,10 @@ public class MediaStream implements Runnable {
      *
      * @since 1.0
      */
-    public static class Builder {
-        private Media media;
-        private MediaHandler<byte[]> audioHandler;
-        private MediaHandler<BufferedImage> videoHandler;
+    public static class Builder implements MediaStream.Builder {
+        public FFMedia media;
+        public MediaHandler<byte[]> audioHandler;
+        public MediaHandler<BufferedImage> videoHandler;
 
         /**
          * Creates a MediaStream builder for the specified {@link Media} object.
@@ -336,7 +340,7 @@ public class MediaStream implements Runnable {
          * @param media The container designated for streaming.
          * @since 1.0
          */
-        public Builder(Media media) {
+        public Builder(FFMedia media) {
             this.media = media;
         }
 
@@ -373,10 +377,10 @@ public class MediaStream implements Runnable {
          * @throws IllegalStateException Thrown if no stream handlers have been specified.
          * @since 1.0
          */
-        public MediaStream create() throws IOException {
+        public FFMediaStream create() throws IOException {
             if (audioHandler == null && videoHandler == null)
                 throw new IllegalStateException("no media handlers specified");
-            return new MediaStream(media, audioHandler, videoHandler);
+            return new FFMediaStream(media, audioHandler, videoHandler);
         }
     }
 }

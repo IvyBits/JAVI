@@ -1,9 +1,10 @@
 package tk.ivybits.javi;
 
 import tk.ivybits.javi.exc.StreamException;
-import tk.ivybits.javi.media.AudioStream;
+import tk.ivybits.javi.media.stream.AudioStream;
 import tk.ivybits.javi.media.Media;
-import tk.ivybits.javi.media.VideoStream;
+import tk.ivybits.javi.media.MediaFactory;
+import tk.ivybits.javi.media.stream.VideoStream;
 import tk.ivybits.javi.swing.StreamListener;
 import tk.ivybits.javi.swing.SwingMediaPanel;
 
@@ -32,8 +33,7 @@ public class JPlay {
             System.exit(1);
         }
 
-        System.err.printf("Running avcodec-%s, avformat-%s, avutil-%s.\n",
-                AVCODEC_VERSION, AVFORMAT_VERSION, AVUTIL_VERSION);
+        System.err.printf("Running avcodec-%s, avformat-%s, avutil-%s.\n", AVCODEC_VERSION, AVFORMAT_VERSION, AVUTIL_VERSION);
 
         for (String source : args) {
             play(source);
@@ -42,12 +42,11 @@ public class JPlay {
 
     public static void play(String source) throws IOException {
         try {
-
             UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
         } catch (ReflectiveOperationException | UnsupportedLookAndFeelException e) {
         }
         File videoFile = new File(source);
-        Media media = new Media(videoFile);
+        Media media = MediaFactory.open(videoFile);
         final long length = media.length();
         System.err.printf("Video is %s milliseconds (%s seconds) long.\n", length, length / 1000.0);
 

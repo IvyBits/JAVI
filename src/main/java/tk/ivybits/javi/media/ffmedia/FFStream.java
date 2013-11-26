@@ -1,8 +1,10 @@
-package tk.ivybits.javi.media;
+package tk.ivybits.javi.media.ffmedia;
 
 import tk.ivybits.javi.exc.StreamException;
 import tk.ivybits.javi.ffmpeg.avcodec.AVCodec;
 import tk.ivybits.javi.ffmpeg.avformat.AVStream;
+import tk.ivybits.javi.media.Media;
+import tk.ivybits.javi.media.stream.Stream;
 
 import static tk.ivybits.javi.ffmpeg.LibAVCodec.avcodec_find_decoder;
 import static tk.ivybits.javi.ffmpeg.LibAVCodec.avcodec_open2;
@@ -10,12 +12,12 @@ import static tk.ivybits.javi.ffmpeg.LibAVCodec.avcodec_open2;
 /**
  * Represents an arbitrary stream in a container.
  */
-public class Stream {
-    protected final Media container;
-    protected final AVStream ffstream;
-    protected final AVCodec codec;
+public class FFStream implements Stream {
+    public final FFMedia container;
+    public final AVStream ffstream;
+    public final AVCodec codec;
 
-    Stream(Media container, AVStream ffstream) {
+    FFStream(FFMedia container, AVStream ffstream) {
         this.container = container;
         this.ffstream = ffstream;
         codec = avcodec_find_decoder(ffstream.codec.codec_id);
@@ -39,8 +41,8 @@ public class Stream {
      *
      * @return A Type. Current possible values are STREAM_VIDEO and STREAM_AUDIO.
      */
-    public Type type() {
-        return Type.values()[ffstream.codec.codec_type];
+    public Stream.Type type() {
+        return Stream.Type.values()[ffstream.codec.codec_type];
     }
 
     /**

@@ -1,6 +1,10 @@
 package tk.ivybits.javi.swing;
 
-import tk.ivybits.javi.media.*;
+import tk.ivybits.javi.media.Media;
+import tk.ivybits.javi.media.MediaHandler;
+import tk.ivybits.javi.media.stream.AudioStream;
+import tk.ivybits.javi.media.stream.MediaStream;
+import tk.ivybits.javi.media.stream.VideoStream;
 
 import javax.sound.sampled.AudioFormat;
 import javax.sound.sampled.AudioSystem;
@@ -239,10 +243,22 @@ public class SwingMediaPanel extends JPanel {
         return stream.setVideoStream(videoStream);
     }
 
+    /**
+     * Registers <code>listener</code> so that it will receive events when
+     * the playing state of the panel changes.
+     *
+     * @param listener The <code>StreamListener</code> to register.
+     */
     public void addStreamListener(StreamListener listener) {
         listeners.add(listener);
     }
 
+    /**
+     * Unregisters <code>listener</code> so that it will no longer recieve
+     * playback events.
+     *
+     * @param listener The <code>StreamListener</code> to unregister.
+     */
     public void removeStreamListener(StreamListener listener) {
         listeners.remove(listener);
     }
