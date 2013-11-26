@@ -72,11 +72,10 @@ public class FFMediaStream implements MediaStream {
         if (stream.container() != media)
             throw new IllegalArgumentException("stream not from same container");
         VideoStream pre = videoStream;
-        if (videoCodec != null) {
-            // TODO: Close codec
-        }
 
-        // TODO: free pBGRFrame if it existed
+        if (pBGRFrame != null) {
+            avcodec_free_frame(new PointerByReference(pBGRFrame.getPointer()));
+        }
         pBGRFrame = avcodec_alloc_frame();
         int size = avpicture_get_size(BGR24.ordinal(), stream.width(), stream.height());
 
@@ -101,9 +100,6 @@ public class FFMediaStream implements MediaStream {
         if (stream.container() != media)
             throw new IllegalArgumentException("stream not from same container");
         AudioStream pre = audioStream;
-        if (audioCodec != null) {
-            // TODO: Close codec
-        }
         audioStream = (FFAudioStream) stream;
         audioCodec = audioStream.codec;
         return pre;
@@ -322,6 +318,12 @@ public class FFMediaStream implements MediaStream {
         if (err < 0)
             throw new StreamException("failed to seek video: error " + err);
         lastFrame = System.nanoTime();
+    }
+
+    @Override
+    public void close() throws IOException {
+        avcodec_free_frame(new PointerByReference(pFrame.getPointer()));
+        pFrame = null;
     }
 
     /**

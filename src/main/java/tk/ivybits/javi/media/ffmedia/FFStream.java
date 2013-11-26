@@ -1,11 +1,15 @@
 package tk.ivybits.javi.media.ffmedia;
 
 import tk.ivybits.javi.exc.StreamException;
+import tk.ivybits.javi.ffmpeg.LibAVCodec;
 import tk.ivybits.javi.ffmpeg.avcodec.AVCodec;
 import tk.ivybits.javi.ffmpeg.avformat.AVStream;
 import tk.ivybits.javi.media.Media;
 import tk.ivybits.javi.media.stream.Stream;
 
+import java.io.Closeable;
+
+import static tk.ivybits.javi.ffmpeg.LibAVCodec.avcodec_close;
 import static tk.ivybits.javi.ffmpeg.LibAVCodec.avcodec_find_decoder;
 import static tk.ivybits.javi.ffmpeg.LibAVCodec.avcodec_open2;
 
@@ -16,6 +20,7 @@ public class FFStream implements Stream {
     public final FFMedia container;
     public final AVStream ffstream;
     public final AVCodec codec;
+    protected boolean closed;
 
     FFStream(FFMedia container, AVStream ffstream) {
         this.container = container;
@@ -72,6 +77,12 @@ public class FFStream implements Stream {
      */
     public String longCodecName() {
         return ffstream.codec.codec.long_name;
+    }
+
+    public void close() {
+        if (!closed) {
+            avcodec_close(ffstream.codec.getPointer());
+        }
     }
 
     /**

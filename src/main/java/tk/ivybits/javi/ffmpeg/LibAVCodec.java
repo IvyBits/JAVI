@@ -3,6 +3,7 @@ package tk.ivybits.javi.ffmpeg;
 import com.sun.jna.Native;
 import com.sun.jna.Pointer;
 import com.sun.jna.ptr.IntByReference;
+import com.sun.jna.ptr.PointerByReference;
 import tk.ivybits.javi.ffmpeg.avcodec.AVCodec;
 import tk.ivybits.javi.ffmpeg.avutil.AVFrame;
 
@@ -30,6 +31,8 @@ public class LibAVCodec {
     public static native void av_free_packet(Pointer pointer);
 
     public static native int avcodec_close(Pointer avctx);
+
+    public static native void avcodec_free_frame(PointerByReference frame);
 
     static {
         FFmpeg.ensureInitialized();

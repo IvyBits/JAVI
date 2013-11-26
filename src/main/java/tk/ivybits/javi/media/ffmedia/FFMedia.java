@@ -11,6 +11,7 @@ import tk.ivybits.javi.media.stream.MediaStream;
 import tk.ivybits.javi.media.stream.Stream;
 import tk.ivybits.javi.media.stream.VideoStream;
 
+import java.io.Closeable;
 import java.io.File;
 import java.io.IOException;
 import java.net.URI;
@@ -18,6 +19,8 @@ import java.net.URLDecoder;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+
+import static tk.ivybits.javi.ffmpeg.LibAVFormat.avformat_close_input;
 
 /**
  * An object to represent a container.
@@ -30,7 +33,7 @@ import java.util.List;
  * @since 1.0
  */
 public class FFMedia implements Media {
-    public final AVFormatContext formatContext;
+    public AVFormatContext formatContext;
     public ArrayList<FFVideoStream> videoStreams = new ArrayList<>();
     public ArrayList<FFAudioStream> audioStreams = new ArrayList<>();
     public ArrayList<FFStream> subtitleStreams = new ArrayList<>();
@@ -115,5 +118,12 @@ public class FFMedia implements Media {
         if (formatContext.duration == Long.MIN_VALUE)
             return 0;
         return formatContext.duration / 1000;
+    }
+
+    public void close() {
+        if (formatContext != null) {
+            avformat_close_input(new PointerByReference(formatContext.getPointer()));
+            formatContext = null;
+        }
     }
 }

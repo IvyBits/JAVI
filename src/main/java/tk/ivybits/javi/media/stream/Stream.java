@@ -2,10 +2,12 @@ package tk.ivybits.javi.media.stream;
 
 import tk.ivybits.javi.media.Media;
 
+import java.io.Closeable;
+
 /**
  * Represents an arbitrary stream in a container.
  */
-public interface Stream {
+public interface Stream extends Closeable {
     /**
      * Fetches the parent container.
      *

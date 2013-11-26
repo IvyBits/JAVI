@@ -4,6 +4,7 @@ import tk.ivybits.javi.exc.StreamException;
 import tk.ivybits.javi.media.MediaHandler;
 
 import java.awt.image.BufferedImage;
+import java.io.Closeable;
 import java.io.IOException;
 
 /**
@@ -14,7 +15,7 @@ import java.io.IOException;
  * @version 1.0
  * @since 1.0
  */
-public interface MediaStream extends Runnable {
+public interface MediaStream extends Runnable, Closeable {
     /**
      * Sets a video stream to be played.
      *

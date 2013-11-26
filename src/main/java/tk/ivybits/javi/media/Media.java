@@ -4,6 +4,7 @@ import tk.ivybits.javi.media.stream.AudioStream;
 import tk.ivybits.javi.media.stream.MediaStream;
 import tk.ivybits.javi.media.stream.VideoStream;
 
+import java.io.Closeable;
 import java.util.List;
 
 /**
@@ -16,7 +17,7 @@ import java.util.List;
  * @version 1.0
  * @since 1.0
  */
-public interface Media {
+public interface Media extends Closeable {
     public List<? extends VideoStream> videoStreams();
 
     public List<? extends AudioStream> audioStreams();
