@@ -18,9 +18,10 @@ public class LibAVUtil {
 
     public static native int av_samples_get_buffer_size(IntByReference linesize, int nb_channels, int nb_samples, int sample_fmt, int align);
 
-    public static native  int av_samples_alloc_array_and_samples(PointerByReference audio_data, IntByReference linesize, int nb_channels, int nb_samples, int sample_fmt, int align);
+    public static native int av_samples_alloc_array_and_samples(PointerByReference audio_data, IntByReference linesize, int nb_channels, int nb_samples, int sample_fmt, int align);
 
     static {
+        FFmpeg.ensureInitialized();
         Native.register("avutil-52");
     }
 }

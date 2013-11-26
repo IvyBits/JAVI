@@ -26,6 +26,7 @@ public class LibAVFormat {
     public static native void avformat_close_input(PointerByReference s);
 
     static {
+        FFmpeg.ensureInitialized();
         Native.register("avformat-55");
     }
 }

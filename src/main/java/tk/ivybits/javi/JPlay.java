@@ -1,9 +1,6 @@
 package tk.ivybits.javi;
 
 import tk.ivybits.javi.exc.StreamException;
-import tk.ivybits.javi.ffmpeg.LibAVCodec;
-import tk.ivybits.javi.ffmpeg.LibAVFormat;
-import tk.ivybits.javi.ffmpeg.LibAVUtil;
 import tk.ivybits.javi.media.AudioStream;
 import tk.ivybits.javi.media.Media;
 import tk.ivybits.javi.media.VideoStream;
@@ -16,7 +13,7 @@ import java.awt.event.*;
 import java.io.File;
 import java.io.IOException;
 
-import static tk.ivybits.javi.debug.Utilities.getVersion;
+import static tk.ivybits.javi.ffmpeg.FFmpeg.*;
 
 /**
  * Minimalistic media player.
@@ -35,14 +32,8 @@ public class JPlay {
             System.exit(1);
         }
 
-        LibAVFormat.av_register_all();
-        LibAVCodec.avcodec_register_all();
-        LibAVFormat.avformat_network_init();
-
         System.err.printf("Running avcodec-%s, avformat-%s, avutil-%s.\n",
-                getVersion(LibAVCodec.avcodec_version()),
-                getVersion(LibAVFormat.avformat_version()),
-                getVersion(LibAVUtil.avutil_version()));
+                AVCODEC_VERSION, AVFORMAT_VERSION, AVUTIL_VERSION);
 
         for (String source : args) {
             play(source);
@@ -51,8 +42,9 @@ public class JPlay {
 
     public static void play(String source) throws IOException {
         try {
+
             UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
-        } catch (ClassNotFoundException | InstantiationException | IllegalAccessException | UnsupportedLookAndFeelException e) {
+        } catch (ReflectiveOperationException | UnsupportedLookAndFeelException e) {
         }
         File videoFile = new File(source);
         Media media = new Media(videoFile);

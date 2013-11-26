@@ -32,6 +32,7 @@ public class LibAVCodec {
     public static native int avcodec_close(Pointer avctx);
 
     static {
+        FFmpeg.ensureInitialized();
         Native.register("avcodec-55");
     }
 }

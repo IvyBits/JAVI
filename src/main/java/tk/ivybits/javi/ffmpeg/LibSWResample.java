@@ -16,6 +16,7 @@ public class LibSWResample {
     public static native int swr_convert(Pointer s, Pointer out, int out_count, Pointer in, int in_count);
 
     static {
+        FFmpeg.ensureInitialized();
         Native.register("swresample-0");
     }
 }

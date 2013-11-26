@@ -9,6 +9,7 @@ public class LibSWScale {
     public static native int sws_scale(Pointer c, Pointer src, int[] srcStride, int srcSliceY, int srcSliceH, Pointer dst, int[] dstStride);
 
     static {
+        FFmpeg.ensureInitialized();
         Native.register("swscale-2");
     }
 }
