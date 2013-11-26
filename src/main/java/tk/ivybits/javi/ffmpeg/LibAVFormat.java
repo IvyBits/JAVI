@@ -23,6 +23,8 @@ public class LibAVFormat {
 
     public static native int av_seek_frame(Pointer s, int stream_index, long timestamp, int flags);
 
+    public static native void avformat_close_input(PointerByReference s);
+
     static {
         Native.register("avformat-55");
     }

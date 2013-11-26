@@ -29,6 +29,8 @@ public class LibAVCodec {
 
     public static native void av_free_packet(Pointer pointer);
 
+    public static native int avcodec_close(Pointer avctx);
+
     static {
         Native.register("avcodec-55");
     }
