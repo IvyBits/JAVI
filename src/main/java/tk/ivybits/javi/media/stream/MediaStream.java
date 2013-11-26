@@ -36,6 +36,8 @@ public interface MediaStream extends Runnable, Closeable {
      */
     AudioStream setAudioStream(AudioStream stream);
 
+    public SubtitleStream setSubtitleStream(SubtitleStream stream);
+
     /**
      * Checks if the stream is playing.
      *

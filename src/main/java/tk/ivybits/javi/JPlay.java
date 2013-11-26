@@ -4,6 +4,7 @@ import tk.ivybits.javi.exc.StreamException;
 import tk.ivybits.javi.media.stream.AudioStream;
 import tk.ivybits.javi.media.Media;
 import tk.ivybits.javi.media.MediaFactory;
+import tk.ivybits.javi.media.stream.SubtitleStream;
 import tk.ivybits.javi.media.stream.VideoStream;
 import tk.ivybits.javi.swing.StreamListener;
 import tk.ivybits.javi.swing.SwingMediaPanel;
@@ -67,15 +68,22 @@ public class JPlay {
             System.err.printf("\tStream #%s: (%sx%s) - %s (%s)\n",
                     str.index(), str.width(), str.height(), str.codecName(), str.longCodecName());
         }
+
         for (final AudioStream str : media.audioStreams()) {
             System.err.printf("\tStream #%s: %s - %s (%s)\n",
                     str.index(), str.audioFormat(), str.codecName(), str.longCodecName());
+        }
+
+        for (final SubtitleStream str : media.subtitleStreams()) {
+            System.err.printf("\tStream #%s: %s (%s)\n", str.index(), str.codecName(), str.longCodecName());
         }
 
         if (video != null)
             videoPanel.setVideoStream(video);
         if (!media.audioStreams().isEmpty())
             videoPanel.setAudioStream(media.audioStreams().get(0));
+        if (!media.subtitleStreams().isEmpty())
+            videoPanel.setSubtitleStream(media.subtitleStreams().get(0));
 
         videoPanel.setBackground(Color.BLACK);
         videoPanel.addMouseListener(new MouseAdapter() {

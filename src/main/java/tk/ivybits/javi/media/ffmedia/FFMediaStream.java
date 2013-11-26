@@ -4,18 +4,22 @@ import com.sun.jna.Pointer;
 import com.sun.jna.ptr.IntByReference;
 import com.sun.jna.ptr.PointerByReference;
 import tk.ivybits.javi.exc.StreamException;
-import tk.ivybits.javi.ffmpeg.avcodec.AVCodec;
-import tk.ivybits.javi.ffmpeg.avcodec.AVCodecContext;
-import tk.ivybits.javi.ffmpeg.avcodec.AVPacket;
+import tk.ivybits.javi.ffmpeg.avcodec.*;
 import tk.ivybits.javi.ffmpeg.avutil.AVFrame;
+import tk.ivybits.javi.format.PixelFormat;
+import tk.ivybits.javi.format.SubtitleType;
 import tk.ivybits.javi.media.*;
 import tk.ivybits.javi.media.stream.AudioStream;
 import tk.ivybits.javi.media.stream.MediaStream;
+import tk.ivybits.javi.media.stream.SubtitleStream;
 import tk.ivybits.javi.media.stream.VideoStream;
 
+import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
 import java.awt.image.DataBufferByte;
+import java.io.File;
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.concurrent.Semaphore;
 
 import static tk.ivybits.javi.ffmpeg.LibAVCodec.*;
@@ -24,6 +28,7 @@ import static tk.ivybits.javi.ffmpeg.LibAVFormat.av_seek_frame;
 import static tk.ivybits.javi.ffmpeg.LibAVUtil.av_malloc;
 import static tk.ivybits.javi.ffmpeg.LibAVUtil.av_samples_alloc_array_and_samples;
 import static tk.ivybits.javi.ffmpeg.LibSWResample.*;
+import static tk.ivybits.javi.ffmpeg.LibSWScale.sws_freeContext;
 import static tk.ivybits.javi.ffmpeg.LibSWScale.sws_getContext;
 import static tk.ivybits.javi.ffmpeg.LibSWScale.sws_scale;
 import static tk.ivybits.javi.format.PixelFormat.BGR24;
@@ -43,11 +48,14 @@ public class FFMediaStream implements MediaStream {
     public MediaHandler<BufferedImage> videoHandler;
     public FFAudioStream audioStream;
     public FFVideoStream videoStream;
+    public FFSubtitleStream subtitleStream;
 
     public AVFrame.ByReference pBGRFrame;
     public AVFrame.ByReference pFrame;
 
-    public AVCodec videoCodec, audioCodec;
+    public AVSubtitle pSubtitle;
+
+    public AVCodec videoCodec, audioCodec, subtitleCodec;
     public long lastFrame = 0;
     public boolean playing = false;
     public boolean started;
@@ -105,6 +113,18 @@ public class FFMediaStream implements MediaStream {
         return pre;
     }
 
+    public SubtitleStream setSubtitleStream(SubtitleStream stream) {
+        if (stream.container() != media)
+            throw new IllegalArgumentException("stream not from same container");
+        if (pSubtitle == null)
+            pSubtitle = new AVSubtitle();
+        SubtitleStream pre = subtitleStream;
+        subtitleStream = (FFSubtitleStream) stream;
+        subtitleCodec = subtitleStream.codec;
+        System.out.println("Subtitle is set");
+        return pre;
+    }
+
     /**
      * Starts synchronous streaming.
      *
@@ -148,6 +168,7 @@ public class FFMediaStream implements MediaStream {
         }
 
         lastFrame = System.nanoTime();
+        int subtitle = 0;
         _outer:
         while (av_read_frame(media.formatContext.getPointer(), packet.getPointer()) >= 0) {
             try {
@@ -209,7 +230,7 @@ public class FFMediaStream implements MediaStream {
                         audioHandler.handle(audioBuffer);
                     }
                 }
-            } else if (videoStream != null && packet.stream_index == videoStream.index()) { // We only care about the media media here
+            } else if (videoStream != null && packet.stream_index == videoStream.index()) {
                 // Decode the media into our pFrame
                 int err = avcodec_decode_video2(videoStream.ffstream.codec.getPointer(), pFrame.getPointer(), frameFinished, packet.getPointer());
                 // If the return of avcodec_decode_video2 is negative, an error occurred.
@@ -255,6 +276,36 @@ public class FFMediaStream implements MediaStream {
                     // advance by the length of each lost frame until it goes back to sync,
                     // i.e. duration is back to positive.
                     lastFrame = time + duration;
+                }
+            } else if (subtitleStream != null && packet.stream_index == subtitleStream.index()) {
+                int err = avcodec_decode_subtitle2(subtitleStream.ffstream.codec.getPointer(), pSubtitle.getPointer(), frameFinished, packet.getPointer());
+                if (err < 0) {
+                    throw new StreamException("error while decoding video stream: " + err);
+                }
+                if (frameFinished.getValue() != 0) {
+                    pSubtitle.read();
+
+                    System.out.printf("Subtitle: %d - %d (%d)\n", pSubtitle.start_display_time, pSubtitle.end_display_time, pSubtitle.num_rects);
+                    for (Pointer pointer : pSubtitle.rects.getPointerArray(0, pSubtitle.num_rects)) {
+                        AVSubtitleRect rect = new AVSubtitleRect(pointer);
+                        System.out.printf("  - Rect: %d\n", rect.type);
+                        switch (SubtitleType.values()[rect.type]) {
+                            case SUBTITLE_NONE:
+                                break;
+                            case SUBTITLE_BITMAP: {
+                                System.out.println("    Raw Data: " + Arrays.toString(rect.pict.data));
+                                System.out.println("    Colours: " + rect.nb_colors);
+                                System.out.println("    Size: " + rect.w + "x" + rect.h);
+                                System.out.println("    First: " + Arrays.toString(rect.pict.data[0].getLongArray(0, rect.h * rect.w / 8)));
+                                break;
+                            }
+                            case SUBTITLE_TEXT:
+                                System.out.println(rect.text.getString(0, "UTF-8"));
+                                break;
+                            case SUBTITLE_DONKEY:
+                                break;
+                        }
+                    }
                 }
             }
             // Free the packet that av_read_frame allocated

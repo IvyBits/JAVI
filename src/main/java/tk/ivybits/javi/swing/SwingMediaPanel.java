@@ -4,6 +4,7 @@ import tk.ivybits.javi.media.Media;
 import tk.ivybits.javi.media.MediaHandler;
 import tk.ivybits.javi.media.stream.AudioStream;
 import tk.ivybits.javi.media.stream.MediaStream;
+import tk.ivybits.javi.media.stream.SubtitleStream;
 import tk.ivybits.javi.media.stream.VideoStream;
 
 import javax.sound.sampled.AudioFormat;
@@ -252,6 +253,10 @@ public class SwingMediaPanel extends JPanel {
      */
     public VideoStream setVideoStream(VideoStream videoStream) {
         return stream.setVideoStream(videoStream);
+    }
+
+    public SubtitleStream setSubtitleStream(SubtitleStream subtitleStream) {
+        return stream.setSubtitleStream(subtitleStream);
     }
 
     /**

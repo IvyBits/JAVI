@@ -38,6 +38,10 @@ public class LibAVCodec {
 
     public static native void avsubtitle_free(Pointer sub);
 
+    public static native int avpicture_alloc(Pointer picture, int pix_fmt, int width, int height);
+
+    public static native void avpicture_free(Pointer picture);
+
     static {
         FFmpeg.ensureInitialized();
         Native.register("avcodec-55");
