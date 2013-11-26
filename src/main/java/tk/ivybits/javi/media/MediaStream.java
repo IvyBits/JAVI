@@ -227,6 +227,7 @@ public class MediaStream implements Runnable {
                     // points to the first member of the struct.
                     // We use sws_scale itself to convert a data buffer of an arbitrary pixel format
                     // into our desired format: 3-byte BGR
+
                     sws_scale(pSwsContext, pFrame.getPointer(), pFrame.linesize, 0, height, pBGRFrame.getPointer(), pBGRFrame.linesize);
                     // Only data and linesize were changed in the sws_scale call: we only need update them
                     pBGRFrame.readField("data");
@@ -241,11 +242,11 @@ public class MediaStream implements Runnable {
                     byte[] raster = ((DataBufferByte) imageBuffer.getRaster().getDataBuffer()).getData();
                     pBGRFrame.data[0].read(0, raster, 0, raster.length);
 
-                    long duration = pFrame.pkt_duration * 1000000000 *
+                    long duration = pFrame.pkt_duration * 1_000_000_000 *
                             videoStream.ffstream.time_base.num / videoStream.ffstream.time_base.den;
                     long time = System.nanoTime();
                     duration -= time - lastFrame;
-                    videoHandler.handle(imageBuffer, duration / 1000000);
+                    videoHandler.handle(imageBuffer, duration / 1_000_000);
                     // Add in duration, which is the time that is spent waiting for the frame to render, so we get
                     // the time when this frame is rendered, and set it as the last frame.
                     // If duration is NEGATIVE, nothing will be rendered. We basically are subtracting the overdue
@@ -313,7 +314,7 @@ public class MediaStream implements Runnable {
             throw new IllegalArgumentException("negative position");
         if (to > media.length())
             throw new IllegalArgumentException("position greater then video length");
-        int err = av_seek_frame(media.formatContext.getPointer(), -1, to * 1000, 0);
+        int err = av_seek_frame(media.formatContext.getPointer(), -1, to * 1_000, 0);
         if (err < 0)
             throw new StreamException("failed to seek video: error " + err);
         lastFrame = System.nanoTime();
