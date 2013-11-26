@@ -6,10 +6,7 @@ import tk.ivybits.javi.ffmpeg.LibAVFormat;
 import tk.ivybits.javi.ffmpeg.avformat.AVFormatContext;
 import tk.ivybits.javi.ffmpeg.avformat.AVStream;
 import tk.ivybits.javi.media.*;
-import tk.ivybits.javi.media.stream.AudioStream;
-import tk.ivybits.javi.media.stream.MediaStream;
-import tk.ivybits.javi.media.stream.Stream;
-import tk.ivybits.javi.media.stream.VideoStream;
+import tk.ivybits.javi.media.stream.*;
 
 import java.io.Closeable;
 import java.io.File;
@@ -36,7 +33,7 @@ public class FFMedia implements Media {
     public AVFormatContext formatContext;
     public ArrayList<FFVideoStream> videoStreams = new ArrayList<>();
     public ArrayList<FFAudioStream> audioStreams = new ArrayList<>();
-    public ArrayList<FFStream> subtitleStreams = new ArrayList<>();
+    public ArrayList<FFSubtitleStream> subtitleStreams = new ArrayList<>();
 
     /**
      * Creates a Media object sourced from a <code>File</code>.
@@ -84,7 +81,7 @@ public class FFMedia implements Media {
                     audioStreams.add(new FFAudioStream(this, stream));
                     break;
                 case STREAM_SUBTITLE:
-                    // subtitleStreams.add(str);
+                    subtitleStreams.add(new FFSubtitleStream(this, stream));
                     break;
             }
         }
@@ -96,6 +93,10 @@ public class FFMedia implements Media {
 
     public List<? extends AudioStream> audioStreams() {
         return Collections.unmodifiableList(audioStreams);
+    }
+
+    public List<? extends SubtitleStream> subtitleStreams() {
+        return Collections.unmodifiableList(subtitleStreams);
     }
 
     /**
