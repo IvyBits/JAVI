@@ -79,6 +79,7 @@ public class FFStream implements Stream {
         return ffstream.codec.codec.long_name;
     }
 
+    @Override
     public void close() {
         if (!closed) {
             avcodec_close(ffstream.codec.getPointer());

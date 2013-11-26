@@ -33,6 +33,17 @@ public class SwingMediaPanel extends JPanel {
     private int frames = 0, lost = 0;
     private ArrayList<StreamListener> listeners = new ArrayList<>();
 
+    @Override
+    public void removeNotify() {
+        super.removeNotify();
+        try {
+            streamingThread.join(100);
+        } catch (InterruptedException death) {
+
+        }
+        stream.close();
+    }
+
     /**
      * Creates a new SwingMediaPanel component.
      *

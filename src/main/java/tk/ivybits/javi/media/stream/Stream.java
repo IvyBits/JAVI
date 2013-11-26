@@ -45,6 +45,9 @@ public interface Stream extends Closeable {
      */
     String longCodecName();
 
+    @Override
+    void close();
+
     /**
      * Enum for all possible streams that a container may hold.
      *

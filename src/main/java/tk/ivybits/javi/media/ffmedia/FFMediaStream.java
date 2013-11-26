@@ -321,7 +321,7 @@ public class FFMediaStream implements MediaStream {
     }
 
     @Override
-    public void close() throws IOException {
+    public void close() {
         avcodec_free_frame(new PointerByReference(pFrame.getPointer()));
         pFrame = null;
     }
