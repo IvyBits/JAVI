@@ -15,6 +15,7 @@ import tk.ivybits.javi.media.stream.SubtitleStream;
 import tk.ivybits.javi.media.stream.VideoStream;
 import tk.ivybits.javi.media.subtitle.BitmapSubtitle;
 import tk.ivybits.javi.media.subtitle.Subtitle;
+import tk.ivybits.javi.media.subtitle.TextSubtitle;
 
 import javax.imageio.ImageIO;
 import java.awt.*;
@@ -317,6 +318,8 @@ public class FFMediaStream implements MediaStream {
                             }
                             case SUBTITLE_TEXT:
                                 String subtitle = rect.text.getString(0, "UTF-8");
+                                subtitleHandler.handle(new TextSubtitle(subtitle),
+                                        pSubtitle.start_display_time, pSubtitle.end_display_time);
                                 System.out.println(subtitle);
                                 break;
                             case SUBTITLE_DONKEY:

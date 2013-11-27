@@ -8,6 +8,7 @@ import tk.ivybits.javi.media.stream.SubtitleStream;
 import tk.ivybits.javi.media.stream.VideoStream;
 import tk.ivybits.javi.media.subtitle.BitmapSubtitle;
 import tk.ivybits.javi.media.subtitle.Subtitle;
+import tk.ivybits.javi.media.subtitle.TextSubtitle;
 
 import javax.imageio.ImageIO;
 import javax.sound.sampled.AudioFormat;
@@ -173,6 +174,7 @@ public class SwingMediaPanel extends JPanel {
         if (nextFrame != null) {
             int width = nextFrame.getWidth();
             int height = nextFrame.getHeight();
+            LinkedList<String> subtitleLines = null;
 
             if (!subtitles.isEmpty()) {
                 Graphics2D g2d = nextFrame.createGraphics();
@@ -187,6 +189,11 @@ public class SwingMediaPanel extends JPanel {
                         x = Math.min(x, width - image.getWidth() - 10);
                         y = Math.min(y, height - image.getHeight() - 10);
                         g2d.drawImage(image, x, y, null);
+                    } else if (subtitle instanceof TextSubtitle) {
+                        if (subtitleLines == null)
+                            subtitleLines = new LinkedList<>();
+                        for (String line : ((TextSubtitle) subtitle).text.split("\\r?\\n"))
+                            subtitleLines.addFirst(line);
                     }
                 }
                 g2d.dispose();
@@ -217,6 +224,19 @@ public class SwingMediaPanel extends JPanel {
             } else {
                 g.fillRect(0, 0, boundary.width, y);
                 g.fillRect(0, y + bheight, boundary.width, y + 1);
+            }
+
+            if (subtitleLines != null) {
+                Font oldFont = g.getFont();
+                g.setFont(oldFont.deriveFont(Font.PLAIN, oldFont.getSize() * bwidth / width));
+                FontMetrics metrics = g.getFontMetrics();
+                int subHeight = (metrics.getHeight() + 5) * subtitleLines.size();
+                y = boundary.height - subHeight - 10;
+                for (String line : subtitleLines) {
+                    x = (boundary.width - metrics.stringWidth(line)) / 2;
+                    g.drawString(line, x, y);
+                }
+                g.setFont(oldFont);
             }
         } else {
             g.setColor(getBackground());
