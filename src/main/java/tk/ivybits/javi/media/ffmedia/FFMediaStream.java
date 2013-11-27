@@ -14,6 +14,7 @@ import tk.ivybits.javi.media.stream.MediaStream;
 import tk.ivybits.javi.media.stream.SubtitleStream;
 import tk.ivybits.javi.media.stream.VideoStream;
 import tk.ivybits.javi.media.subtitle.BitmapSubtitle;
+import tk.ivybits.javi.media.subtitle.DonkeyParser;
 import tk.ivybits.javi.media.subtitle.Subtitle;
 import tk.ivybits.javi.media.subtitle.TextSubtitle;
 
@@ -59,6 +60,7 @@ public class FFMediaStream implements MediaStream {
     public AVFrame.ByReference pBGRFrame;
     public AVFrame.ByReference pFrame;
 
+    public DonkeyParser[] donkeyParsers;
     public AVSubtitle pSubtitle;
 
     public AVCodec videoCodec, audioCodec, subtitleCodec;
@@ -74,6 +76,8 @@ public class FFMediaStream implements MediaStream {
         this.videoHandler = videoHandler;
         this.subtitleHandler = subtitleHandler;
         pFrame = avcodec_alloc_frame();
+
+        donkeyParsers = new DonkeyParser[media.formatContext.nb_streams];
     }
 
     /**
@@ -316,14 +320,27 @@ public class FFMediaStream implements MediaStream {
                                                        pSubtitle.start_display_time, pSubtitle.end_display_time);
                                 break;
                             }
-                            case SUBTITLE_TEXT:
+                            case SUBTITLE_TEXT: {
                                 String subtitle = rect.text.getString(0, "UTF-8");
                                 subtitleHandler.handle(new TextSubtitle(subtitle),
                                         pSubtitle.start_display_time, pSubtitle.end_display_time);
                                 System.out.println(subtitle);
                                 break;
-                            case SUBTITLE_DONKEY:
+                            }
+                            case SUBTITLE_DONKEY: {
+                                if (donkeyParsers[packet.stream_index] == null) {
+                                    if (subtitleStream.ffstream.codec.subtitle_header_size <= 0)
+                                        throw new IllegalStateException("subtitle without header");
+                                    String header = subtitleStream.ffstream.codec.subtitle_header.getString(0, "UTF-8");
+                                    //System.out.println(header);
+                                    DonkeyParser parser = new DonkeyParser(header);
+                                    System.out.println(parser);
+                                    donkeyParsers[packet.stream_index] = parser;
+                                }
+                                String subtitle = rect.ass.getString(0, "UTF-8");
+                                System.out.printf("%5d-%d5:: %s", pSubtitle.start_display_time, pSubtitle.end_display_time, subtitle);
                                 break;
+                            }
                         }
                     }
                 }

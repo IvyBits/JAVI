@@ -213,7 +213,7 @@ public class AVCodecContext extends Structure {
     public int /* AVDiscard */  skip_loop_filter;
     public int /* AVDiscard */  skip_idct;
     public int /* AVDiscard */  skip_frame;
-    public ByteByReference subtitle_header;
+    public Pointer subtitle_header;
     public int subtitle_header_size;
     @Deprecated
     public int error_rate;
