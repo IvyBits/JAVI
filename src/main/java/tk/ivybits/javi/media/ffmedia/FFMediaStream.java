@@ -15,8 +15,10 @@ import tk.ivybits.javi.media.stream.SubtitleStream;
 import tk.ivybits.javi.media.stream.VideoStream;
 
 import javax.imageio.ImageIO;
+import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.awt.image.DataBufferByte;
+import java.awt.image.IndexColorModel;
 import java.io.File;
 import java.io.IOException;
 import java.util.Arrays;
@@ -296,7 +298,27 @@ public class FFMediaStream implements MediaStream {
                                 System.out.println("    Raw Data: " + Arrays.toString(rect.pict.data));
                                 System.out.println("    Colours: " + rect.nb_colors);
                                 System.out.println("    Size: " + rect.w + "x" + rect.h);
-                                System.out.println("    First: " + Arrays.toString(rect.pict.data[0].getLongArray(0, rect.h * rect.w / 8)));
+                                //System.out.println("    First: " + Arrays.toString(rect.pict.data[0].getLongArray(0, rect.h * rect.w / 8)));
+                                byte[] r = new byte[rect.nb_colors], g = new byte[rect.nb_colors],
+                                       b = new byte[rect.nb_colors], a = new byte[rect.nb_colors];
+                                for (int i = 0; i < rect.nb_colors; ++i) {
+                                    int colour = rect.pict.data[1].getInt(i * 4);
+                                    r[i] = (byte) ((colour >> 16) & 0xff);
+                                    g[i] = (byte) ((colour >>  8) & 0xff);
+                                    b[i] = (byte) ((colour >>  0) & 0xff);
+                                    a[i] = (byte) ((colour >> 24) & 0xff);
+                                }
+                                IndexColorModel palette = new IndexColorModel(8, rect.nb_colors, r, g, b, a);
+                                BufferedImage result = new BufferedImage(rect.w, rect.h, BufferedImage.TYPE_BYTE_INDEXED, palette);
+                                byte[] raster = ((DataBufferByte) result.getRaster().getDataBuffer()).getData();
+                                rect.pict.data[0].read(0, raster, 0, raster.length);
+
+                                try {
+                                    ImageIO.write(result, "png", new File(String.format("subtitle_%d.png", subtitle++)));
+                                } catch (IOException e) {
+                                    e.printStackTrace();
+                                }
+
                                 break;
                             }
                             case SUBTITLE_TEXT:
