@@ -6,7 +6,10 @@ import tk.ivybits.javi.media.stream.AudioStream;
 import tk.ivybits.javi.media.stream.MediaStream;
 import tk.ivybits.javi.media.stream.SubtitleStream;
 import tk.ivybits.javi.media.stream.VideoStream;
+import tk.ivybits.javi.media.subtitle.BitmapSubtitle;
+import tk.ivybits.javi.media.subtitle.Subtitle;
 
+import javax.imageio.ImageIO;
 import javax.sound.sampled.AudioFormat;
 import javax.sound.sampled.AudioSystem;
 import javax.sound.sampled.LineUnavailableException;
@@ -14,6 +17,7 @@ import javax.sound.sampled.SourceDataLine;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.image.BufferedImage;
+import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 
@@ -117,6 +121,23 @@ public class SwingMediaPanel extends JPanel {
                         // Notify all listeners that our stream has ended
                         for (StreamListener listener : listeners) {
                             listener.onEnd();
+                        }
+                    }
+                })
+                .subtitle(new MediaHandler<Subtitle>() {
+                    int id = 0;
+
+                    @Override
+                    public void handle(Subtitle subtitle, long start, long end) {
+                        if (subtitle instanceof BitmapSubtitle) {
+                            System.out.printf("    Duration: %d-%d\n", start, end);
+
+                            try {
+                                ImageIO.write(((BitmapSubtitle) subtitle).image, "png",
+                                        new File(String.format("subtitle_%d.png", id++)));
+                            } catch (IOException e) {
+                                e.printStackTrace();
+                            }
                         }
                     }
                 })

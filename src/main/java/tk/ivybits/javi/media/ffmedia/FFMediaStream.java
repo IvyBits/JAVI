@@ -13,6 +13,8 @@ import tk.ivybits.javi.media.stream.AudioStream;
 import tk.ivybits.javi.media.stream.MediaStream;
 import tk.ivybits.javi.media.stream.SubtitleStream;
 import tk.ivybits.javi.media.stream.VideoStream;
+import tk.ivybits.javi.media.subtitle.BitmapSubtitle;
+import tk.ivybits.javi.media.subtitle.Subtitle;
 
 import javax.imageio.ImageIO;
 import java.awt.*;
@@ -48,6 +50,7 @@ public class FFMediaStream implements MediaStream {
     public final FFMedia media;
     public MediaHandler<byte[]> audioHandler;
     public MediaHandler<BufferedImage> videoHandler;
+    public MediaHandler<Subtitle> subtitleHandler;
     public FFAudioStream audioStream;
     public FFVideoStream videoStream;
     public FFSubtitleStream subtitleStream;
@@ -63,10 +66,12 @@ public class FFMediaStream implements MediaStream {
     public boolean started;
     private final Semaphore mutex = new Semaphore(1);
 
-    FFMediaStream(FFMedia media, MediaHandler<byte[]> audioHandler, MediaHandler<BufferedImage> videoHandler) throws IOException {
+    FFMediaStream(FFMedia media, MediaHandler<byte[]> audioHandler, MediaHandler<BufferedImage> videoHandler,
+                  MediaHandler<Subtitle> subtitleHandler) throws IOException {
         this.media = media;
         this.audioHandler = audioHandler;
         this.videoHandler = videoHandler;
+        this.subtitleHandler = subtitleHandler;
         pFrame = avcodec_alloc_frame();
     }
 
@@ -170,7 +175,6 @@ public class FFMediaStream implements MediaStream {
         }
 
         lastFrame = System.nanoTime();
-        int subtitle = 0;
         _outer:
         while (av_read_frame(media.formatContext.getPointer(), packet.getPointer()) >= 0) {
             try {
@@ -298,7 +302,7 @@ public class FFMediaStream implements MediaStream {
                                 System.out.println("    Raw Data: " + Arrays.toString(rect.pict.data));
                                 System.out.println("    Colours: " + rect.nb_colors);
                                 System.out.println("    Size: " + rect.w + "x" + rect.h);
-                                //System.out.println("    First: " + Arrays.toString(rect.pict.data[0].getLongArray(0, rect.h * rect.w / 8)));
+
                                 byte[] r = new byte[rect.nb_colors], g = new byte[rect.nb_colors],
                                        b = new byte[rect.nb_colors], a = new byte[rect.nb_colors];
                                 for (int i = 0; i < rect.nb_colors; ++i) {
@@ -313,12 +317,8 @@ public class FFMediaStream implements MediaStream {
                                 byte[] raster = ((DataBufferByte) result.getRaster().getDataBuffer()).getData();
                                 rect.pict.data[0].read(0, raster, 0, raster.length);
 
-                                try {
-                                    ImageIO.write(result, "png", new File(String.format("subtitle_%d.png", subtitle++)));
-                                } catch (IOException e) {
-                                    e.printStackTrace();
-                                }
-
+                                subtitleHandler.handle(new BitmapSubtitle(rect.x, rect.y, rect.w, rect.h, result),
+                                                       pSubtitle.start_display_time, pSubtitle.end_display_time);
                                 break;
                             }
                             case SUBTITLE_TEXT:
@@ -408,6 +408,7 @@ public class FFMediaStream implements MediaStream {
         public FFMedia media;
         public MediaHandler<byte[]> audioHandler;
         public MediaHandler<BufferedImage> videoHandler;
+        public MediaHandler<Subtitle> subtitleHandler;
 
         /**
          * Creates a MediaStream builder for the specified {@link Media} object.
@@ -444,6 +445,11 @@ public class FFMediaStream implements MediaStream {
             return this;
         }
 
+        public Builder subtitle(MediaHandler<Subtitle> subtitleHandler) {
+            this.subtitleHandler = subtitleHandler;
+            return this;
+        }
+
         /**
          * Finalize creation of a {@link MediaStream}.
          *
@@ -455,7 +461,7 @@ public class FFMediaStream implements MediaStream {
         public FFMediaStream create() throws IOException {
             if (audioHandler == null && videoHandler == null)
                 throw new IllegalStateException("no media handlers specified");
-            return new FFMediaStream(media, audioHandler, videoHandler);
+            return new FFMediaStream(media, audioHandler, videoHandler, subtitleHandler);
         }
     }
 }
