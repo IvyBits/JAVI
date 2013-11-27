@@ -5,6 +5,9 @@ import tk.ivybits.javi.media.stream.AudioStream;
 
 import javax.sound.sampled.AudioFormat;
 
+/**
+ * FFmpeg-backed VideoStream.
+ */
 public class FFAudioStream extends FFStream implements AudioStream {
     FFAudioStream(FFMedia container, AVStream ffstream) {
         super(container, ffstream);

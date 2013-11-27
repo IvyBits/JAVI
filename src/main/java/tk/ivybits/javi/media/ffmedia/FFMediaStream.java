@@ -8,7 +8,7 @@ import tk.ivybits.javi.ffmpeg.avcodec.AVCodec;
 import tk.ivybits.javi.ffmpeg.avcodec.AVCodecContext;
 import tk.ivybits.javi.ffmpeg.avcodec.AVPacket;
 import tk.ivybits.javi.ffmpeg.avutil.AVFrame;
-import tk.ivybits.javi.media.*;
+import tk.ivybits.javi.media.MediaHandler;
 import tk.ivybits.javi.media.stream.AudioStream;
 import tk.ivybits.javi.media.stream.MediaStream;
 import tk.ivybits.javi.media.stream.VideoStream;
@@ -30,9 +30,9 @@ import static tk.ivybits.javi.format.PixelFormat.BGR24;
 import static tk.ivybits.javi.format.SampleFormat.SIGNED_16BIT;
 
 /**
- * A media stream.
+ * FFmpeg MediaStream implementation.
  * </p>
- * Cannot be instantiated directly: use {@link tk.ivybits.javi.media.stream.MediaStream.Builder}.
+ * Cannot be instantiated directly.
  *
  * @version 1.0
  * @since 1.0
@@ -61,12 +61,7 @@ public class FFMediaStream implements MediaStream {
     }
 
     /**
-     * Sets a video stream to be played.
-     *
-     * @param stream The stream to play.
-     * @return The stream perviously playing, null if none.
-     * @throws IllegalArgumentException Thrown if the stream does not belong to the parent container.
-     * @throws StreamException          Thrown if an error occurs while allocating stream buffers.
+     * {@inheritDoc}
      */
     public VideoStream setVideoStream(VideoStream stream) {
         if (stream.container() != media)
@@ -89,12 +84,7 @@ public class FFMediaStream implements MediaStream {
     }
 
     /**
-     * Sets a audio stream to be played.
-     *
-     * @param stream The stream to play.
-     * @return The stream perviously playing, null if none.
-     * @throws IllegalArgumentException Thrown if the stream does not belong to the parent container.
-     * @throws StreamException          Thrown if an error occurs while allocating stream buffers.
+     * {@inheritDoc}
      */
     public AudioStream setAudioStream(AudioStream stream) {
         if (stream.container() != media)
@@ -106,10 +96,7 @@ public class FFMediaStream implements MediaStream {
     }
 
     /**
-     * Starts synchronous streaming.
-     *
-     * @throws StreamException Thrown if an error occurs while decoding.
-     * @since 1.0
+     * {@inheritDoc}
      */
     public void run() {
         started = playing = true;
@@ -246,7 +233,7 @@ public class FFMediaStream implements MediaStream {
                             videoStream.ffstream.time_base.num / videoStream.ffstream.time_base.den;
                     long time = System.nanoTime();
                     duration -= time - lastFrame;
-                    videoHandler.handle(imageBuffer, duration / 1_000_000);
+                    videoHandler.handle(imageBuffer, duration);
                     // Add in duration, which is the time that is spent waiting for the frame to render, so we get
                     // the time when this frame is rendered, and set it as the last frame.
                     // If duration is NEGATIVE, nothing will be rendered. We basically are subtracting the overdue
@@ -266,21 +253,14 @@ public class FFMediaStream implements MediaStream {
     }
 
     /**
-     * Checks if the stream is playing.
-     *
-     * @return True if so, false otherwise.
-     * @since 1.0
+     * {@inheritDoc}
      */
     public boolean isPlaying() {
         return playing;
     }
 
     /**
-     * Sets the current state of the stream.
-     *
-     * @param flag If true, the stream will be played. Otherwise, it will be paused.
-     * @throws StreamException Thrown if called when called on a stream that is not started.
-     * @since 1.0
+     * {@inheritDoc}
      */
     public void setPlaying(boolean flag) {
         if (!started)
@@ -299,13 +279,7 @@ public class FFMediaStream implements MediaStream {
     }
 
     /**
-     * Sets the current position of the stream, in milliseconds.
-     *
-     * @param to The position to seek to.
-     * @throws IllegalArgumentException Thrown if the seek position is invalid.
-     * @throws StreamException          Thrown if the seek failed.
-     * @throws StreamException          Thrown if called when called on a stream that is not started.
-     * @since 1.0
+     * {@inheritDoc}
      */
     public void seek(long to) {
         if (!started)
@@ -320,6 +294,9 @@ public class FFMediaStream implements MediaStream {
         lastFrame = System.nanoTime();
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public void close() {
         avcodec_free_frame(new PointerByReference(pFrame.getPointer()));
@@ -327,9 +304,23 @@ public class FFMediaStream implements MediaStream {
     }
 
     /**
-     * Builder for generating valid {@link MediaStream} objects.
-     *
-     * @since 1.0
+     * {@inheritDoc}
+     */
+    @Override
+    public FFAudioStream getAudioStream() {
+        return audioStream;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public FFVideoStream getVideoStream() {
+        return videoStream;
+    }
+
+    /**
+     * {@inheritDoc}
      */
     public static class Builder implements MediaStream.Builder {
         public FFMedia media;
@@ -337,22 +328,14 @@ public class FFMediaStream implements MediaStream {
         public MediaHandler<BufferedImage> videoHandler;
 
         /**
-         * Creates a MediaStream builder for the specified {@link Media} object.
-         *
-         * @param media The container designated for streaming.
-         * @since 1.0
+         * {@inheritDoc}
          */
         public Builder(FFMedia media) {
             this.media = media;
         }
 
         /**
-         * Specifies the audio stream handler.
-         *
-         * @param audioHandler The audio handler. Should accept byte arrays of arbitrary size as signed 16-bit PCM audio
-         *                     data. Frequency and channels may be obtained from the source media container.
-         * @return The current Builder.
-         * @since 1.0
+         * {@inheritDoc}
          */
         public Builder audio(MediaHandler<byte[]> audioHandler) {
             this.audioHandler = audioHandler;
@@ -360,11 +343,7 @@ public class FFMediaStream implements MediaStream {
         }
 
         /**
-         * Specifies the video stream handler.
-         *
-         * @param videoHandler The video handler. Should accept BufferedImages of arbitrary sizes.
-         * @return The current Builder.
-         * @since 1.0
+         * {@inheritDoc}
          */
         public Builder video(MediaHandler<BufferedImage> videoHandler) {
             this.videoHandler = videoHandler;
@@ -372,12 +351,7 @@ public class FFMediaStream implements MediaStream {
         }
 
         /**
-         * Finalize creation of a {@link MediaStream}.
-         *
-         * @return The aforementioned stream.
-         * @throws IOException           Thrown if a stream could not be established.
-         * @throws IllegalStateException Thrown if no stream handlers have been specified.
-         * @since 1.0
+         * {@inheritDoc}
          */
         public FFMediaStream create() throws IOException {
             if (audioHandler == null && videoHandler == null)

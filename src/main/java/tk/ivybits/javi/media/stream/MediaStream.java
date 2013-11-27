@@ -23,6 +23,7 @@ public interface MediaStream extends Runnable, Closeable {
      * @return The stream perviously playing, null if none.
      * @throws IllegalArgumentException Thrown if the stream does not belong to the parent container.
      * @throws StreamException          Thrown if an error occurs while allocating stream buffers.
+     * @since 1.0
      */
     VideoStream setVideoStream(VideoStream stream);
 
@@ -33,8 +34,25 @@ public interface MediaStream extends Runnable, Closeable {
      * @return The stream perviously playing, null if none.
      * @throws IllegalArgumentException Thrown if the stream does not belong to the parent container.
      * @throws StreamException          Thrown if an error occurs while allocating stream buffers.
+     * @since 1.0
      */
     AudioStream setAudioStream(AudioStream stream);
+
+    /**
+     * Fetches current audio stream.
+     *
+     * @return The <code>AudioStream</code> currently in use, or null if none.
+     * @since 1.0
+     */
+    AudioStream getAudioStream();
+
+    /**
+     * Fetches current video stream.
+     *
+     * @return The <code>VideoStream</code> currently in use, or null if none.
+     * @since 1.0
+     */
+    VideoStream getVideoStream();
 
     /**
      * Checks if the stream is playing.
@@ -64,6 +82,9 @@ public interface MediaStream extends Runnable, Closeable {
      */
     void seek(long to);
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     void close();
 

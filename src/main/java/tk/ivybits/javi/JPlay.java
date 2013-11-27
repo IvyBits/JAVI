@@ -1,13 +1,14 @@
 package tk.ivybits.javi;
 
 import tk.ivybits.javi.exc.StreamException;
-import tk.ivybits.javi.media.stream.AudioStream;
 import tk.ivybits.javi.media.Media;
 import tk.ivybits.javi.media.MediaFactory;
+import tk.ivybits.javi.media.stream.AudioStream;
 import tk.ivybits.javi.media.stream.VideoStream;
 import tk.ivybits.javi.swing.StreamListener;
 import tk.ivybits.javi.swing.SwingMediaPanel;
 
+import javax.sound.sampled.LineUnavailableException;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
@@ -27,7 +28,7 @@ import static tk.ivybits.javi.ffmpeg.FFmpeg.*;
  * @since 1.0
  */
 public class JPlay {
-    public static void main(String[] args) throws IOException {
+    public static void main(String[] args) throws IOException, LineUnavailableException {
         if (args.length < 1) {
             System.err.println("File not specified.");
             System.exit(1);
@@ -77,10 +78,18 @@ public class JPlay {
         if (!media.audioStreams().isEmpty())
             videoPanel.setAudioStream(media.audioStreams().get(0));
 
-        videoPanel.setBackground(Color.BLACK);
-        videoPanel.addMouseListener(new MouseAdapter() {
+        MouseAdapter seeker = new MouseAdapter() {
             @Override
             public void mouseClicked(MouseEvent e) {
+                doSeek(e);
+            }
+
+            @Override
+            public void mouseDragged(MouseEvent e) {
+                doSeek(e);
+            }
+
+            private void doSeek(MouseEvent e) {
                 double ratio = e.getX() / (double) videoPanel.getWidth();
                 long position = (long) (length * ratio);
                 System.err.printf("Seek to %s milliseconds (%s seconds).\n", position, position / 1000.0);
@@ -90,7 +99,10 @@ public class JPlay {
                     System.err.println("Seek failed.");
                 }
             }
-        });
+        };
+        videoPanel.setBackground(Color.BLACK);
+        videoPanel.addMouseListener(seeker);
+        videoPanel.addMouseMotionListener(seeker);
         frame.addKeyListener(new KeyAdapter() {
             @Override
             public void keyReleased(KeyEvent e) {

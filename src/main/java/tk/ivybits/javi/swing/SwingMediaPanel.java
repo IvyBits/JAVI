@@ -6,15 +6,13 @@ import tk.ivybits.javi.media.stream.AudioStream;
 import tk.ivybits.javi.media.stream.MediaStream;
 import tk.ivybits.javi.media.stream.VideoStream;
 
-import javax.sound.sampled.AudioFormat;
-import javax.sound.sampled.AudioSystem;
-import javax.sound.sampled.LineUnavailableException;
-import javax.sound.sampled.SourceDataLine;
+import javax.sound.sampled.*;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.concurrent.locks.LockSupport;
 
 /**
  * Media component for Swing.
@@ -32,16 +30,50 @@ public class SwingMediaPanel extends JPanel {
     private BufferedImage nextFrame;
     private int frames = 0, lost = 0;
     private ArrayList<StreamListener> listeners = new ArrayList<>();
+    private SourceDataLine sdl;
+    private Mixer mixer;
 
-    @Override
-    public void removeNotify() {
-        super.removeNotify();
-        try {
-            streamingThread.join(100);
-        } catch (InterruptedException death) {
+    /**
+     * Fetches the mixer in use.
+     *
+     * @return The mixer currently being used, or null if there is none (or the desired one failed to open).
+     */
+    public Mixer getMixer() {
+        return mixer;
+    }
 
+    /**
+     * Sets the mixer used for audio playback.
+     *
+     * @param mixer The mixer to use, or null to disable (mute) audio.
+     * @return True if the mixer was successfully set, or false if it was not.
+     *         <b>A mixer may not be set if a <code>LineUnavailableException</code> is thrown when opening a line.</b>
+     *         This is generally caused by the desired mixer not supporting the format the audio stream is encoded in.
+     */
+    public boolean setMixer(Mixer mixer) {
+        // Close audio line, if it exists
+        if (sdl != null) {
+            sdl.drain();
+            sdl.close();
         }
-        stream.close();
+
+        if (mixer == null) {
+            // If mixer is null, then audio is disabled
+            this.mixer = mixer;
+            return true;
+        }
+        try {
+            AudioFormat af = stream.getAudioStream().audioFormat();
+            sdl = AudioSystem.getSourceDataLine(af, mixer.getMixerInfo());
+            // Attempt to use a large buffer, such that sdl.write has a lower
+            // chance of blocking
+            sdl.open(af, 512000);
+        } catch (LineUnavailableException failed) {
+            return false;
+        }
+        this.mixer = mixer;
+        sdl.start();
+        return true;
     }
 
     /**
@@ -50,27 +82,14 @@ public class SwingMediaPanel extends JPanel {
      * @param media The source to be played. Does not have to contain a video media. In the case that a video media does
      *              not exist, this component will act like a normal <code>JPanel</code> while playing available
      *              streams.
+     * @since 1.0
      */
     public SwingMediaPanel(final Media media) throws IOException {
         this.media = media;
+
         stream = media
                 .stream()
                 .audio(new MediaHandler<byte[]>() {
-                    private SourceDataLine sdl;
-
-                    {
-                        try {
-                            AudioFormat af = media.audioStreams().get(0).audioFormat();
-                            sdl = AudioSystem.getSourceDataLine(af);
-                            // Attempt to use a large buffer, such that sdl.write has a lower
-                            // chance of blocking
-                            sdl.open(af, 512000);
-                            sdl.start();
-                        } catch (LineUnavailableException e) {
-                            throw new IllegalStateException("failed to initialize audio line");
-                        }
-                    }
-
                     @Override
                     public void handle(byte[] buffer) {
                         if (sdl == null) {// Audio failed to initialize; ignore this buffer
@@ -94,10 +113,8 @@ public class SwingMediaPanel extends JPanel {
                             ++lost;
                             return;
                         }
-                        try {
-                            Thread.sleep(duration);
-                        } catch (InterruptedException e) {
-                        }
+
+                        LockSupport.parkNanos(duration);
                         // Set our current frame to the passed buffer,
                         // and repaint immediately. Because we do not use repaint(), we
                         // have a guarantee that each frame will be drawn separately. repaint() tends
@@ -120,15 +137,16 @@ public class SwingMediaPanel extends JPanel {
                     }
                 })
                 .create();
+
         streamingThread = new Thread(stream);
     }
 
     /**
      * Starts media streaming.
      *
-     * @throws IOException Thrown if a media stream could not be established.
+     * @since 1.0
      */
-    public void start() throws IOException {
+    public void start() {
         streamingThread.start();
     }
 
@@ -152,7 +170,7 @@ public class SwingMediaPanel extends JPanel {
                 bwidth = ((bheight = boundary.height) * width) / height;
             }
 
-            // Don't filter if the difference in size is insignificant
+            // Don't filter if the difference in size is insignificant (under 20px)
             if (Math.max(bwidth - width, bheight - height) > 20) {
                 ((Graphics2D) g).setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR);
             }
@@ -162,6 +180,8 @@ public class SwingMediaPanel extends JPanel {
             int y = Math.abs(boundary.height - bheight) / 2;
             g.drawImage(nextFrame, x, y, bwidth, bheight, null);
             // Now draw the black sizes on the side or the top
+            // By not filling the entire client area with a colour and then overwriting with the current frame,
+            // we save potentially significant amounts of time.
             g.setColor(getBackground());
             if (bheight == boundary.height) {
                 g.fillRect(0, 0, x, boundary.height);
@@ -171,15 +191,33 @@ public class SwingMediaPanel extends JPanel {
                 g.fillRect(0, y + bheight, boundary.width, y + 1);
             }
         } else {
+            // Foregoe call to super.paint: emulate it with less overhead
             g.setColor(getBackground());
             g.fillRect(0, 0, boundary.width, boundary.height);
         }
     }
 
     /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void removeNotify() {
+        super.removeNotify();
+        try {
+            streamingThread.join(100);
+        } catch (InterruptedException death) {
+
+        }
+        // Close data lines
+        setMixer(null);
+        stream.close();
+    }
+
+    /**
      * Returns the amount of video frames not rendered due to audio-video sync, as a percentage.
      *
      * @return The aforementioned percentage, from 0..1
+     * @since 1.0
      */
     public double frameLossRate() {
         return lost / (double) frames;
@@ -208,17 +246,6 @@ public class SwingMediaPanel extends JPanel {
     }
 
     /**
-     * Checks if the stream has been completed.
-     *
-     * @return True if so, false otherwise.
-     * @throws IllegalStateException Thrown if the stream was never started.
-     * @since 1.0
-     */
-    public boolean isFinished() {
-        return nextFrame == null;
-    }
-
-    /**
      * Seeks to a position in the stream.
      *
      * @param to The position to seek to, in milliseconds.
@@ -240,7 +267,25 @@ public class SwingMediaPanel extends JPanel {
      * @since 1.0
      */
     public AudioStream setAudioStream(AudioStream audioStream) {
-        return stream.setAudioStream(audioStream);
+        // Set the audio stream, but keep the previous stream to return later
+        // This call cannot be last since setMixer closes our SourceDataLine
+        AudioStream previous = stream.setAudioStream(audioStream);
+
+        // Desired attributes
+        DataLine.Info lineInfo = new DataLine.Info(SourceDataLine.class, audioStream.audioFormat());
+        // If all else fails after this, at the very least we close the current line, if any
+        setMixer(null);
+        // Iterate over all mixers and select one that supports out audio stream's format
+        // Such a mixer may not necessarily exist, which is why it's important to close the
+        // line before we do this
+        for (Mixer.Info info : AudioSystem.getMixerInfo()) {
+            Mixer mix = AudioSystem.getMixer(info);
+            if (mix.isLineSupported(lineInfo)) {
+                setMixer(mix); // Start using this mixer
+                break;
+            }
+        }
+        return previous;
     }
 
     /**
