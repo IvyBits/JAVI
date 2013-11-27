@@ -20,6 +20,9 @@ import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.LinkedList;
+import java.util.Timer;
+import java.util.TimerTask;
 
 /**
  * Media component for Swing.
@@ -37,6 +40,8 @@ public class SwingMediaPanel extends JPanel {
     private BufferedImage nextFrame;
     private int frames = 0, lost = 0;
     private ArrayList<StreamListener> listeners = new ArrayList<>();
+    private LinkedList<Subtitle> subtitles = new LinkedList<>();
+    private Timer timer = new Timer("SwingMediaPanel - Subtitle Timer", true);
 
     @Override
     public void removeNotify() {
@@ -125,20 +130,25 @@ public class SwingMediaPanel extends JPanel {
                     }
                 })
                 .subtitle(new MediaHandler<Subtitle>() {
-                    int id = 0;
-
                     @Override
-                    public void handle(Subtitle subtitle, long start, long end) {
-                        if (subtitle instanceof BitmapSubtitle) {
-                            System.out.printf("    Duration: %d-%d\n", start, end);
-
-                            try {
-                                ImageIO.write(((BitmapSubtitle) subtitle).image, "png",
-                                        new File(String.format("subtitle_%d.png", id++)));
-                            } catch (IOException e) {
-                                e.printStackTrace();
-                            }
+                    public void handle(final Subtitle subtitle, long start, long end) {
+                        if (start > 0) {
+                            timer.schedule(new TimerTask() {
+                                @Override
+                                public void run() {
+                                    subtitles.add(subtitle);
+                                }
+                            }, start);
+                        } else {
+                            subtitles.add(subtitle);
                         }
+
+                        timer.schedule(new TimerTask() {
+                            @Override
+                            public void run() {
+                                subtitles.remove(subtitle);
+                            }
+                        }, end);
                     }
                 })
                 .create();
@@ -163,9 +173,24 @@ public class SwingMediaPanel extends JPanel {
         if (nextFrame != null) {
             int width = nextFrame.getWidth();
             int height = nextFrame.getHeight();
-            /* Graphics2D g2d = nextFrame.createGraphics();
-            g2d.setColor(Color.WHITE);
-            g2d.drawString("HEIL UNS SELBSTS!", 50, 50); */
+
+            if (!subtitles.isEmpty()) {
+                Graphics2D g2d = nextFrame.createGraphics();
+                for (Subtitle subtitle : subtitles) {
+                    if (subtitle instanceof BitmapSubtitle) {
+                        int x = ((BitmapSubtitle) subtitle).x;
+                        int y = ((BitmapSubtitle) subtitle).y;
+                        BufferedImage image = ((BitmapSubtitle) subtitle).image;
+
+                        // Some subtitles position themselves out of the video.
+                        // Here, make sure they go in with some space on the side
+                        x = Math.min(x, width - image.getWidth() - 10);
+                        y = Math.min(y, height - image.getHeight() - 10);
+                        g2d.drawImage(image, x, y, null);
+                    }
+                }
+                g2d.dispose();
+            }
 
             // Scale image dimensions with aspect ratio to fit inside the panel
             int bwidth;
@@ -183,6 +208,7 @@ public class SwingMediaPanel extends JPanel {
             int x = Math.abs(boundary.width - bwidth) / 2;
             int y = Math.abs(boundary.height - bheight) / 2;
             g.drawImage(nextFrame, x, y, bwidth, bheight, null);
+
             // Now draw the black sizes on the side or the top
             g.setColor(getBackground());
             if (bheight == boundary.height) {

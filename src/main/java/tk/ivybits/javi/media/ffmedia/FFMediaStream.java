@@ -291,18 +291,12 @@ public class FFMediaStream implements MediaStream {
                 if (frameFinished.getValue() != 0) {
                     pSubtitle.read();
 
-                    System.out.printf("Subtitle: %d - %d (%d)\n", pSubtitle.start_display_time, pSubtitle.end_display_time, pSubtitle.num_rects);
                     for (Pointer pointer : pSubtitle.rects.getPointerArray(0, pSubtitle.num_rects)) {
                         AVSubtitleRect rect = new AVSubtitleRect(pointer);
-                        System.out.printf("  - Rect: %d\n", rect.type);
                         switch (SubtitleType.values()[rect.type]) {
                             case SUBTITLE_NONE:
                                 break;
                             case SUBTITLE_BITMAP: {
-                                System.out.println("    Raw Data: " + Arrays.toString(rect.pict.data));
-                                System.out.println("    Colours: " + rect.nb_colors);
-                                System.out.println("    Size: " + rect.w + "x" + rect.h);
-
                                 byte[] r = new byte[rect.nb_colors], g = new byte[rect.nb_colors],
                                        b = new byte[rect.nb_colors], a = new byte[rect.nb_colors];
                                 for (int i = 0; i < rect.nb_colors; ++i) {
@@ -322,7 +316,8 @@ public class FFMediaStream implements MediaStream {
                                 break;
                             }
                             case SUBTITLE_TEXT:
-                                System.out.println(rect.text.getString(0, "UTF-8"));
+                                String subtitle = rect.text.getString(0, "UTF-8");
+                                System.out.println(subtitle);
                                 break;
                             case SUBTITLE_DONKEY:
                                 break;
