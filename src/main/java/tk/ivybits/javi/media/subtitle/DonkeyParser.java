@@ -6,9 +6,17 @@ import java.util.*;
 public class DonkeyParser {
     protected String version;
     protected ArrayList<String> format;
+    protected Style defaultStyle;
     protected HashMap<String, Style> styles = new HashMap<>();
 
     public DonkeyParser(String header) {
+        defaultStyle = new Style();
+        defaultStyle.name = "Default";
+        defaultStyle.font = new Font(Font.SANS_SERIF, Font.PLAIN, 20);
+        defaultStyle.primaryColor = Color.white;
+        defaultStyle.secondaryColor = Color.white;
+        defaultStyle.outlineColor = Color.black;
+        defaultStyle.backColor = Color.black;
         for (String line : header.split("\\r?\\n")) {
             processLine(line);
         }
@@ -41,19 +49,28 @@ public class DonkeyParser {
         Style style = new Style();
         String name = map.get("Name");
         int fontStyle = 0;
+        style.primaryColor = new Color(parseInt(getWithDefault(map, "PrimaryColour", "&HFFFFFF")));
+        style.secondaryColor = new Color(parseInt(getWithDefault(map, "SecondaryColour", "&HFFFFFF")));
+        style.outlineColor = new Color(parseInt(getWithDefault(map, "OutlineColour", "0")));
+        style.backColor = new Color(parseInt(getWithDefault(map, "BackColour", "0")));
         if (parseInt(getWithDefault(map, "Bold", "0")) != 0)
             fontStyle &= Font.BOLD;
         if (parseInt(getWithDefault(map, "Italic", "0")) != 0)
             fontStyle &= Font.ITALIC;
-        Font font = new Font(getWithDefault(map, "Fontname", Font.SANS_SERIF), fontStyle,
-                parseInt(getWithDefault(map, "Fontsize", "16")));
-        style.name = name;
-        style.font = font;
-        style.primaryColor = new Color(parseInt(getWithDefault(map, "PrimaryColour", "&HFFFFFFFF")));
-        style.secondaryColor = new Color(parseInt(getWithDefault(map, "SecondaryColour", "0")));
-        style.outlineColor = new Color(parseInt(getWithDefault(map, "OutlineColour", "0")));
-        style.backColor = new Color(parseInt(getWithDefault(map, "BackColour", "0")));
-        styles.put(name, style);
+        String fontName = getWithDefault(map, "Fontname", Font.SANS_SERIF);
+        int fontSize = parseInt(getWithDefault(map, "Fontsize", "16"));
+        if ("Default".equals(name) && "Arial".equals(fontName) && style.primaryColor.getRGB() == 0xFFFFFFFF &&
+                style.secondaryColor.getRGB() == 0xFFFFFFFF && style.outlineColor.getRGB() == 0xFF000000 &&
+                style.backColor.getRGB() == 0xFF000000) {
+            // FFmpeg's default font, for the subtitles converted to Donkey internally
+            System.out.println("Hit default font");
+            styles.put(name, defaultStyle);
+        } else {
+            Font font = new Font(fontName, fontStyle, fontSize);
+            style.name = name;
+            style.font = font;
+            styles.put(name, style);
+        }
     }
 
     protected void processLine(String line) {
