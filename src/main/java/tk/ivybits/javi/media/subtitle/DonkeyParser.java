@@ -1,10 +1,7 @@
 package tk.ivybits.javi.media.subtitle;
 
 import java.awt.*;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 
 public class DonkeyParser {
     protected String version;
@@ -50,6 +47,7 @@ public class DonkeyParser {
             fontStyle &= Font.ITALIC;
         Font font = new Font(getWithDefault(map, "Fontname", Font.SANS_SERIF), fontStyle,
                 parseInt(getWithDefault(map, "Fontsize", "16")));
+        style.name = name;
         style.font = font;
         style.primaryColor = new Color(parseInt(getWithDefault(map, "PrimaryColour", "&HFFFFFFFF")));
         style.secondaryColor = new Color(parseInt(getWithDefault(map, "SecondaryColour", "0")));
@@ -90,10 +88,14 @@ public class DonkeyParser {
         String style = map.get("Style");
         if (style.startsWith("*"))
             style = style.substring(1);
-        String text = map.get("Text");
+        String text = map.get("Text").replace("\\n", "\n"); // \n is the embedded new line
         long start = map.containsKey("Start") ? parseTimeStamp(map.get("Start")) : 0;
         long end = map.containsKey("End") ? parseTimeStamp(map.get("End")) : 0;
-        return new DonkeySubtitle(styles.get(style), start, end, text);
+        return new DonkeySubtitle(this, styles.get(style), start, end, text);
+    }
+
+    public DrawHelper getDrawHelper() {
+        return new DrawHelper();
     }
 
     public String toString() {
@@ -112,6 +114,7 @@ public class DonkeyParser {
     }
 
     public class Style {
+        public String name;
         public Font font;
         public Color primaryColor;
         public Color secondaryColor;
@@ -119,7 +122,108 @@ public class DonkeyParser {
         public Color backColor;
     }
 
-    public static <K,V> V getWithDefault(Map<K, V> map, K key, V defaultValue) {
+    public static class RowInfo {
+        public String text;
+        public Font font;
+        public Style style;
+        public int width;
+        public int y;
+    }
+
+    public class DrawHelper {
+        HashMap<String, Font> fontCache = new HashMap<>();
+        double scale;
+        int spacing = 5;
+        public DonkeyParser parser;
+
+        public DrawHelper() {
+            this.parser = DonkeyParser.this;
+        }
+
+        public double getScale() {
+            return scale;
+        }
+
+        public void setScale(double scale) {
+            if (this.scale != scale) {
+                this.scale = scale;
+                fontCache.clear();
+            }
+        }
+
+        public int getSpacing() {
+            return spacing;
+        }
+
+        public void setSpacing(int spacing) {
+            this.spacing = spacing;
+        }
+
+        public Font getFont(Style style) {
+            Font font = fontCache.get(style.name);
+            if (font != null)
+                return font;
+            font = style.font.deriveFont((float) (style.font.getSize() * scale));
+            fontCache.put(style.name, font);
+            return font;
+        }
+
+        public Group draw(Graphics graphics) {
+            return new Group(graphics);
+        }
+
+        public class Group {
+            private final Graphics graphics;
+            HashMap<String, FontMetrics> metricsCache = new HashMap<>();
+            ArrayList<RowInfo> subtitles = new ArrayList<>();
+
+            public Group(Graphics graphics) {
+                this.graphics = graphics;
+            }
+
+            public void addSubtitle(DonkeySubtitle subtitle) {
+                for (String line : subtitle.line.split("\\r?\\n")) {
+                    RowInfo row = new RowInfo();
+                    row.style = subtitle.style;
+                    row.text = line;
+                    subtitles.add(row);
+                }
+            }
+
+            public FontMetrics getMetrics(Style style) {
+                FontMetrics metrics = metricsCache.get(style.name);
+                if (metrics != null)
+                    return metrics;
+                metrics = graphics.getFontMetrics(getFont(style));
+                metricsCache.put(style.name, metrics);
+                return metrics;
+            }
+
+            public int getHeight() {
+                int height = 0;
+                for (RowInfo row : subtitles) {
+                    height += getMetrics(row.style).getHeight() + spacing;
+                }
+                return Math.max(0, height - spacing);
+            }
+
+            public Collection<RowInfo> getRows() {
+                int y = 0;
+
+                for (RowInfo row : subtitles) {
+                    FontMetrics metrics = getMetrics(row.style);
+                    row.y = y;
+                    row.font = getFont(row.style);
+                    row.width = metrics.stringWidth(row.text);
+                    y += metrics.getHeight() + spacing;
+                }
+
+                return Collections.unmodifiableList(subtitles);
+            }
+        }
+    }
+
+    public static <K, V> V getWithDefault(Map<K, V> map, K key, V defaultValue) {
         V ret = map.get(key);
         if (ret == null) {
             return defaultValue;

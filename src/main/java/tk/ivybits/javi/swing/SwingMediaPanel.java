@@ -6,9 +6,7 @@ import tk.ivybits.javi.media.stream.AudioStream;
 import tk.ivybits.javi.media.stream.MediaStream;
 import tk.ivybits.javi.media.stream.SubtitleStream;
 import tk.ivybits.javi.media.stream.VideoStream;
-import tk.ivybits.javi.media.subtitle.BitmapSubtitle;
-import tk.ivybits.javi.media.subtitle.Subtitle;
-import tk.ivybits.javi.media.subtitle.TextSubtitle;
+import tk.ivybits.javi.media.subtitle.*;
 
 import javax.imageio.ImageIO;
 import javax.sound.sampled.AudioFormat;
@@ -20,10 +18,8 @@ import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.LinkedList;
+import java.util.*;
 import java.util.Timer;
-import java.util.TimerTask;
 
 /**
  * Media component for Swing.
@@ -43,8 +39,9 @@ public class SwingMediaPanel extends JPanel {
     private ArrayList<StreamListener> listeners = new ArrayList<>();
     private LinkedList<Subtitle> subtitles = new LinkedList<>();
     private Timer timer = new Timer("SwingMediaPanel - Subtitle Timer", true);
+    private DonkeyParser lastParser;
+    private DonkeyParser.DrawHelper donkeyHelper;
 
-    @Override
     public void removeNotify() {
         super.removeNotify();
         try {
@@ -175,6 +172,7 @@ public class SwingMediaPanel extends JPanel {
             int width = nextFrame.getWidth();
             int height = nextFrame.getHeight();
             LinkedList<String> subtitleLines = null;
+            DonkeyParser.DrawHelper.Group donkeySubtitles = null;
 
             if (!subtitles.isEmpty()) {
                 Graphics2D g2d = nextFrame.createGraphics();
@@ -194,6 +192,15 @@ public class SwingMediaPanel extends JPanel {
                             subtitleLines = new LinkedList<>();
                         for (String line : ((TextSubtitle) subtitle).text.split("\\r?\\n"))
                             subtitleLines.addFirst(line);
+                    } else if (subtitle instanceof DonkeySubtitle) {
+                        if (donkeySubtitles == null) {
+                            if (lastParser != ((DonkeySubtitle) subtitle).parser) {
+                                donkeyHelper = ((DonkeySubtitle) subtitle).parser.getDrawHelper();
+                                lastParser = ((DonkeySubtitle) subtitle).parser;
+                            }
+                            donkeySubtitles = donkeyHelper.draw(g);
+                        }
+                        donkeySubtitles.addSubtitle((DonkeySubtitle) subtitle);
                     }
                 }
                 g2d.dispose();
@@ -235,6 +242,27 @@ public class SwingMediaPanel extends JPanel {
                 for (String line : subtitleLines) {
                     x = (boundary.width - metrics.stringWidth(line)) / 2;
                     g.drawString(line, x, y);
+                }
+                g.setFont(oldFont);
+            }
+
+            if (donkeySubtitles != null) {
+                Font oldFont = g.getFont();
+                donkeyHelper.setScale(bwidth / (double) width);
+
+                ((Graphics2D) g).setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_GASP);
+                int startHeight = boundary.height - donkeySubtitles.getHeight() - 10;
+                for (DonkeyParser.RowInfo row : donkeySubtitles.getRows()) {
+                    x = (boundary.width - row.width) / 2;
+                    y = startHeight + row.y;
+                    g.setFont(row.font);
+                    // Shadows
+                    g.setColor(row.style.outlineColor);
+                    g.drawString(row.text, x - 1, y - 1);
+                    g.drawString(row.text, x + 2, y + 2);
+                    // Now the text
+                    g.setColor(row.style.primaryColor);
+                    g.drawString(row.text, x, y);
                 }
                 g.setFont(oldFont);
             }

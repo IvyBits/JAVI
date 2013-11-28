@@ -330,11 +330,9 @@ public class FFMediaStream implements MediaStream {
                                         throw new IllegalStateException("subtitle without header");
                                     String header = subtitleStream.ffstream.codec.subtitle_header.getString(0, "UTF-8");
                                     DonkeyParser parser = new DonkeyParser(header);
-                                    System.out.println(parser);
                                     donkeyParsers[packet.stream_index] = parser;
                                 }
                                 String subtitle = rect.ass.getString(0, "UTF-8");
-                                System.out.printf("%5d-%5d:: %s", start, end, subtitle);
                                 subtitleHandler.handle(donkeyParsers[packet.stream_index].processDialog(subtitle), start, end);
                                 break;
                             }
