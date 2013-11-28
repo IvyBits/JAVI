@@ -80,6 +80,22 @@ public class DonkeyParser {
         }
     }
 
+    protected long parseTimeStamp(String ts) {
+        String[] time = ts.split(":");
+        return Integer.parseInt(time[0]) * 3600_000 + Integer.parseInt(time[1]) * 60_000 + (int) (Double.parseDouble(time[2]) * 1000);
+    }
+
+    public DonkeySubtitle processDialog(String line) {
+        HashMap<String, String> map = parseWithFormat(line);
+        String style = map.get("Style");
+        if (style.startsWith("*"))
+            style = style.substring(1);
+        String text = map.get("Text");
+        long start = map.containsKey("Start") ? parseTimeStamp(map.get("Start")) : 0;
+        long end = map.containsKey("End") ? parseTimeStamp(map.get("End")) : 0;
+        return new DonkeySubtitle(styles.get(style), start, end, text);
+    }
+
     public String toString() {
         StringBuilder builder = new StringBuilder();
         builder.append("Version: " + version + "\n");
