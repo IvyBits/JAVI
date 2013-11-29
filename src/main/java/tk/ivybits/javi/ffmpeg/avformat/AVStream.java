@@ -120,7 +120,7 @@ public class AVStream extends Structure {
         return Arrays.asList("index", "id", "codec", "priv_data", "pts", "time_base", "start_time",
                 "duration", "nb_frames", "disposition", "discard",
                 "sample_aspect_ratio", "metadata", "avg_frame_rate", "attached_pic",
-                "info", "do_not_use", "first_dts", "cur_dts",
+                "info", "pts_wrap_bits", "do_not_use", "first_dts", "cur_dts",
                 "last_IP_pts", "last_IP_duration", "probe_packets", "codec_info_nb_frames",
                 "need_parsing", "parser", "last_in_packet_buffer", "probe_data",
                 "pts_buffer", "index_entries", "nb_index_entries", "index_entries_allocated_size",
