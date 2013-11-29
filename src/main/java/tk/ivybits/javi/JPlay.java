@@ -1,11 +1,10 @@
 package tk.ivybits.javi;
 
 import tk.ivybits.javi.exc.StreamException;
-import tk.ivybits.javi.media.stream.AudioStream;
 import tk.ivybits.javi.media.Media;
 import tk.ivybits.javi.media.MediaFactory;
-import tk.ivybits.javi.media.stream.SubtitleStream;
 import tk.ivybits.javi.media.stream.AudioStream;
+import tk.ivybits.javi.media.stream.SubtitleStream;
 import tk.ivybits.javi.media.stream.VideoStream;
 import tk.ivybits.javi.swing.StreamListener;
 import tk.ivybits.javi.swing.SwingMediaPanel;

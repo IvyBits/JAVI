@@ -6,24 +6,22 @@ import com.sun.jna.ptr.PointerByReference;
 import tk.ivybits.javi.exc.StreamException;
 import tk.ivybits.javi.ffmpeg.avcodec.*;
 import tk.ivybits.javi.ffmpeg.avutil.AVFrame;
-import tk.ivybits.javi.format.PixelFormat;
 import tk.ivybits.javi.format.SubtitleType;
-import tk.ivybits.javi.media.*;
+import tk.ivybits.javi.media.Media;
 import tk.ivybits.javi.media.MediaHandler;
 import tk.ivybits.javi.media.stream.AudioStream;
 import tk.ivybits.javi.media.stream.MediaStream;
 import tk.ivybits.javi.media.stream.SubtitleStream;
 import tk.ivybits.javi.media.stream.VideoStream;
-import tk.ivybits.javi.media.subtitle.*;
+import tk.ivybits.javi.media.subtitle.BitmapSubtitle;
+import tk.ivybits.javi.media.subtitle.DonkeyParser;
+import tk.ivybits.javi.media.subtitle.Subtitle;
+import tk.ivybits.javi.media.subtitle.TextSubtitle;
 
-import javax.imageio.ImageIO;
-import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.awt.image.DataBufferByte;
 import java.awt.image.IndexColorModel;
-import java.io.File;
 import java.io.IOException;
-import java.util.Arrays;
 import java.util.concurrent.Semaphore;
 
 import static tk.ivybits.javi.ffmpeg.LibAVCodec.*;
@@ -32,7 +30,6 @@ import static tk.ivybits.javi.ffmpeg.LibAVFormat.av_seek_frame;
 import static tk.ivybits.javi.ffmpeg.LibAVUtil.av_malloc;
 import static tk.ivybits.javi.ffmpeg.LibAVUtil.av_samples_alloc_array_and_samples;
 import static tk.ivybits.javi.ffmpeg.LibSWResample.*;
-import static tk.ivybits.javi.ffmpeg.LibSWScale.sws_freeContext;
 import static tk.ivybits.javi.ffmpeg.LibSWScale.sws_getContext;
 import static tk.ivybits.javi.ffmpeg.LibSWScale.sws_scale;
 import static tk.ivybits.javi.format.PixelFormat.BGR24;
@@ -290,12 +287,12 @@ public class FFMediaStream implements MediaStream {
                                 break;
                             case SUBTITLE_BITMAP: {
                                 byte[] r = new byte[rect.nb_colors], g = new byte[rect.nb_colors],
-                                       b = new byte[rect.nb_colors], a = new byte[rect.nb_colors];
+                                        b = new byte[rect.nb_colors], a = new byte[rect.nb_colors];
                                 for (int i = 0; i < rect.nb_colors; ++i) {
                                     int colour = rect.pict.data[1].getInt(i * 4);
                                     r[i] = (byte) ((colour >> 16) & 0xff);
-                                    g[i] = (byte) ((colour >>  8) & 0xff);
-                                    b[i] = (byte) ((colour >>  0) & 0xff);
+                                    g[i] = (byte) ((colour >> 8) & 0xff);
+                                    b[i] = (byte) ((colour >> 0) & 0xff);
                                     a[i] = (byte) ((colour >> 24) & 0xff);
                                 }
                                 IndexColorModel palette = new IndexColorModel(8, rect.nb_colors, r, g, b, a);
@@ -385,7 +382,6 @@ public class FFMediaStream implements MediaStream {
     @Override
     public void close() {
         avcodec_free_frame(new PointerByReference(pFrame.getPointer()));
-        pFrame = null;
     }
 
     /**

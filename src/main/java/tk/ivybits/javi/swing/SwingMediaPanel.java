@@ -13,10 +13,8 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.LinkedList;
+import java.util.*;
 import java.util.Timer;
-import java.util.TimerTask;
 import java.util.concurrent.locks.LockSupport;
 
 /**
@@ -34,10 +32,10 @@ public class SwingMediaPanel extends JPanel {
     private Thread streamingThread;
     private BufferedImage nextFrame;
     private int frames = 0, lost = 0;
-    private ArrayList<StreamListener> listeners = new ArrayList<>();
+    private Collection<StreamListener> listeners = new ArrayList<>();
     private SourceDataLine sdl;
     private Mixer mixer;
-    private LinkedList<Subtitle> subtitles = new LinkedList<>();
+    private Collection<Subtitle> subtitles = new LinkedList<>();
     private Timer timer = new Timer("SwingMediaPanel - Subtitle Timer", true);
     private DonkeyParser lastParser;
     private DonkeyParser.DrawHelper donkeyHelper;
@@ -190,36 +188,42 @@ public class SwingMediaPanel extends JPanel {
         if (nextFrame != null) {
             int width = nextFrame.getWidth();
             int height = nextFrame.getHeight();
-            LinkedList<String> subtitleLines = null;
+            Deque<String> subtitleLines = null;
             DonkeyParser.DrawHelper.Group donkeySubtitles = null;
 
             if (!subtitles.isEmpty()) {
                 Graphics2D g2d = nextFrame.createGraphics();
                 for (Subtitle subtitle : subtitles) {
-                    if (subtitle instanceof BitmapSubtitle) {
-                        int x = ((BitmapSubtitle) subtitle).x;
-                        int y = ((BitmapSubtitle) subtitle).y;
-                        BufferedImage image = ((BitmapSubtitle) subtitle).image;
+                    switch (subtitle.type()) {
 
-                        // Some subtitles position themselves out of the video.
-                        // Here, make sure they go in with some space on the side
-                        x = Math.min(x, width - image.getWidth() - 10);
-                        y = Math.min(y, height - image.getHeight() - 10);
-                        g2d.drawImage(image, x, y, null);
-                    } else if (subtitle instanceof TextSubtitle) {
-                        if (subtitleLines == null)
-                            subtitleLines = new LinkedList<>();
-                        for (String line : ((TextSubtitle) subtitle).text.split("\\r?\\n"))
-                            subtitleLines.addFirst(line);
-                    } else if (subtitle instanceof DonkeySubtitle) {
-                        if (donkeySubtitles == null) {
-                            if (lastParser != ((DonkeySubtitle) subtitle).parser) {
-                                donkeyHelper = ((DonkeySubtitle) subtitle).parser.getDrawHelper();
-                                lastParser = ((DonkeySubtitle) subtitle).parser;
+                        case SUBTITLE_BITMAP:
+                            int x = ((BitmapSubtitle) subtitle).x;
+                            int y = ((BitmapSubtitle) subtitle).y;
+                            BufferedImage image = ((BitmapSubtitle) subtitle).image;
+
+                            // Some subtitles position themselves out of the video.
+                            // Here, make sure they go in with some space on the side
+                            x = Math.min(x, width - image.getWidth() - 10);
+                            y = Math.min(y, height - image.getHeight() - 10);
+                            g2d.drawImage(image, x, y, null);
+                            break;
+                        case SUBTITLE_TEXT:
+                            if (subtitleLines == null)
+                                subtitleLines = new LinkedList<>();
+                            for (String line : ((TextSubtitle) subtitle).text.split("\\r?\\n"))
+                                subtitleLines.addFirst(line);
+                            break;
+                        case SUBTITLE_DONKEY:
+                            if (donkeySubtitles == null) {
+                                if (lastParser != ((DonkeySubtitle) subtitle).parser) {
+                                    donkeyHelper = ((DonkeySubtitle) subtitle).parser.getDrawHelper();
+                                    lastParser = ((DonkeySubtitle) subtitle).parser;
+                                }
+                                donkeySubtitles = donkeyHelper.draw(g);
                             }
-                            donkeySubtitles = donkeyHelper.draw(g);
-                        }
-                        donkeySubtitles.addSubtitle((DonkeySubtitle) subtitle);
+                            donkeySubtitles.addSubtitle((DonkeySubtitle) subtitle);
+                            break;
+
                     }
                 }
                 g2d.dispose();
@@ -349,7 +353,6 @@ public class SwingMediaPanel extends JPanel {
      * @throws IllegalStateException Thrown if the stream was never started.
      * @throws tk.ivybits.javi.exc.StreamException
      *                               Thrown if seek failed.
-     * @throws IllegalStateException Thrown if called when called on a stream that is not started.
      * @since 1.0
      */
     public void seek(long to) {

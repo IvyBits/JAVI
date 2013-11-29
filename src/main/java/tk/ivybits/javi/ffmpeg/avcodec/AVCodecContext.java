@@ -3,7 +3,6 @@ package tk.ivybits.javi.ffmpeg.avcodec;
 import com.sun.jna.Callback;
 import com.sun.jna.Pointer;
 import com.sun.jna.Structure;
-import com.sun.jna.ptr.ByteByReference;
 import com.sun.jna.ptr.IntByReference;
 import com.sun.jna.ptr.ShortByReference;
 import tk.ivybits.javi.ffmpeg.avutil.AVFrame;

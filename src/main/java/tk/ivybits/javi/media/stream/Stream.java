@@ -23,9 +23,9 @@ public interface Stream extends Closeable {
     Type type();
 
     /**
-     * Fetches the index of this stream in the parent container
+     * Fetches the index of this stream in the parent container.
      *
-     * @return
+     * @return The index of the stream.
      */
     int index();
 

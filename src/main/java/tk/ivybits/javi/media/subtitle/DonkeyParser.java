@@ -2,6 +2,7 @@ package tk.ivybits.javi.media.subtitle;
 
 import java.awt.*;
 import java.util.*;
+import java.util.List;
 
 public class DonkeyParser {
     protected String version;
@@ -23,7 +24,7 @@ public class DonkeyParser {
     }
 
     protected void processFormat(String data) {
-        format = new ArrayList<String>(Arrays.asList(data.split("\\s*,\\s*")));
+        format = new ArrayList<>(Arrays.asList(data.split("\\s*,\\s*")));
     }
 
     protected HashMap<String, String> parseWithFormat(String line) {
@@ -117,15 +118,15 @@ public class DonkeyParser {
 
     public String toString() {
         StringBuilder builder = new StringBuilder();
-        builder.append("Version: " + version + "\n");
+        builder.append("Version: ").append(version).append("\n");
         builder.append("Styles:\n");
         for (Map.Entry<String, Style> styleEntry : styles.entrySet()) {
             Style style = styleEntry.getValue();
-            builder.append("  - " + styleEntry.getKey() + ":\n");
-            builder.append("      primaryColor: " + style.primaryColor + "\n");
-            builder.append("      secondaryColor: " + style.secondaryColor + "\n");
-            builder.append("      outlineColor: " + style.outlineColor + "\n");
-            builder.append("      backColor: " + style.backColor + "\n");
+            builder.append("  - ").append(styleEntry.getKey()).append(":\n");
+            builder.append("      primaryColor: ").append(style.primaryColor).append("\n");
+            builder.append("      secondaryColor: ").append(style.secondaryColor).append("\n");
+            builder.append("      outlineColor: ").append(style.outlineColor).append("\n");
+            builder.append("      backColor: ").append(style.backColor).append("\n");
         }
         return builder.toString();
     }
@@ -192,7 +193,7 @@ public class DonkeyParser {
         public class Group {
             private final Graphics graphics;
             HashMap<String, FontMetrics> metricsCache = new HashMap<>();
-            ArrayList<RowInfo> subtitles = new ArrayList<>();
+            List<RowInfo> subtitles = new ArrayList<>();
 
             public Group(Graphics graphics) {
                 this.graphics = graphics;

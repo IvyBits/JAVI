@@ -5,13 +5,8 @@ import com.sun.jna.ptr.PointerByReference;
 import tk.ivybits.javi.ffmpeg.LibAVFormat;
 import tk.ivybits.javi.ffmpeg.avformat.AVFormatContext;
 import tk.ivybits.javi.ffmpeg.avformat.AVStream;
-import tk.ivybits.javi.media.*;
-import tk.ivybits.javi.media.stream.*;
 import tk.ivybits.javi.media.Media;
-import tk.ivybits.javi.media.stream.AudioStream;
-import tk.ivybits.javi.media.stream.MediaStream;
-import tk.ivybits.javi.media.stream.Stream;
-import tk.ivybits.javi.media.stream.VideoStream;
+import tk.ivybits.javi.media.stream.*;
 
 import java.io.File;
 import java.io.IOException;
@@ -31,9 +26,9 @@ import static tk.ivybits.javi.ffmpeg.LibAVFormat.avformat_close_input;
  */
 public class FFMedia implements Media {
     public AVFormatContext formatContext;
-    public ArrayList<FFVideoStream> videoStreams = new ArrayList<>();
-    public ArrayList<FFAudioStream> audioStreams = new ArrayList<>();
-    public ArrayList<FFSubtitleStream> subtitleStreams = new ArrayList<>();
+    public List<FFVideoStream> videoStreams = new ArrayList<>();
+    public List<FFAudioStream> audioStreams = new ArrayList<>();
+    public List<FFSubtitleStream> subtitleStreams = new ArrayList<>();
 
     /**
      * Creates a FFMedia object sourced from a <code>File</code>.
@@ -128,7 +123,6 @@ public class FFMedia implements Media {
     public void close() {
         if (formatContext != null) {
             avformat_close_input(new PointerByReference(formatContext.getPointer()));
-            formatContext = null;
         }
     }
 }

@@ -79,8 +79,7 @@ public interface MediaStream extends Runnable, Closeable {
      *
      * @param to The position to seek to.
      * @throws IllegalArgumentException Thrown if the seek position is invalid.
-     * @throws StreamException          Thrown if the seek failed.
-     * @throws StreamException          Thrown if called when called on a stream that is not started.
+     * @throws StreamException          Thrown if the seek failed or if called when called on a stream that is not started.
      * @since 1.0
      */
     void seek(long to);
