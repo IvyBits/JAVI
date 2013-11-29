@@ -27,6 +27,9 @@ public abstract class MediaHandler<T> {
     public void handle(T buffer, long time) {
     }
 
+    public void handle(T buffer, long start, long end) {
+    }
+
     /**
      * Called to signify that the stream has ended.
      * <p/>

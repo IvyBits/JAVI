@@ -2,6 +2,7 @@ package tk.ivybits.javi.media.stream;
 
 import tk.ivybits.javi.exc.StreamException;
 import tk.ivybits.javi.media.MediaHandler;
+import tk.ivybits.javi.media.subtitle.Subtitle;
 
 import java.awt.image.BufferedImage;
 import java.io.Closeable;
@@ -37,6 +38,8 @@ public interface MediaStream extends Runnable, Closeable {
      * @since 1.0
      */
     AudioStream setAudioStream(AudioStream stream);
+
+    public SubtitleStream setSubtitleStream(SubtitleStream stream);
 
     /**
      * Fetches current audio stream.
@@ -119,6 +122,8 @@ public interface MediaStream extends Runnable, Closeable {
          * @since 1.0
          */
         Builder video(MediaHandler<BufferedImage> videoHandler);
+
+        Builder subtitle(MediaHandler<Subtitle> subtitleHandler);
 
         /**
          * Finalize creation of a {@link MediaStream}.

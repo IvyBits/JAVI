@@ -4,14 +4,27 @@ import tk.ivybits.javi.media.Media;
 import tk.ivybits.javi.media.MediaHandler;
 import tk.ivybits.javi.media.stream.AudioStream;
 import tk.ivybits.javi.media.stream.MediaStream;
+import tk.ivybits.javi.media.stream.SubtitleStream;
 import tk.ivybits.javi.media.stream.VideoStream;
+import tk.ivybits.javi.media.subtitle.BitmapSubtitle;
+import tk.ivybits.javi.media.subtitle.Subtitle;
+import tk.ivybits.javi.media.subtitle.TextSubtitle;
 
+import javax.imageio.ImageIO;
+import javax.sound.sampled.AudioFormat;
+import javax.sound.sampled.AudioSystem;
+import javax.sound.sampled.LineUnavailableException;
+import javax.sound.sampled.SourceDataLine;
 import javax.sound.sampled.*;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.image.BufferedImage;
+import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.LinkedList;
+import java.util.Timer;
+import java.util.TimerTask;
 import java.util.concurrent.locks.LockSupport;
 
 /**
@@ -32,6 +45,8 @@ public class SwingMediaPanel extends JPanel {
     private ArrayList<StreamListener> listeners = new ArrayList<>();
     private SourceDataLine sdl;
     private Mixer mixer;
+    private LinkedList<Subtitle> subtitles = new LinkedList<>();
+    private Timer timer = new Timer("SwingMediaPanel - Subtitle Timer", true);
 
     /**
      * Fetches the mixer in use.
@@ -136,6 +151,28 @@ public class SwingMediaPanel extends JPanel {
                         }
                     }
                 })
+                .subtitle(new MediaHandler<Subtitle>() {
+                    @Override
+                    public void handle(final Subtitle subtitle, long start, long end) {
+                        if (start > 0) {
+                            timer.schedule(new TimerTask() {
+                                @Override
+                                public void run() {
+                                    subtitles.add(subtitle);
+                                }
+                            }, start);
+                        } else {
+                            subtitles.add(subtitle);
+                        }
+
+                        timer.schedule(new TimerTask() {
+                            @Override
+                            public void run() {
+                                subtitles.remove(subtitle);
+                            }
+                        }, end);
+                    }
+                })
                 .create();
 
         streamingThread = new Thread(stream);
@@ -159,9 +196,30 @@ public class SwingMediaPanel extends JPanel {
         if (nextFrame != null) {
             int width = nextFrame.getWidth();
             int height = nextFrame.getHeight();
-            /* Graphics2D g2d = nextFrame.createGraphics();
-            g2d.setColor(Color.WHITE);
-            g2d.drawString("HEIL UNS SELBSTS!", 50, 50); */
+            LinkedList<String> subtitleLines = null;
+
+            if (!subtitles.isEmpty()) {
+                Graphics2D g2d = nextFrame.createGraphics();
+                for (Subtitle subtitle : subtitles) {
+                    if (subtitle instanceof BitmapSubtitle) {
+                        int x = ((BitmapSubtitle) subtitle).x;
+                        int y = ((BitmapSubtitle) subtitle).y;
+                        BufferedImage image = ((BitmapSubtitle) subtitle).image;
+
+                        // Some subtitles position themselves out of the video.
+                        // Here, make sure they go in with some space on the side
+                        x = Math.min(x, width - image.getWidth() - 10);
+                        y = Math.min(y, height - image.getHeight() - 10);
+                        g2d.drawImage(image, x, y, null);
+                    } else if (subtitle instanceof TextSubtitle) {
+                        if (subtitleLines == null)
+                            subtitleLines = new LinkedList<>();
+                        for (String line : ((TextSubtitle) subtitle).text.split("\\r?\\n"))
+                            subtitleLines.addFirst(line);
+                    }
+                }
+                g2d.dispose();
+            }
 
             // Scale image dimensions with aspect ratio to fit inside the panel
             int bwidth;
@@ -179,6 +237,7 @@ public class SwingMediaPanel extends JPanel {
             int x = Math.abs(boundary.width - bwidth) / 2;
             int y = Math.abs(boundary.height - bheight) / 2;
             g.drawImage(nextFrame, x, y, bwidth, bheight, null);
+
             // Now draw the black sizes on the side or the top
             // By not filling the entire client area with a colour and then overwriting with the current frame,
             // we save potentially significant amounts of time.
@@ -189,6 +248,19 @@ public class SwingMediaPanel extends JPanel {
             } else {
                 g.fillRect(0, 0, boundary.width, y);
                 g.fillRect(0, y + bheight, boundary.width, y + 1);
+            }
+
+            if (subtitleLines != null) {
+                Font oldFont = g.getFont();
+                g.setFont(oldFont.deriveFont(Font.PLAIN, oldFont.getSize() * bwidth / width));
+                FontMetrics metrics = g.getFontMetrics();
+                int subHeight = (metrics.getHeight() + 5) * subtitleLines.size();
+                y = boundary.height - subHeight - 10;
+                for (String line : subtitleLines) {
+                    x = (boundary.width - metrics.stringWidth(line)) / 2;
+                    g.drawString(line, x, y);
+                }
+                g.setFont(oldFont);
             }
         } else {
             // Foregoe call to super.paint: emulate it with less overhead
@@ -297,6 +369,10 @@ public class SwingMediaPanel extends JPanel {
      */
     public VideoStream setVideoStream(VideoStream videoStream) {
         return stream.setVideoStream(videoStream);
+    }
+
+    public SubtitleStream setSubtitleStream(SubtitleStream subtitleStream) {
+        return stream.setSubtitleStream(subtitleStream);
     }
 
     /**

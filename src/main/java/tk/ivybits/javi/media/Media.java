@@ -2,6 +2,7 @@ package tk.ivybits.javi.media;
 
 import tk.ivybits.javi.media.stream.AudioStream;
 import tk.ivybits.javi.media.stream.MediaStream;
+import tk.ivybits.javi.media.stream.SubtitleStream;
 import tk.ivybits.javi.media.stream.VideoStream;
 
 import java.io.Closeable;
@@ -21,6 +22,8 @@ public interface Media extends Closeable {
     public List<? extends VideoStream> videoStreams();
 
     public List<? extends AudioStream> audioStreams();
+
+    public List<? extends SubtitleStream> subtitleStreams();
 
     /**
      * Prepares video for streaming.

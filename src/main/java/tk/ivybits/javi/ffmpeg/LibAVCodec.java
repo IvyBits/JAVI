@@ -26,6 +26,8 @@ public class LibAVCodec {
 
     public static native int avcodec_decode_audio4(Pointer avctx, Pointer frame, IntByReference frameFinished, Pointer pkt);
 
+    public static native int avcodec_decode_subtitle2(Pointer avctx, Pointer sub, IntByReference got_sub_ptr, Pointer pkt);
+
     public static native void av_init_packet(Pointer pointer);
 
     public static native void av_free_packet(Pointer pointer);
@@ -33,6 +35,12 @@ public class LibAVCodec {
     public static native int avcodec_close(Pointer avctx);
 
     public static native void avcodec_free_frame(PointerByReference frame);
+
+    public static native void avsubtitle_free(Pointer sub);
+
+    public static native int avpicture_alloc(Pointer picture, int pix_fmt, int width, int height);
+
+    public static native void avpicture_free(Pointer picture);
 
     static {
         FFmpeg.ensureInitialized();

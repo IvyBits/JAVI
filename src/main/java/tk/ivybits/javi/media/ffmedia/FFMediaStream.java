@@ -4,18 +4,28 @@ import com.sun.jna.Pointer;
 import com.sun.jna.ptr.IntByReference;
 import com.sun.jna.ptr.PointerByReference;
 import tk.ivybits.javi.exc.StreamException;
-import tk.ivybits.javi.ffmpeg.avcodec.AVCodec;
-import tk.ivybits.javi.ffmpeg.avcodec.AVCodecContext;
-import tk.ivybits.javi.ffmpeg.avcodec.AVPacket;
+import tk.ivybits.javi.ffmpeg.avcodec.*;
 import tk.ivybits.javi.ffmpeg.avutil.AVFrame;
+import tk.ivybits.javi.format.PixelFormat;
+import tk.ivybits.javi.format.SubtitleType;
+import tk.ivybits.javi.media.*;
 import tk.ivybits.javi.media.MediaHandler;
 import tk.ivybits.javi.media.stream.AudioStream;
 import tk.ivybits.javi.media.stream.MediaStream;
+import tk.ivybits.javi.media.stream.SubtitleStream;
 import tk.ivybits.javi.media.stream.VideoStream;
+import tk.ivybits.javi.media.subtitle.BitmapSubtitle;
+import tk.ivybits.javi.media.subtitle.Subtitle;
+import tk.ivybits.javi.media.subtitle.TextSubtitle;
 
+import javax.imageio.ImageIO;
+import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.awt.image.DataBufferByte;
+import java.awt.image.IndexColorModel;
+import java.io.File;
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.concurrent.Semaphore;
 
 import static tk.ivybits.javi.ffmpeg.LibAVCodec.*;
@@ -24,6 +34,7 @@ import static tk.ivybits.javi.ffmpeg.LibAVFormat.av_seek_frame;
 import static tk.ivybits.javi.ffmpeg.LibAVUtil.av_malloc;
 import static tk.ivybits.javi.ffmpeg.LibAVUtil.av_samples_alloc_array_and_samples;
 import static tk.ivybits.javi.ffmpeg.LibSWResample.*;
+import static tk.ivybits.javi.ffmpeg.LibSWScale.sws_freeContext;
 import static tk.ivybits.javi.ffmpeg.LibSWScale.sws_getContext;
 import static tk.ivybits.javi.ffmpeg.LibSWScale.sws_scale;
 import static tk.ivybits.javi.format.PixelFormat.BGR24;
@@ -41,22 +52,28 @@ public class FFMediaStream implements MediaStream {
     public final FFMedia media;
     public MediaHandler<byte[]> audioHandler;
     public MediaHandler<BufferedImage> videoHandler;
+    public MediaHandler<Subtitle> subtitleHandler;
     public FFAudioStream audioStream;
     public FFVideoStream videoStream;
+    public FFSubtitleStream subtitleStream;
 
     public AVFrame.ByReference pBGRFrame;
     public AVFrame.ByReference pFrame;
 
-    public AVCodec videoCodec, audioCodec;
+    public AVSubtitle pSubtitle;
+
+    public AVCodec videoCodec, audioCodec, subtitleCodec;
     public long lastFrame = 0;
     public boolean playing = false;
     public boolean started;
     private final Semaphore mutex = new Semaphore(1);
 
-    FFMediaStream(FFMedia media, MediaHandler<byte[]> audioHandler, MediaHandler<BufferedImage> videoHandler) throws IOException {
+    FFMediaStream(FFMedia media, MediaHandler<byte[]> audioHandler, MediaHandler<BufferedImage> videoHandler,
+                  MediaHandler<Subtitle> subtitleHandler) throws IOException {
         this.media = media;
         this.audioHandler = audioHandler;
         this.videoHandler = videoHandler;
+        this.subtitleHandler = subtitleHandler;
         pFrame = avcodec_alloc_frame();
     }
 
@@ -92,6 +109,18 @@ public class FFMediaStream implements MediaStream {
         AudioStream pre = audioStream;
         audioStream = (FFAudioStream) stream;
         audioCodec = audioStream.codec;
+        return pre;
+    }
+
+    public SubtitleStream setSubtitleStream(SubtitleStream stream) {
+        if (stream.container() != media)
+            throw new IllegalArgumentException("stream not from same container");
+        if (pSubtitle == null)
+            pSubtitle = new AVSubtitle();
+        SubtitleStream pre = subtitleStream;
+        subtitleStream = (FFSubtitleStream) stream;
+        subtitleCodec = subtitleStream.codec;
+        System.out.println("Subtitle is set");
         return pre;
     }
 
@@ -196,7 +225,7 @@ public class FFMediaStream implements MediaStream {
                         audioHandler.handle(audioBuffer);
                     }
                 }
-            } else if (videoStream != null && packet.stream_index == videoStream.index()) { // We only care about the media media here
+            } else if (videoStream != null && packet.stream_index == videoStream.index()) {
                 // Decode the media into our pFrame
                 int err = avcodec_decode_video2(videoStream.ffstream.codec.getPointer(), pFrame.getPointer(), frameFinished, packet.getPointer());
                 // If the return of avcodec_decode_video2 is negative, an error occurred.
@@ -242,6 +271,49 @@ public class FFMediaStream implements MediaStream {
                     // advance by the length of each lost frame until it goes back to sync,
                     // i.e. duration is back to positive.
                     lastFrame = time + duration;
+                }
+            } else if (subtitleStream != null && packet.stream_index == subtitleStream.index()) {
+                int err = avcodec_decode_subtitle2(subtitleStream.ffstream.codec.getPointer(), pSubtitle.getPointer(), frameFinished, packet.getPointer());
+                if (err < 0) {
+                    throw new StreamException("error while decoding video stream: " + err);
+                }
+                if (frameFinished.getValue() != 0) {
+                    pSubtitle.read();
+
+                    for (Pointer pointer : pSubtitle.rects.getPointerArray(0, pSubtitle.num_rects)) {
+                        AVSubtitleRect rect = new AVSubtitleRect(pointer);
+                        switch (SubtitleType.values()[rect.type]) {
+                            case SUBTITLE_NONE:
+                                break;
+                            case SUBTITLE_BITMAP: {
+                                byte[] r = new byte[rect.nb_colors], g = new byte[rect.nb_colors],
+                                       b = new byte[rect.nb_colors], a = new byte[rect.nb_colors];
+                                for (int i = 0; i < rect.nb_colors; ++i) {
+                                    int colour = rect.pict.data[1].getInt(i * 4);
+                                    r[i] = (byte) ((colour >> 16) & 0xff);
+                                    g[i] = (byte) ((colour >>  8) & 0xff);
+                                    b[i] = (byte) ((colour >>  0) & 0xff);
+                                    a[i] = (byte) ((colour >> 24) & 0xff);
+                                }
+                                IndexColorModel palette = new IndexColorModel(8, rect.nb_colors, r, g, b, a);
+                                BufferedImage result = new BufferedImage(rect.w, rect.h, BufferedImage.TYPE_BYTE_INDEXED, palette);
+                                byte[] raster = ((DataBufferByte) result.getRaster().getDataBuffer()).getData();
+                                rect.pict.data[0].read(0, raster, 0, raster.length);
+
+                                subtitleHandler.handle(new BitmapSubtitle(rect.x, rect.y, rect.w, rect.h, result),
+                                                       pSubtitle.start_display_time, pSubtitle.end_display_time);
+                                break;
+                            }
+                            case SUBTITLE_TEXT:
+                                String subtitle = rect.text.getString(0, "UTF-8");
+                                subtitleHandler.handle(new TextSubtitle(subtitle),
+                                        pSubtitle.start_display_time, pSubtitle.end_display_time);
+                                System.out.println(subtitle);
+                                break;
+                            case SUBTITLE_DONKEY:
+                                break;
+                        }
+                    }
                 }
             }
             // Free the packet that av_read_frame allocated
@@ -326,9 +398,13 @@ public class FFMediaStream implements MediaStream {
         public FFMedia media;
         public MediaHandler<byte[]> audioHandler;
         public MediaHandler<BufferedImage> videoHandler;
+        public MediaHandler<Subtitle> subtitleHandler;
 
         /**
-         * {@inheritDoc}
+         * Creates a MediaStream builder for the specified {@link Media} object.
+         *
+         * @param media The container designated for streaming.
+         * @since 1.0
          */
         public Builder(FFMedia media) {
             this.media = media;
@@ -350,13 +426,18 @@ public class FFMediaStream implements MediaStream {
             return this;
         }
 
+        public Builder subtitle(MediaHandler<Subtitle> subtitleHandler) {
+            this.subtitleHandler = subtitleHandler;
+            return this;
+        }
+
         /**
          * {@inheritDoc}
          */
         public FFMediaStream create() throws IOException {
             if (audioHandler == null && videoHandler == null)
                 throw new IllegalStateException("no media handlers specified");
-            return new FFMediaStream(media, audioHandler, videoHandler);
+            return new FFMediaStream(media, audioHandler, videoHandler, subtitleHandler);
         }
     }
 }
