@@ -6,6 +6,7 @@ import com.sun.jna.Structure;
 import com.sun.jna.ptr.ByteByReference;
 import com.sun.jna.ptr.IntByReference;
 import com.sun.jna.ptr.ShortByReference;
+import tk.ivybits.javi.ffmpeg.avutil.AVFrame;
 import tk.ivybits.javi.ffmpeg.avutil.AVRational;
 
 import java.util.Arrays;
@@ -198,7 +199,7 @@ public class AVCodecContext extends Structure {
     public int bits_per_raw_sample;
     @Deprecated
     public int lowres;
-    public /*AVFrame */ int coded_frame;
+    public /*AVFrame* */ AVFrame.ByReference coded_frame;
     public int thread_count;
     public int thread_type;
     public int active_thread_type;

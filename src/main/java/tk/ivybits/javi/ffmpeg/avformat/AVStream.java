@@ -30,6 +30,7 @@ public class AVStream extends Structure {
     public AVRational avg_frame_rate;
     public AVPacket attached_pic;
     public info_struct.ByReference info;
+    public int pts_wrap_bits;
     @Deprecated
     public long do_not_use;
     public long first_dts;
