@@ -8,18 +8,13 @@ import tk.ivybits.javi.media.stream.SubtitleStream;
 import tk.ivybits.javi.media.stream.VideoStream;
 import tk.ivybits.javi.media.subtitle.*;
 
-import javax.imageio.ImageIO;
-import javax.sound.sampled.AudioFormat;
-import javax.sound.sampled.AudioSystem;
-import javax.sound.sampled.LineUnavailableException;
-import javax.sound.sampled.SourceDataLine;
 import javax.sound.sampled.*;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.image.BufferedImage;
-import java.io.File;
 import java.io.IOException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.concurrent.locks.LockSupport;
@@ -47,11 +42,6 @@ public class SwingMediaPanel extends JPanel {
     private DonkeyParser lastParser;
     private DonkeyParser.DrawHelper donkeyHelper;
 
-    public void removeNotify() {
-        super.removeNotify();
-        try {
-            streamingThread.join(100);
-        } catch (InterruptedException death) {
     /**
      * Fetches the mixer in use.
      *
