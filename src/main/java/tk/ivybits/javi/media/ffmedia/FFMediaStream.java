@@ -14,9 +14,7 @@ import tk.ivybits.javi.media.stream.AudioStream;
 import tk.ivybits.javi.media.stream.MediaStream;
 import tk.ivybits.javi.media.stream.SubtitleStream;
 import tk.ivybits.javi.media.stream.VideoStream;
-import tk.ivybits.javi.media.subtitle.BitmapSubtitle;
-import tk.ivybits.javi.media.subtitle.Subtitle;
-import tk.ivybits.javi.media.subtitle.TextSubtitle;
+import tk.ivybits.javi.media.subtitle.*;
 
 import javax.imageio.ImageIO;
 import java.awt.*;
@@ -60,6 +58,7 @@ public class FFMediaStream implements MediaStream {
     public AVFrame.ByReference pBGRFrame;
     public AVFrame.ByReference pFrame;
 
+    public DonkeyParser[] donkeyParsers;
     public AVSubtitle pSubtitle;
 
     public AVCodec videoCodec, audioCodec, subtitleCodec;
@@ -75,6 +74,8 @@ public class FFMediaStream implements MediaStream {
         this.videoHandler = videoHandler;
         this.subtitleHandler = subtitleHandler;
         pFrame = avcodec_alloc_frame();
+
+        donkeyParsers = new DonkeyParser[media.formatContext.nb_streams];
     }
 
     /**
@@ -280,6 +281,8 @@ public class FFMediaStream implements MediaStream {
                 if (frameFinished.getValue() != 0) {
                     pSubtitle.read();
 
+                    long start = pSubtitle.start_display_time * 1000 * subtitleStream.ffstream.time_base.num / subtitleStream.ffstream.time_base.den;
+                    long end = pSubtitle.end_display_time * 1000 * subtitleStream.ffstream.time_base.num / subtitleStream.ffstream.time_base.den;
                     for (Pointer pointer : pSubtitle.rects.getPointerArray(0, pSubtitle.num_rects)) {
                         AVSubtitleRect rect = new AVSubtitleRect(pointer);
                         switch (SubtitleType.values()[rect.type]) {
@@ -300,18 +303,28 @@ public class FFMediaStream implements MediaStream {
                                 byte[] raster = ((DataBufferByte) result.getRaster().getDataBuffer()).getData();
                                 rect.pict.data[0].read(0, raster, 0, raster.length);
 
-                                subtitleHandler.handle(new BitmapSubtitle(rect.x, rect.y, rect.w, rect.h, result),
-                                                       pSubtitle.start_display_time, pSubtitle.end_display_time);
+                                subtitleHandler.handle(new BitmapSubtitle(rect.x, rect.y, rect.w, rect.h, result), start, end);
                                 break;
                             }
-                            case SUBTITLE_TEXT:
+                            case SUBTITLE_TEXT: {
                                 String subtitle = rect.text.getString(0, "UTF-8");
-                                subtitleHandler.handle(new TextSubtitle(subtitle),
-                                        pSubtitle.start_display_time, pSubtitle.end_display_time);
+                                subtitleHandler.handle(new TextSubtitle(subtitle), start, end);
                                 System.out.println(subtitle);
                                 break;
-                            case SUBTITLE_DONKEY:
+                            }
+                            case SUBTITLE_DONKEY: {
+                                if (donkeyParsers[packet.stream_index] == null) {
+                                    if (subtitleStream.ffstream.codec.subtitle_header_size <= 0)
+                                        throw new IllegalStateException("subtitle without header");
+                                    String header = subtitleStream.ffstream.codec.subtitle_header.getString(0, "UTF-8");
+                                    //System.out.println(header);
+                                    DonkeyParser parser = new DonkeyParser(header);
+                                    donkeyParsers[packet.stream_index] = parser;
+                                }
+                                String subtitle = rect.ass.getString(0, "UTF-8");
+                                subtitleHandler.handle(donkeyParsers[packet.stream_index].processDialog(subtitle), start, end);
                                 break;
+                            }
                         }
                     }
                 }
