@@ -19,10 +19,10 @@
 package tk.ivybits.javi.media.stream;
 
 import tk.ivybits.javi.exc.StreamException;
-import tk.ivybits.javi.media.MediaHandler;
-import tk.ivybits.javi.media.subtitle.Subtitle;
+import tk.ivybits.javi.media.handler.AudioHandler;
+import tk.ivybits.javi.media.handler.FrameHandler;
+import tk.ivybits.javi.media.handler.SubtitleHandler;
 
-import java.awt.image.BufferedImage;
 import java.io.Closeable;
 import java.io.IOException;
 
@@ -129,7 +129,7 @@ public interface MediaStream extends Runnable, Closeable {
          * @return The current Builder.
          * @since 1.0
          */
-        Builder audio(MediaHandler<byte[]> audioHandler);
+        Builder audio(AudioHandler audioHandler);
 
         /**
          * Specifies the video stream handler.
@@ -138,9 +138,9 @@ public interface MediaStream extends Runnable, Closeable {
          * @return The current Builder.
          * @since 1.0
          */
-        Builder video(MediaHandler<BufferedImage> videoHandler);
+        Builder video(FrameHandler videoHandler);
 
-        Builder subtitle(MediaHandler<Subtitle> subtitleHandler);
+        Builder subtitle(SubtitleHandler subtitleHandler);
 
         /**
          * Finalize creation of a {@link MediaStream}.

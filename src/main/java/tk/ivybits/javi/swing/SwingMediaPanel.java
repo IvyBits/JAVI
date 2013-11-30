@@ -18,9 +18,10 @@
 
 package tk.ivybits.javi.swing;
 
-import com.sun.istack.internal.Nullable;
 import tk.ivybits.javi.media.Media;
-import tk.ivybits.javi.media.MediaHandler;
+import tk.ivybits.javi.media.handler.AudioHandler;
+import tk.ivybits.javi.media.handler.FrameHandler;
+import tk.ivybits.javi.media.handler.SubtitleHandler;
 import tk.ivybits.javi.media.stream.AudioStream;
 import tk.ivybits.javi.media.stream.MediaStream;
 import tk.ivybits.javi.media.stream.SubtitleStream;
@@ -115,7 +116,7 @@ public class SwingMediaPanel extends JPanel {
 
         stream = media
                 .stream()
-                .audio(new MediaHandler<byte[]>() {
+                .audio(new AudioHandler() {
                     @Override
                     public void handle(byte[] buffer) {
                         if (sdl == null) {// Audio failed to initialize; ignore this buffer
@@ -130,7 +131,7 @@ public class SwingMediaPanel extends JPanel {
                         }
                     }
                 })
-                .video(new MediaHandler<BufferedImage>() {
+                .video(new FrameHandler() {
                     @Override
                     public void handle(BufferedImage buffer, long duration) {
                         ++frames;
@@ -162,7 +163,7 @@ public class SwingMediaPanel extends JPanel {
                         }
                     }
                 })
-                .subtitle(new MediaHandler<Subtitle>() {
+                .subtitle(new SubtitleHandler() {
                     @Override
                     public void handle(final Subtitle subtitle, long start, long end) {
                         if (start > 0) {

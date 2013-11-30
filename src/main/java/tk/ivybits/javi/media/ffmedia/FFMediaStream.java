@@ -26,14 +26,15 @@ import tk.ivybits.javi.ffmpeg.avcodec.*;
 import tk.ivybits.javi.ffmpeg.avutil.AVFrame;
 import tk.ivybits.javi.format.SubtitleType;
 import tk.ivybits.javi.media.Media;
-import tk.ivybits.javi.media.MediaHandler;
+import tk.ivybits.javi.media.handler.AudioHandler;
+import tk.ivybits.javi.media.handler.FrameHandler;
+import tk.ivybits.javi.media.handler.SubtitleHandler;
 import tk.ivybits.javi.media.stream.AudioStream;
 import tk.ivybits.javi.media.stream.MediaStream;
 import tk.ivybits.javi.media.stream.SubtitleStream;
 import tk.ivybits.javi.media.stream.VideoStream;
 import tk.ivybits.javi.media.subtitle.BitmapSubtitle;
 import tk.ivybits.javi.media.subtitle.DonkeyParser;
-import tk.ivybits.javi.media.subtitle.Subtitle;
 import tk.ivybits.javi.media.subtitle.TextSubtitle;
 
 import java.awt.image.BufferedImage;
@@ -63,9 +64,9 @@ import static tk.ivybits.javi.format.SampleFormat.SIGNED_16BIT;
  */
 public class FFMediaStream implements MediaStream {
     public final FFMedia media;
-    public MediaHandler<byte[]> audioHandler;
-    public MediaHandler<BufferedImage> videoHandler;
-    public MediaHandler<Subtitle> subtitleHandler;
+    public AudioHandler audioHandler;
+    public FrameHandler videoHandler;
+    public SubtitleHandler subtitleHandler;
     public FFAudioStream audioStream;
     public FFVideoStream videoStream;
     public FFSubtitleStream subtitleStream;
@@ -82,8 +83,8 @@ public class FFMediaStream implements MediaStream {
     public boolean started;
     private final Semaphore mutex = new Semaphore(1);
 
-    FFMediaStream(FFMedia media, MediaHandler<byte[]> audioHandler, MediaHandler<BufferedImage> videoHandler,
-                  MediaHandler<Subtitle> subtitleHandler) throws IOException {
+    FFMediaStream(FFMedia media, AudioHandler audioHandler, FrameHandler videoHandler,
+                  SubtitleHandler subtitleHandler) throws IOException {
         this.media = media;
         this.audioHandler = audioHandler;
         this.videoHandler = videoHandler;
@@ -423,9 +424,9 @@ public class FFMediaStream implements MediaStream {
      */
     public static class Builder implements MediaStream.Builder {
         public FFMedia media;
-        public MediaHandler<byte[]> audioHandler;
-        public MediaHandler<BufferedImage> videoHandler;
-        public MediaHandler<Subtitle> subtitleHandler;
+        public AudioHandler audioHandler;
+        public FrameHandler videoHandler;
+        public SubtitleHandler subtitleHandler;
 
         /**
          * Creates a MediaStream builder for the specified {@link Media} object.
@@ -440,7 +441,7 @@ public class FFMediaStream implements MediaStream {
         /**
          * {@inheritDoc}
          */
-        public Builder audio(MediaHandler<byte[]> audioHandler) {
+        public Builder audio(AudioHandler audioHandler) {
             this.audioHandler = audioHandler;
             return this;
         }
@@ -448,12 +449,12 @@ public class FFMediaStream implements MediaStream {
         /**
          * {@inheritDoc}
          */
-        public Builder video(MediaHandler<BufferedImage> videoHandler) {
+        public Builder video(FrameHandler videoHandler) {
             this.videoHandler = videoHandler;
             return this;
         }
 
-        public Builder subtitle(MediaHandler<Subtitle> subtitleHandler) {
+        public Builder subtitle(SubtitleHandler subtitleHandler) {
             this.subtitleHandler = subtitleHandler;
             return this;
         }
