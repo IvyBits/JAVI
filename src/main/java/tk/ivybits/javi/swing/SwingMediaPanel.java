@@ -18,6 +18,7 @@
 
 package tk.ivybits.javi.swing;
 
+import tk.ivybits.javi.media.AVSync;
 import tk.ivybits.javi.media.Media;
 import tk.ivybits.javi.media.handler.AudioHandler;
 import tk.ivybits.javi.media.handler.FrameHandler;
@@ -59,6 +60,7 @@ public class SwingMediaPanel extends JPanel {
     private Timer timer = new Timer("SwingMediaPanel - Subtitle Timer", true);
     private DonkeyParser lastParser;
     private DonkeyParser.DrawHelper donkeyHelper;
+    private AVSync sync;
 
     /**
      * Fetches the mixer in use.
@@ -135,6 +137,7 @@ public class SwingMediaPanel extends JPanel {
                     @Override
                     public void handle(BufferedImage buffer, long duration) {
                         ++frames;
+                        duration = sync.sync(duration);
                         if (duration < 0) {
                             // Video is behind audio; skip frame
                             ++lost;
@@ -196,6 +199,7 @@ public class SwingMediaPanel extends JPanel {
      * @since 1.0
      */
     public void start() {
+        sync = new AVSync();
         streamingThread.start();
     }
 
@@ -242,7 +246,6 @@ public class SwingMediaPanel extends JPanel {
                             }
                             donkeySubtitles.addSubtitle((DonkeySubtitle) subtitle);
                             break;
-
                     }
                 }
                 g2d.dispose();
@@ -363,6 +366,8 @@ public class SwingMediaPanel extends JPanel {
      */
     public void setPlaying(boolean flag) {
         stream.setPlaying(flag);
+        if (flag)
+            sync.reset();
     }
 
     /**
@@ -376,6 +381,7 @@ public class SwingMediaPanel extends JPanel {
      */
     public void seek(long to) {
         stream.seek(to);
+        sync.reset();
     }
 
     /**

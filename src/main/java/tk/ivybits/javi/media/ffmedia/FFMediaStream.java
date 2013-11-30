@@ -78,7 +78,6 @@ public class FFMediaStream implements MediaStream {
     public AVSubtitle pSubtitle;
 
     public AVCodec videoCodec, audioCodec, subtitleCodec;
-    public long lastFrame = 0;
     public boolean playing = false;
     public boolean started;
     private final Semaphore mutex = new Semaphore(1);
@@ -180,7 +179,6 @@ public class FFMediaStream implements MediaStream {
             ac.read();
         }
 
-        lastFrame = System.nanoTime();
         _outer:
         while (av_read_frame(media.formatContext.getPointer(), packet.getPointer()) >= 0) {
             try {
@@ -275,19 +273,8 @@ public class FFMediaStream implements MediaStream {
                     byte[] raster = ((DataBufferByte) imageBuffer.getRaster().getDataBuffer()).getData();
                     pBGRFrame.data[0].read(0, raster, 0, raster.length);
 
-                    long duration = pFrame.pkt_duration * 1_000_000_000 *
-                            videoStream.ffstream.time_base.num / videoStream.ffstream.time_base.den;
-                    long time = System.nanoTime();
-                    duration -= time - lastFrame;
-                    videoHandler.handle(imageBuffer, duration);
-                    // Add in duration, which is the time that is spent waiting for the frame to render, so we get
-                    // the time when this frame is rendered, and set it as the last frame.
-                    // If duration is NEGATIVE, nothing will be rendered. We basically are subtracting the overdue
-                    // time from time we started handling this frame, so we get the time on which the current frame
-                    // should be rendered. If multiple frames are skipped, this still works, as the lastFrame will
-                    // advance by the length of each lost frame until it goes back to sync,
-                    // i.e. duration is back to positive.
-                    lastFrame = time + duration;
+                    videoHandler.handle(imageBuffer, pFrame.pkt_duration * 1_000_000_000 *
+                            videoStream.ffstream.time_base.num / videoStream.ffstream.time_base.den);
                 }
             } else if (subtitleStream != null && packet.stream_index == subtitleStream.index()) {
                 int err = avcodec_decode_subtitle2(subtitleStream.ffstream.codec.getPointer(), pSubtitle.getPointer(), frameFinished, packet.getPointer());
@@ -374,7 +361,6 @@ public class FFMediaStream implements MediaStream {
                 e.printStackTrace();
             }
         else {
-            lastFrame = System.nanoTime();
             mutex.release();
         }
     }
@@ -392,7 +378,6 @@ public class FFMediaStream implements MediaStream {
         int err = av_seek_frame(media.formatContext.getPointer(), -1, to * 1_000, 0);
         if (err < 0)
             throw new StreamException("failed to seek video: error " + err);
-        lastFrame = System.nanoTime();
     }
 
     /**
