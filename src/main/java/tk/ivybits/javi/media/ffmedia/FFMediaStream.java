@@ -318,7 +318,7 @@ public class FFMediaStream implements MediaStream {
                                 byte[] raster = ((DataBufferByte) result.getRaster().getDataBuffer()).getData();
                                 rect.pict.data[0].read(0, raster, 0, raster.length);
 
-                                subtitleHandler.handle(new BitmapSubtitle(rect.x, rect.y, rect.w, rect.h, result), start, end);
+                                subtitleHandler.handle(new BitmapSubtitle(rect.x, rect.y, result), start, end);
                                 break;
                             }
                             case SUBTITLE_TEXT: {
