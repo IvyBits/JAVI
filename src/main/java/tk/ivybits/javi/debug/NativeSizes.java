@@ -23,9 +23,9 @@ import com.sun.jna.Structure;
 public class NativeSizes {
 
     public static void main(String[] args) throws ClassNotFoundException, IllegalAccessException, InstantiationException {
-        System.out.println("#include <avutil/avutil.h>\n" +
-                "#include <avcodec/avcodec.h>\n" +
-                "#include <avformat/avformat.h>\n" +
+        System.out.println("#include <libavutil/avutil.h>\n" +
+                "#include <libavcodec/avcodec.h>\n" +
+                "#include <libavformat/avformat.h>\n" +
                 "int main() {");
         for (String clazz : JNADebug.classes) {
             try {

@@ -25,23 +25,15 @@ public class JNADebug {
             "avcodec.AVCodec",
             "avcodec.AVCodecContext",
             "avcodec.AVPacket",
-            "avformat.AVChapter",
+            "avcodec.Picture",
+            "avcodec.AVSubtitle",
+            "avcodec.AVSubtitleRect",
             "avformat.AVFormatContext",
             "avformat.AVFrac",
-            "avformat.AVInputFormat",
-            "avformat.AVIOContext",
-            "avformat.AVIOInterruptCB",
-            "avformat.AVOutputFormat",
-            "avformat.AVPacketList",
             "avformat.AVProbeData",
-            "avformat.AVProgram",
             "avformat.AVStream",
-            "avutil.AVClass",
             "avutil.AVFrame",
             "avutil.AVRational",
-            "avcodec.AVPicture",
-            "avcodec.AVSubtitle",
-            "avcodec.AVSubtitleRect"
     };
 
     public static void main(String[] args) throws ClassNotFoundException, IllegalAccessException, InstantiationException {
