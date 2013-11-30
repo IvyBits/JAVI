@@ -32,11 +32,11 @@ import tk.ivybits.javi.media.subtitle.*;
 import javax.sound.sampled.*;
 import javax.swing.*;
 import java.awt.*;
+import java.awt.event.ActionEvent;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.util.*;
 import java.util.Timer;
-import java.util.concurrent.locks.LockSupport;
 
 /**
  * Media component for Swing.
@@ -135,22 +135,27 @@ public class SwingMediaPanel extends JPanel {
                 })
                 .video(new FrameHandler() {
                     @Override
-                    public void handle(BufferedImage buffer, long duration) {
-                        ++frames;
-                        duration = sync.sync(duration);
-                        if (duration < 0) {
-                            // Video is behind audio; skip frame
-                            ++lost;
-                            return;
+                    public void start() {
+                        sync.reset();
+                        // Notify all listeners that our stream has started
+                        for (StreamListener listener : listeners) {
+                            listener.onStart();
                         }
+                    }
 
-                        LockSupport.parkNanos(duration);
-                        // Set our current frame to the passed buffer,
-                        // and repaint immediately. Because we do not use repaint(), we
-                        // have a guarantee that each frame will be drawn separately. repaint() tends
-                        // to squash multiple paints into one, giving a jerkish appearance to the video.
-                        nextFrame = buffer;
-                        paintImmediately(getBounds());
+                    @Override
+                    public void handle(final BufferedImage buffer, long duration) {
+                        sync.sync(duration, new AbstractAction() {
+                            @Override
+                            public void actionPerformed(ActionEvent e) {
+                                // Set our current frame to the passed buffer,
+                                // and repaint immediately. Because we do not use repaint(), we
+                                // have a guarantee that each frame will be drawn separately. repaint() tends
+                                // to squash multiple paints into one, giving a jerkish appearance to the video.
+                                nextFrame = buffer;
+                                paintImmediately(getBounds());
+                            }
+                        });
                     }
 
                     @Override
@@ -209,6 +214,7 @@ public class SwingMediaPanel extends JPanel {
     @Override
     public void paintComponent(Graphics g) {
         Dimension boundary = getSize();
+
         if (nextFrame != null) {
             int width = nextFrame.getWidth();
             int height = nextFrame.getHeight();
@@ -343,7 +349,7 @@ public class SwingMediaPanel extends JPanel {
      * @since 1.0
      */
     public double frameLossRate() {
-        return lost / (double) frames;
+        return sync.frameLossRate();
     }
 
     /**

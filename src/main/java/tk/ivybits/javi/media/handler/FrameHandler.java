@@ -3,6 +3,11 @@ package tk.ivybits.javi.media.handler;
 import java.awt.image.BufferedImage;
 
 public abstract class FrameHandler {
+    public static final FrameHandler NO_HANDLER = new FrameHandler() {
+        @Override
+        public void handle(BufferedImage buffer, long time) {
+        }
+    };
 
     /**
      * Handles a frame.
@@ -14,6 +19,10 @@ public abstract class FrameHandler {
     public abstract void handle(BufferedImage buffer, long time);
 
     public void end() {
+
+    }
+
+    public void start() {
 
     }
 }

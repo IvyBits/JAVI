@@ -178,7 +178,9 @@ public class FFMediaStream implements MediaStream {
             swr_init(pSwrContext);
             ac.read();
         }
-
+        audioHandler.start();
+        videoHandler.start();
+        subtitleHandler.start();
         _outer:
         while (av_read_frame(media.formatContext.getPointer(), packet.getPointer()) >= 0) {
             try {
@@ -338,6 +340,8 @@ public class FFMediaStream implements MediaStream {
         }
         videoHandler.end();
         audioHandler.end();
+        subtitleHandler.end();
+        setPlaying(false);
     }
 
     /**
@@ -409,9 +413,9 @@ public class FFMediaStream implements MediaStream {
      */
     public static class Builder implements MediaStream.Builder {
         public FFMedia media;
-        public AudioHandler audioHandler;
-        public FrameHandler videoHandler;
-        public SubtitleHandler subtitleHandler;
+        public AudioHandler audioHandler = AudioHandler.NO_HANDLER;
+        public FrameHandler videoHandler = FrameHandler.NO_HANDLER;
+        public SubtitleHandler subtitleHandler = SubtitleHandler.NO_HANDLER;
 
         /**
          * Creates a MediaStream builder for the specified {@link Media} object.
@@ -448,7 +452,7 @@ public class FFMediaStream implements MediaStream {
          * {@inheritDoc}
          */
         public FFMediaStream create() throws IOException {
-            if (audioHandler == null && videoHandler == null)
+            if (audioHandler == null && videoHandler == null && subtitleHandler == null)
                 throw new IllegalStateException("no media handlers specified");
             return new FFMediaStream(media, audioHandler, videoHandler, subtitleHandler);
         }

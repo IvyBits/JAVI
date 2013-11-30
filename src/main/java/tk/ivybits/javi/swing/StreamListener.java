@@ -26,6 +26,13 @@ package tk.ivybits.javi.swing;
  */
 public interface StreamListener {
     /**
+     * Called when playback is started.
+     *
+     * @since 1.0
+     */
+    void onStart();
+
+    /**
      * Called when playback is finished.
      *
      * @since 1.0
