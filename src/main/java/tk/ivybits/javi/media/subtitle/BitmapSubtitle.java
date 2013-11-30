@@ -22,17 +22,47 @@ import tk.ivybits.javi.format.SubtitleType;
 
 import java.awt.image.BufferedImage;
 
+/**
+ * Class to represent a bitmap-style subtitle.
+ * <p/>
+ * This class provides a location and image (with transparency) to draw over video.
+ * <p/>
+ * Note: malformed subtitle do exist whose coordinates are outside of the video.
+ *
+ * @since 1.0
+ */
 public class BitmapSubtitle implements Subtitle {
+    /**
+     * The x-coordinate to draw the subtitle.
+     */
     public final int x;
+
+    /**
+     * The y-coordinate to draw the subtitle.
+     */
     public final int y;
+
+    /**
+     * The subtitle image.
+     */
     public final BufferedImage image;
 
+    /**
+     * Constructs a <code>BitmapSubtitle</code>.
+     *
+     * @param x     x-coordinate to draw the subtitle.
+     * @param y     y-coordinate to draw the subtitle.
+     * @param image The subtitle image.
+     */
     public BitmapSubtitle(int x, int y, BufferedImage image) {
         this.x = x;
         this.y = y;
         this.image = image;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public SubtitleType type() {
         return SubtitleType.SUBTITLE_BITMAP;

@@ -20,13 +20,27 @@ package tk.ivybits.javi.media.subtitle;
 
 import tk.ivybits.javi.format.SubtitleType;
 
+/**
+ * Class to represent a plain text subtitle exposed by FFmpeg.
+ */
 public class TextSubtitle implements Subtitle {
+    /**
+     * Subtitle in plain text.
+     */
     public final String text;
 
+    /**
+     * Creates a plain text subtitle line.
+     *
+     * @param text Subtitle in plain text.
+     */
     public TextSubtitle(String text) {
         this.text = text;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public SubtitleType type() {
         return SubtitleType.SUBTITLE_TEXT;

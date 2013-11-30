@@ -39,7 +39,7 @@ public interface MediaStream extends Runnable, Closeable {
      * Sets a video stream to be played.
      *
      * @param stream The stream to play.
-     * @return The stream perviously playing, null if none.
+     * @return The stream previously playing, null if none.
      * @throws IllegalArgumentException Thrown if the stream does not belong to the parent container.
      * @throws StreamException          Thrown if an error occurs while allocating stream buffers.
      * @since 1.0
@@ -50,14 +50,23 @@ public interface MediaStream extends Runnable, Closeable {
      * Sets a audio stream to be played.
      *
      * @param stream The stream to play.
-     * @return The stream perviously playing, null if none.
+     * @return The stream previously playing, null if none.
      * @throws IllegalArgumentException Thrown if the stream does not belong to the parent container.
      * @throws StreamException          Thrown if an error occurs while allocating stream buffers.
      * @since 1.0
      */
     AudioStream setAudioStream(AudioStream stream);
 
-    public SubtitleStream setSubtitleStream(SubtitleStream stream);
+    /**
+     * Sets a subtitle stream to be played.
+     *
+     * @param stream The stream to play.
+     * @return The stream previously playing, null if none.
+     * @throws IllegalArgumentException Thrown if the stream does not belong to the parent container.
+     * @throws StreamException          Thrown if an error occurs while allocating stream buffers.
+     * @since 1.0
+     */
+    SubtitleStream setSubtitleStream(SubtitleStream stream);
 
     /**
      * Fetches current audio stream.
@@ -74,6 +83,13 @@ public interface MediaStream extends Runnable, Closeable {
      * @since 1.0
      */
     VideoStream getVideoStream();
+
+    /**
+     * Fetches current subtitle stream.
+     *
+     * @return The <code>SubtitleStream</code> currently in use, or null if none.
+     */
+    SubtitleStream getSubtitleStream();
 
     /**
      * Checks if the stream is playing.
@@ -140,6 +156,14 @@ public interface MediaStream extends Runnable, Closeable {
          */
         Builder video(FrameHandler videoHandler);
 
+        /**
+         * Specifies the subtitle stream handler.
+         *
+         * @param subtitleHandler The subtitle handler. Should accept objects that implement
+         *                        {@link tk.ivybits.javi.media.subtitle.Subtitle}.
+         * @return The current Builder.
+         * @since 1.0
+         */
         Builder subtitle(SubtitleHandler subtitleHandler);
 
         /**

@@ -128,6 +128,9 @@ public class FFMediaStream implements MediaStream {
         return pre;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     public SubtitleStream setSubtitleStream(SubtitleStream stream) {
         if (stream.container() != media)
             throw new IllegalArgumentException("stream not from same container");
@@ -411,6 +414,14 @@ public class FFMediaStream implements MediaStream {
     /**
      * {@inheritDoc}
      */
+    @Override
+    public FFSubtitleStream getSubtitleStream() {
+        return subtitleStream;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
     public static class Builder implements MediaStream.Builder {
         public FFMedia media;
         public AudioHandler audioHandler = AudioHandler.NO_HANDLER;
@@ -443,6 +454,9 @@ public class FFMediaStream implements MediaStream {
             return this;
         }
 
+        /**
+         * {@inheritDoc}
+         */
         public Builder subtitle(SubtitleHandler subtitleHandler) {
             this.subtitleHandler = subtitleHandler;
             return this;

@@ -20,6 +20,21 @@ package tk.ivybits.javi.media.subtitle;
 
 import tk.ivybits.javi.format.SubtitleType;
 
+/**
+ * Interface for a general subtitles.
+ * <p/>
+ * There are many possible subtitle implementations that must be dealt separately, in general,
+ * they come in two forms: bitmap and text. Users of this interface should support the two
+ * major concrete implementations: {@link tk.ivybits.javi.media.subtitle.BitmapSubtitle} and
+ * {@link tk.ivybits.javi.media.subtitle.DonkeySubtitle}.
+ *
+ * @since 1.0
+ */
 public interface Subtitle {
+    /**
+     * Gets the type of subtitle.
+     *
+     * @return the type of subtitle.
+     */
     SubtitleType type();
 }
