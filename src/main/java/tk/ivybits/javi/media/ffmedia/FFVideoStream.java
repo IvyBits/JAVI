@@ -42,4 +42,9 @@ public class FFVideoStream extends FFStream implements VideoStream {
     public int height() {
         return ffstream.codec.height;
     }
+
+    @Override
+    public double framerate() {
+        return ffstream.r_frame_rate.num / (double)ffstream.r_frame_rate.den;
+    }
 }

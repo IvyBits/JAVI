@@ -70,8 +70,8 @@ public class JPlay {
                     area = size;
                     video = str;
                 }
-                System.err.printf("\tStream #%s: (%sx%s) - %s (%s)\n",
-                        str.index(), str.width(), str.height(), str.codecName(), str.longCodecName());
+                System.err.printf("\tStream #%s: (%sx%s) - %s (%s) @%.2f FPS\n",
+                        str.index(), str.width(), str.height(), str.codecName(), str.longCodecName(), str.framerate());
             }
 
             for (final AudioStream str : media.audioStreams()) {

@@ -38,4 +38,6 @@ public interface VideoStream extends Stream {
      * @since 1.0
      */
     int height();
+
+    double framerate();
 }
