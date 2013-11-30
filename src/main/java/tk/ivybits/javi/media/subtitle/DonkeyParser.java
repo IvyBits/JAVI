@@ -22,12 +22,23 @@ import java.awt.*;
 import java.util.*;
 import java.util.List;
 
+
+/**
+ * Parser for Advanced SubStation Alpha subtitles.
+ *
+ * @since 1.0
+ */
 public class DonkeyParser {
     protected String version;
     protected ArrayList<String> format;
     protected Style defaultStyle;
     protected HashMap<String, Style> styles = new HashMap<>();
 
+    /**
+     * Initializes a subtitle from its header.
+     *
+     * @param header the subtitle header.
+     */
     public DonkeyParser(String header) {
         defaultStyle = new Style();
         defaultStyle.name = "Default";
@@ -41,10 +52,21 @@ public class DonkeyParser {
         }
     }
 
+    /**
+     * Processes a format line.
+     *
+     * @param data A format line for the subsequent lines of text.
+     */
     protected void processFormat(String data) {
         format = new ArrayList<>(Arrays.asList(data.split("\\s*,\\s*")));
     }
 
+    /**
+     * Loads a line of SubStation Alpha command into a key-value mapping based on the current format.
+     *
+     * @param line Command line to parse.
+     * @return A map of data stored in the line.
+     */
     protected HashMap<String, String> parseWithFormat(String line) {
         HashMap<String, String> map = new HashMap<>();
         String[] data = line.split("\\s*,\\s*");
@@ -55,6 +77,12 @@ public class DonkeyParser {
         return map;
     }
 
+    /**
+     * Parses a SubStation Alpha integer literal.
+     *
+     * @param number An integer literal to parse, <code>&H</code> at the beginning means hex.
+     * @return Parsed integer.
+     */
     protected int parseInt(String number) {
         if (number.startsWith("&H")) {
             return Integer.parseInt(number.substring(2), 16);
@@ -63,6 +91,11 @@ public class DonkeyParser {
         }
     }
 
+    /**
+     * Parses a style line.
+     *
+     * @param line The style line.
+     */
     protected void processStyle(String line) {
         HashMap<String, String> map = parseWithFormat(line);
         Style style = new Style();
@@ -92,6 +125,11 @@ public class DonkeyParser {
         }
     }
 
+    /**
+     * Dispatched of a line of subtitle.
+     *
+     * @param line A raw line of Substation Alpha.
+     */
     protected void processLine(String line) {
         if (line.isEmpty() || line.startsWith("["))
             return;
@@ -114,11 +152,23 @@ public class DonkeyParser {
         }
     }
 
+    /**
+     * Parses a SubStation Alpha timestamp into milliseconds since start of video.
+     *
+     * @param ts SubStation Alpha timestamp.
+     * @return ts represented in milliseconds since start of video.
+     */
     protected long parseTimeStamp(String ts) {
         String[] time = ts.split(":");
         return Integer.parseInt(time[0]) * 3600_000 + Integer.parseInt(time[1]) * 60_000 + (int) (Double.parseDouble(time[2]) * 1000);
     }
 
+    /**
+     * Processes a line of SubStation Alpha dialog.
+     *
+     * @param line The line of dialog.
+     * @return The parsed line of subtitle.
+     */
     public DonkeySubtitle processDialog(String line) {
         HashMap<String, String> map = parseWithFormat(line);
         String style = map.get("Style");
@@ -130,10 +180,20 @@ public class DonkeyParser {
         return new DonkeySubtitle(this, styles.get(style), start, end, text);
     }
 
+    /**
+     * Gets a helper to draw a subtitle parsed by this parser.
+     *
+     * @return A <code>DrawHelper</code>.
+     */
     public DrawHelper getDrawHelper() {
         return new DrawHelper();
     }
 
+    /**
+     * Debug method to dump the subtitle header.
+     *
+     * @return The subtitle header abstract representation.
+     */
     public String toString() {
         StringBuilder builder = new StringBuilder();
         builder.append("Version: ").append(version).append("\n");
@@ -149,37 +209,104 @@ public class DonkeyParser {
         return builder.toString();
     }
 
-    public class Style {
+    /**
+     * Class to represent a SubStation Alpha style.
+     *
+     * @since 1.0
+     */
+    public static class Style {
+        /**
+         * The name of the style.
+         */
         public String name;
+
+        /**
+         * The font referenced by the style.
+         */
         public Font font;
+
+        /**
+         * The primary colour of the subtitle.
+         */
         public Color primaryColor;
+
+        /**
+         * The secondary colour of the subtitle.
+         */
         public Color secondaryColor;
+
+        /**
+         * The colour to draw the outline of the subtitle.
+         */
         public Color outlineColor;
+
+        /**
+         * The background colour to draw the subtitle on.
+         */
         public Color backColor;
     }
 
+    /**
+     * An actual line of subtitle. Represents one line ONLY.
+     *
+     * @since 1.0
+     */
     public static class RowInfo {
+        /**
+         * The subtitle text. Only ONE line.
+         */
         public String text;
+
+        /**
+         * The font to draw the line in, taking into account resizing.
+         */
         public Font font;
+
+        /**
+         * The other style attributes and the original font of the line.
+         */
         public Style style;
+
+        /**
+         * The width of the line of text.
+         */
         public int width;
+
+        /**
+         * The offset from the top of the video to draw on.
+         */
         public int y;
     }
 
+    /**
+     * Helper to draw the subtitle.
+     */
     public class DrawHelper {
         HashMap<String, Font> fontCache = new HashMap<>();
         double scale;
         int spacing = 5;
         public DonkeyParser parser;
 
-        public DrawHelper() {
+        protected DrawHelper() {
             this.parser = DonkeyParser.this;
         }
 
+        /**
+         * Gets the currently set scaling factor.
+         *
+         * @return the current scale factor.
+         */
         public double getScale() {
             return scale;
         }
 
+        /**
+         * Sets the currently set scaling factor.
+         * <p/>
+         * Does nothing if the scaling factor is not changed.
+         *
+         * @param scale The scale factor to change to.
+         */
         public void setScale(double scale) {
             if (this.scale != scale) {
                 this.scale = scale;
@@ -187,14 +314,30 @@ public class DonkeyParser {
             }
         }
 
+        /**
+         * Gets the current line spacing to draw the subtitles.
+         *
+         * @return the current line spacing
+         */
         public int getSpacing() {
             return spacing;
         }
 
+        /**
+         * Sets the current line spacing to draw the subtitles.
+         *
+         * @param spacing the line spacing to set to.
+         */
         public void setSpacing(int spacing) {
             this.spacing = spacing;
         }
 
+        /**
+         * Helper to apply the scaling to the font in a style, with a cache.
+         *
+         * @param style the style whose font is to be scaled.
+         * @return the scaled font.
+         */
         public Font getFont(Style style) {
             Font font = fontCache.get(style.name);
             if (font != null)
@@ -204,19 +347,35 @@ public class DonkeyParser {
             return font;
         }
 
+        /**
+         * Start the drawing of a group of subtitles.
+         *
+         * @param graphics The {@link java.awt.Graphics} object to draw on.
+         * @return The helper to draw a group of subtitles.
+         */
         public Group draw(Graphics graphics) {
             return new Group(graphics);
         }
 
+        /**
+         * Represent a group of subtitles to be drawn, i.e. on the same screen.
+         *
+         * @since 1.0
+         */
         public class Group {
             private final Graphics graphics;
             HashMap<String, FontMetrics> metricsCache = new HashMap<>();
             List<RowInfo> subtitles = new ArrayList<>();
 
-            public Group(Graphics graphics) {
+            protected Group(Graphics graphics) {
                 this.graphics = graphics;
             }
 
+            /**
+             * Adds a subtitle to the group.
+             *
+             * @param subtitle The abstract representation of a SubStation Alpha dialog.
+             */
             public void addSubtitle(DonkeySubtitle subtitle) {
                 for (String line : subtitle.line.split("\\r?\\n")) {
                     RowInfo row = new RowInfo();
@@ -226,6 +385,14 @@ public class DonkeyParser {
                 }
             }
 
+            /**
+             * Gets the font metrics of a SubStation Alpha style, as drawn on the current graphics object.
+             * <p/>
+             * Note: it's cached.
+             *
+             * @param style the SubStation Alpha style.
+             * @return the font metrics.
+             */
             public FontMetrics getMetrics(Style style) {
                 FontMetrics metrics = metricsCache.get(style.name);
                 if (metrics != null)
@@ -235,6 +402,11 @@ public class DonkeyParser {
                 return metrics;
             }
 
+            /**
+             * Gets the height of the current subtitle group.
+             *
+             * @return the height of the current subtitle group when drawn.
+             */
             public int getHeight() {
                 int height = 0;
                 for (RowInfo row : subtitles) {
@@ -243,6 +415,11 @@ public class DonkeyParser {
                 return Math.max(0, height - spacing);
             }
 
+            /**
+             * Gets all the lines of subtitles in the current group.
+             *
+             * @return A collection of lines of subtitles.
+             */
             public Collection<RowInfo> getRows() {
                 int y = 0;
 
@@ -259,6 +436,16 @@ public class DonkeyParser {
         }
     }
 
+    /**
+     * Helper function to access a {@link java.util.Map} with a default value.
+     *
+     * @param map The map to access.
+     * @param key The key to retrieve.
+     * @param defaultValue The default value to return if the key doesn't exist.
+     * @param <K> The type of keys in the map.
+     * @param <V> The type of values in the map.
+     * @return The value of the key if exists, otherwise the default value.
+     */
     public static <K, V> V getWithDefault(Map<K, V> map, K key, V defaultValue) {
         V ret = map.get(key);
         if (ret == null) {
