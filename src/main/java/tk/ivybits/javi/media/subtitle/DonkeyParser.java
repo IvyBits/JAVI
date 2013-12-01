@@ -32,7 +32,7 @@ public class DonkeyParser {
     protected String version;
     protected ArrayList<String> format;
     protected Style defaultStyle;
-    protected HashMap<String, Style> styles = new HashMap<>();
+    protected HashMap<String, Style> styles = new HashMap<String, Style>();
 
     /**
      * Initializes a subtitle from its header.
@@ -58,7 +58,7 @@ public class DonkeyParser {
      * @param data A format line for the subsequent lines of text.
      */
     protected void processFormat(String data) {
-        format = new ArrayList<>(Arrays.asList(data.split("\\s*,\\s*")));
+        format = new ArrayList<String>(Arrays.asList(data.split("\\s*,\\s*")));
     }
 
     /**
@@ -68,7 +68,7 @@ public class DonkeyParser {
      * @return A map of data stored in the line.
      */
     protected HashMap<String, String> parseWithFormat(String line) {
-        HashMap<String, String> map = new HashMap<>();
+        HashMap<String, String> map = new HashMap<String, String>();
         String[] data = line.split("\\s*,\\s*");
         int size = Math.min(format.size(), data.length);
         for (int i = 0; i < size; ++i) {
@@ -139,17 +139,9 @@ public class DonkeyParser {
         String command = line.substring(0, colon);
         String data = line.substring(colon + 1).trim();
         //System.out.println("Parsed: Command: " + command + ", Data: " + data);
-        switch (command) {
-            case "ScriptType":
-                version = data;
-                break;
-            case "Format":
-                processFormat(data);
-                break;
-            case "Style":
-                processStyle(data);
-                break;
-        }
+        if (command.equals("ScriptType")) version = data;
+        else if (command.equals("Format")) processFormat(data);
+        else if (command.equals("Style")) processStyle(data);
     }
 
     /**
@@ -160,7 +152,7 @@ public class DonkeyParser {
      */
     protected long parseTimeStamp(String ts) {
         String[] time = ts.split(":");
-        return Integer.parseInt(time[0]) * 3600_000 + Integer.parseInt(time[1]) * 60_000 + (int) (Double.parseDouble(time[2]) * 1000);
+        return Integer.parseInt(time[0]) * 3600000 + Integer.parseInt(time[1]) * 60000 + (int) (Double.parseDouble(time[2]) * 1000);
     }
 
     /**
@@ -282,7 +274,7 @@ public class DonkeyParser {
      * Helper to draw the subtitle.
      */
     public class DrawHelper {
-        HashMap<String, Font> fontCache = new HashMap<>();
+        HashMap<String, Font> fontCache = new HashMap<String, Font>();
         double scale;
         int spacing = 5;
         public DonkeyParser parser;
@@ -364,8 +356,8 @@ public class DonkeyParser {
          */
         public class Group {
             private final Graphics graphics;
-            HashMap<String, FontMetrics> metricsCache = new HashMap<>();
-            List<RowInfo> subtitles = new ArrayList<>();
+            HashMap<String, FontMetrics> metricsCache = new HashMap<String, FontMetrics>();
+            ArrayList<RowInfo> subtitles = new ArrayList<RowInfo>();
 
             protected Group(Graphics graphics) {
                 this.graphics = graphics;
@@ -439,11 +431,11 @@ public class DonkeyParser {
     /**
      * Helper function to access a {@link java.util.Map} with a default value.
      *
-     * @param map The map to access.
-     * @param key The key to retrieve.
+     * @param map          The map to access.
+     * @param key          The key to retrieve.
      * @param defaultValue The default value to return if the key doesn't exist.
-     * @param <K> The type of keys in the map.
-     * @param <V> The type of values in the map.
+     * @param <K>          The type of keys in the map.
+     * @param <V>          The type of values in the map.
      * @return The value of the key if exists, otherwise the default value.
      */
     public static <K, V> V getWithDefault(Map<K, V> map, K key, V defaultValue) {

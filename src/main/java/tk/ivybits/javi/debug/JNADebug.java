@@ -25,7 +25,7 @@ public class JNADebug {
             "avcodec.AVCodec",
             "avcodec.AVCodecContext",
             "avcodec.AVPacket",
-            "avcodec.Picture",
+            "avcodec.AVPicture",
             "avcodec.AVSubtitle",
             "avcodec.AVSubtitleRect",
             "avformat.AVFormatContext",

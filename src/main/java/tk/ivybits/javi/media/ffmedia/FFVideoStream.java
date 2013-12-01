@@ -32,6 +32,7 @@ public class FFVideoStream extends FFStream implements VideoStream {
     /**
      * {@inheritDoc}
      */
+    @Override
     public int width() {
         return ffstream.codec.width;
     }
@@ -39,12 +40,16 @@ public class FFVideoStream extends FFStream implements VideoStream {
     /**
      * {@inheritDoc}
      */
+    @Override
     public int height() {
         return ffstream.codec.height;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public double framerate() {
-        return ffstream.r_frame_rate.num / (double)ffstream.r_frame_rate.den;
+        return ffstream.r_frame_rate.num / (double) ffstream.r_frame_rate.den;
     }
 }

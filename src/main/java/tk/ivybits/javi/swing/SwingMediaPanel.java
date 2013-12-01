@@ -52,58 +52,14 @@ public class SwingMediaPanel extends JPanel {
     private MediaStream stream;
     private Thread streamingThread;
     private BufferedImage nextFrame;
-    private int frames = 0, lost = 0;
-    private Collection<StreamListener> listeners = new ArrayList<>();
+    private ArrayList<StreamListener> listeners = new ArrayList<StreamListener>();
     private SourceDataLine sdl;
     private Mixer mixer;
-    private Collection<Subtitle> subtitles = new LinkedList<>();
+    private LinkedList<Subtitle> subtitles = new LinkedList<Subtitle>();
     private Timer timer = new Timer("SwingMediaPanel - Subtitle Timer", true);
     private DonkeyParser lastParser;
     private DonkeyParser.DrawHelper donkeyHelper;
     private AVSync sync;
-
-    /**
-     * Fetches the mixer in use.
-     *
-     * @return The mixer currently being used, or null if there is none (or the desired one failed to open).
-     */
-    public Mixer getMixer() {
-        return mixer;
-    }
-
-    /**
-     * Sets the mixer used for audio playback.
-     *
-     * @param mixer The mixer to use, or null to disable (mute) audio.
-     * @return True if the mixer was successfully set, or false if it was not.
-     *         <b>A mixer may not be set if a <code>LineUnavailableException</code> is thrown when opening a line.</b>
-     *         This is generally caused by the desired mixer not supporting the format the audio stream is encoded in.
-     */
-    public boolean setMixer(Mixer mixer) {
-        // Close audio line, if it exists
-        if (sdl != null) {
-            sdl.drain();
-            sdl.close();
-        }
-
-        if (mixer == null) {
-            // If mixer is null, then audio is disabled
-            this.mixer = mixer;
-            return true;
-        }
-        try {
-            AudioFormat af = stream.getAudioStream().audioFormat();
-            sdl = AudioSystem.getSourceDataLine(af, mixer.getMixerInfo());
-            // Attempt to use a large buffer, such that sdl.write has a lower
-            // chance of blocking
-            sdl.open(af, 512000);
-        } catch (LineUnavailableException failed) {
-            return false;
-        }
-        this.mixer = mixer;
-        sdl.start();
-        return true;
-    }
 
     /**
      * Creates a new SwingMediaPanel component.
@@ -146,7 +102,6 @@ public class SwingMediaPanel extends JPanel {
                     @Override
                     public void handle(final BufferedImage buffer, long duration) {
                         sync.sync(duration, new AbstractAction() {
-                            @Override
                             public void actionPerformed(ActionEvent e) {
                                 // Set our current frame to the passed buffer,
                                 // and repaint immediately. Because we do not use repaint(), we
@@ -218,7 +173,7 @@ public class SwingMediaPanel extends JPanel {
         if (nextFrame != null) {
             int width = nextFrame.getWidth();
             int height = nextFrame.getHeight();
-            Deque<String> subtitleLines = null;
+            LinkedList<String> subtitleLines = null;
             DonkeyParser.DrawHelper.Group donkeySubtitles = null;
 
             if (!subtitles.isEmpty()) {
@@ -238,7 +193,7 @@ public class SwingMediaPanel extends JPanel {
                             break;
                         case SUBTITLE_TEXT:
                             if (subtitleLines == null)
-                                subtitleLines = new LinkedList<>();
+                                subtitleLines = new LinkedList<String>();
                             for (String line : ((TextSubtitle) subtitle).text.split("\\r?\\n"))
                                 subtitleLines.addFirst(line);
                             break;
@@ -452,5 +407,48 @@ public class SwingMediaPanel extends JPanel {
      */
     public void removeStreamListener(StreamListener listener) {
         listeners.remove(listener);
+    }
+
+    /**
+     * Fetches the mixer in use.
+     *
+     * @return The mixer currently being used, or null if there is none (or the desired one failed to open).
+     */
+    public Mixer getMixer() {
+        return mixer;
+    }
+
+    /**
+     * Sets the mixer used for audio playback.
+     *
+     * @param mixer The mixer to use, or null to disable (mute) audio.
+     * @return True if the mixer was successfully set, or false if it was not.
+     *         <b>A mixer may not be set if a <code>LineUnavailableException</code> is thrown when opening a line.</b>
+     *         This is generally caused by the desired mixer not supporting the format the audio stream is encoded in.
+     */
+    public boolean setMixer(Mixer mixer) {
+        // Close audio line, if it exists
+        if (sdl != null) {
+            sdl.drain();
+            sdl.close();
+        }
+
+        if (mixer == null) {
+            // If mixer is null, then audio is disabled
+            this.mixer = mixer;
+            return true;
+        }
+        try {
+            AudioFormat af = stream.getAudioStream().audioFormat();
+            sdl = AudioSystem.getSourceDataLine(af, mixer.getMixerInfo());
+            // Attempt to use a large buffer, such that sdl.write has a lower
+            // chance of blocking
+            sdl.open(af, 512000);
+        } catch (LineUnavailableException failed) {
+            return false;
+        }
+        this.mixer = mixer;
+        sdl.start();
+        return true;
     }
 }

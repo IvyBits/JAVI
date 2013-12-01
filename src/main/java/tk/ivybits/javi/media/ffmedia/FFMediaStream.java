@@ -96,6 +96,7 @@ public class FFMediaStream implements MediaStream {
     /**
      * {@inheritDoc}
      */
+    @Override
     public VideoStream setVideoStream(VideoStream stream) {
         if (stream.container() != media)
             throw new IllegalArgumentException("stream not from same container");
@@ -119,6 +120,7 @@ public class FFMediaStream implements MediaStream {
     /**
      * {@inheritDoc}
      */
+    @Override
     public AudioStream setAudioStream(AudioStream stream) {
         if (stream.container() != media)
             throw new IllegalArgumentException("stream not from same container");
@@ -131,6 +133,7 @@ public class FFMediaStream implements MediaStream {
     /**
      * {@inheritDoc}
      */
+    @Override
     public SubtitleStream setSubtitleStream(SubtitleStream stream) {
         if (stream.container() != media)
             throw new IllegalArgumentException("stream not from same container");
@@ -146,6 +149,7 @@ public class FFMediaStream implements MediaStream {
     /**
      * {@inheritDoc}
      */
+    @Override
     public void run() {
         started = playing = true;
         IntByReference frameFinished = new IntByReference();
@@ -278,7 +282,7 @@ public class FFMediaStream implements MediaStream {
                     byte[] raster = ((DataBufferByte) imageBuffer.getRaster().getDataBuffer()).getData();
                     pBGRFrame.data[0].read(0, raster, 0, raster.length);
 
-                    videoHandler.handle(imageBuffer, pFrame.pkt_duration * 1_000_000_000 *
+                    videoHandler.handle(imageBuffer, pFrame.pkt_duration * 1000000000 *
                             videoStream.ffstream.time_base.num / videoStream.ffstream.time_base.den);
                 }
             } else if (subtitleStream != null && packet.stream_index == subtitleStream.index()) {
@@ -350,6 +354,7 @@ public class FFMediaStream implements MediaStream {
     /**
      * {@inheritDoc}
      */
+    @Override
     public boolean isPlaying() {
         return playing;
     }
@@ -357,6 +362,7 @@ public class FFMediaStream implements MediaStream {
     /**
      * {@inheritDoc}
      */
+    @Override
     public void setPlaying(boolean flag) {
         if (!started)
             throw new StreamException("stream not started");
@@ -375,6 +381,7 @@ public class FFMediaStream implements MediaStream {
     /**
      * {@inheritDoc}
      */
+    @Override
     public void seek(long to) {
         if (!started)
             throw new StreamException("stream not started");
@@ -382,7 +389,7 @@ public class FFMediaStream implements MediaStream {
             throw new IllegalArgumentException("negative position");
         if (to > media.length())
             throw new IllegalArgumentException("position greater then video length");
-        int err = av_seek_frame(media.formatContext.getPointer(), -1, to * 1_000, 0);
+        int err = av_seek_frame(media.formatContext.getPointer(), -1, to * 1000, 0);
         if (err < 0)
             throw new StreamException("failed to seek video: error " + err);
     }
@@ -441,6 +448,7 @@ public class FFMediaStream implements MediaStream {
         /**
          * {@inheritDoc}
          */
+        @Override
         public Builder audio(AudioHandler audioHandler) {
             this.audioHandler = audioHandler;
             return this;
@@ -449,6 +457,7 @@ public class FFMediaStream implements MediaStream {
         /**
          * {@inheritDoc}
          */
+        @Override
         public Builder video(FrameHandler videoHandler) {
             this.videoHandler = videoHandler;
             return this;
@@ -457,6 +466,7 @@ public class FFMediaStream implements MediaStream {
         /**
          * {@inheritDoc}
          */
+        @Override
         public Builder subtitle(SubtitleHandler subtitleHandler) {
             this.subtitleHandler = subtitleHandler;
             return this;
@@ -465,6 +475,7 @@ public class FFMediaStream implements MediaStream {
         /**
          * {@inheritDoc}
          */
+        @Override
         public FFMediaStream create() throws IOException {
             if (audioHandler == null && videoHandler == null && subtitleHandler == null)
                 throw new IllegalStateException("no media handlers specified");

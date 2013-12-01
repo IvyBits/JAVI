@@ -63,6 +63,9 @@ public interface Stream extends Closeable {
      */
     String longCodecName();
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     void close();
 

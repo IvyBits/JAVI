@@ -44,9 +44,9 @@ import static tk.ivybits.javi.ffmpeg.LibAVFormat.avformat_close_input;
  */
 public class FFMedia implements Media {
     public AVFormatContext formatContext;
-    public List<FFVideoStream> videoStreams = new ArrayList<>();
-    public List<FFAudioStream> audioStreams = new ArrayList<>();
-    public List<FFSubtitleStream> subtitleStreams = new ArrayList<>();
+    public ArrayList<FFVideoStream> videoStreams = new ArrayList<FFVideoStream>();
+    public ArrayList<FFAudioStream> audioStreams = new ArrayList<FFAudioStream>();
+    public ArrayList<FFSubtitleStream> subtitleStreams = new ArrayList<FFSubtitleStream>();
 
     /**
      * Creates a FFMedia object sourced from a <code>File</code>.
@@ -103,6 +103,7 @@ public class FFMedia implements Media {
     /**
      * {@inheritDoc}
      */
+    @Override
     public List<? extends VideoStream> videoStreams() {
         return Collections.unmodifiableList(videoStreams);
     }
@@ -110,10 +111,15 @@ public class FFMedia implements Media {
     /**
      * {@inheritDoc}
      */
+    @Override
     public List<? extends AudioStream> audioStreams() {
         return Collections.unmodifiableList(audioStreams);
     }
 
+    /**
+     * {@inheritDoc}
+     */
+    @Override
     public List<? extends SubtitleStream> subtitleStreams() {
         return Collections.unmodifiableList(subtitleStreams);
     }
@@ -121,6 +127,7 @@ public class FFMedia implements Media {
     /**
      * {@inheritDoc}
      */
+    @Override
     public MediaStream.Builder stream() {
         return new FFMediaStream.Builder(this);
     }
@@ -128,6 +135,7 @@ public class FFMedia implements Media {
     /**
      * {@inheritDoc}
      */
+    @Override
     public long length() {
         if (formatContext.duration == Long.MIN_VALUE)
             return 0;

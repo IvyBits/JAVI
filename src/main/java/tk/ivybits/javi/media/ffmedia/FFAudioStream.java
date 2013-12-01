@@ -34,6 +34,7 @@ public class FFAudioStream extends FFStream implements AudioStream {
     /**
      * {@inheritDoc}
      */
+    @Override
     public AudioFormat audioFormat() {
         return new AudioFormat(ffstream.codec.sample_rate,
                 16,

@@ -48,6 +48,7 @@ public class FFStream implements Stream {
     /**
      * {@inheritDoc}
      */
+    @Override
     public Media container() {
         return container;
     }
@@ -55,6 +56,7 @@ public class FFStream implements Stream {
     /**
      * {@inheritDoc}
      */
+    @Override
     public Stream.Type type() {
         return Stream.Type.values()[ffstream.codec.codec_type];
     }
@@ -62,6 +64,7 @@ public class FFStream implements Stream {
     /**
      * {@inheritDoc}
      */
+    @Override
     public int index() {
         return ffstream.index;
     }
@@ -69,6 +72,7 @@ public class FFStream implements Stream {
     /**
      * {@inheritDoc}
      */
+    @Override
     public String codecName() {
         return ffstream.codec.codec.name;
     }
@@ -76,6 +80,7 @@ public class FFStream implements Stream {
     /**
      * {@inheritDoc}
      */
+    @Override
     public String longCodecName() {
         return ffstream.codec.codec.long_name;
     }

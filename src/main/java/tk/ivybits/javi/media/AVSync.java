@@ -2,7 +2,6 @@ package tk.ivybits.javi.media;
 
 import javax.swing.*;
 import java.awt.event.ActionEvent;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.LockSupport;
 
 public class AVSync {
