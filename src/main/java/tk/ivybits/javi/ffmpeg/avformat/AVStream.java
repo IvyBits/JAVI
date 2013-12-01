@@ -47,7 +47,7 @@ public class AVStream extends Structure {
     public AVDictionary metadata;
     public AVRational avg_frame_rate;
     public AVPacket attached_pic;
-    public info_struct.ByReference info;
+    public Pointer info;
     public int pts_wrap_bits;
     @Deprecated
     public long do_not_use;
@@ -81,43 +81,6 @@ public class AVStream extends Structure {
     public static final int MAX_PROBE_PACKETS = 2500;
     public static final int MAX_REORDER_DELAY = 16;
 
-    public static class info_struct extends Structure {
-        public static class ByReference extends info_struct implements Structure.ByReference {
-        }
-
-        public static class ByValue extends info_struct implements Structure.ByValue {
-        }
-
-        public long last_dts;
-        public long duration_gcd;
-        public int duration_count;
-        public Pointer duration_error;
-        public long codec_info_duration;
-        public long codec_info_duration_fields;
-        public int found_decoder;
-        public long last_duration;
-        public long fps_first_dts;
-        public int fps_first_dts_idx;
-        public long fps_last_dts;
-        public int fps_last_dts_idx;
-
-        public info_struct(Pointer address) {
-            super(address);
-            read();
-        }
-
-        public info_struct() {
-            super();
-        }
-
-        @Override
-        protected List<String> getFieldOrder() {
-            return Arrays.asList("last_dts", "duration_gcd", "duration_count", "duration_error",
-                    "codec_info_duration", "codec_info_duration_fields", "found_decoder", "last_duration",
-                    "fps_first_dts", "fps_first_dts_idx", "fps_last_dts", "fps_last_dts_idx");
-        }
-    }
-
     public AVStream() {
         super();
     }
@@ -125,12 +88,6 @@ public class AVStream extends Structure {
     public AVStream(Pointer address) {
         super(address);
         read();
-    }
-
-    public double getFPS() {
-        Pointer ptr = new Pointer(Pointer.nativeValue(getPointer()) + fieldOffset("avg_frame_rate"));
-        System.out.println(Arrays.toString(ptr.getIntArray(0, 2)));
-        return 0;
     }
 
     @Override
