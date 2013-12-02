@@ -80,6 +80,7 @@ public class FFMediaStream implements MediaStream {
     public AVCodec videoCodec, audioCodec, subtitleCodec;
     public boolean playing = false;
     public boolean started;
+    public long time;
     private final Semaphore mutex = new Semaphore(1);
 
     FFMediaStream(FFMedia media, AudioHandler audioHandler, FrameHandler videoHandler,
@@ -281,9 +282,10 @@ public class FFMediaStream implements MediaStream {
                     // Read the buffer directly into the raster of our image
                     byte[] raster = ((DataBufferByte) imageBuffer.getRaster().getDataBuffer()).getData();
                     pBGRFrame.data[0].read(0, raster, 0, raster.length);
-
-                    videoHandler.handle(imageBuffer, pFrame.pkt_duration * 1000000000 *
-                            videoStream.ffstream.time_base.num / videoStream.ffstream.time_base.den);
+                    long nano = pFrame.pkt_duration * 1000000000 *
+                            videoStream.ffstream.time_base.num / videoStream.ffstream.time_base.den;
+                    time += nano / 1000;
+                    videoHandler.handle(imageBuffer, nano);
                 }
             } else if (subtitleStream != null && packet.stream_index == subtitleStream.index()) {
                 int err = avcodec_decode_subtitle2(subtitleStream.ffstream.codec.getPointer(), pSubtitle.getPointer(), frameFinished, packet.getPointer());
@@ -392,6 +394,12 @@ public class FFMediaStream implements MediaStream {
         int err = av_seek_frame(media.formatContext.getPointer(), -1, to * 1000, 0);
         if (err < 0)
             throw new StreamException("failed to seek video: error " + err);
+        time = to;
+    }
+
+    @Override
+    public long position() {
+        return 0;
     }
 
     /**

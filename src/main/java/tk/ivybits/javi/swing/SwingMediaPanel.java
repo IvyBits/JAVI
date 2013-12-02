@@ -346,6 +346,16 @@ public class SwingMediaPanel extends JPanel {
     }
 
     /**
+     * Fetches the current time of the media, in milliseconds.
+     *
+     * @return The current time.
+     * @since 1.0
+     */
+    public long position() {
+        return stream.position();
+    }
+
+    /**
      * Sets the AudioStream to be played.
      *
      * @param audioStream The AudioStream to begin playing.

@@ -119,6 +119,14 @@ public interface MediaStream extends Runnable, Closeable {
     void seek(long to);
 
     /**
+     * Fetches the current time of the media, in milliseconds.
+     *
+     * @return The current time.
+     * @since 1.0
+     */
+    long position();
+
+    /**
      * {@inheritDoc}
      */
     @Override
