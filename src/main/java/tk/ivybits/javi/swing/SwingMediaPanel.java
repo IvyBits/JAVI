@@ -90,6 +90,17 @@ public class SwingMediaPanel extends JPanel {
                     }
                 })
                 .video(new FrameHandler() {
+                    private final AbstractAction REPAINT_CALLBACK = new AbstractAction() {
+                        public void actionPerformed(ActionEvent e) {
+                            // Set our current frame to the passed buffer,
+                            // and repaint immediately. Because we do not use repaint(), we
+                            // have a guarantee that each frame will be drawn separately. repaint() tends
+                            // to squash multiple paints into one, giving a jerkish appearance to the video.
+
+                            paintImmediately(getBounds());
+                        }
+                    };
+
                     @Override
                     public void start() {
                         sync.reset();
@@ -101,16 +112,8 @@ public class SwingMediaPanel extends JPanel {
 
                     @Override
                     public void handle(final BufferedImage buffer, long duration) {
-                        sync.sync(duration, new AbstractAction() {
-                            public void actionPerformed(ActionEvent e) {
-                                // Set our current frame to the passed buffer,
-                                // and repaint immediately. Because we do not use repaint(), we
-                                // have a guarantee that each frame will be drawn separately. repaint() tends
-                                // to squash multiple paints into one, giving a jerkish appearance to the video.
-                                nextFrame = buffer;
-                                paintImmediately(getBounds());
-                            }
-                        });
+                        nextFrame = buffer;
+                        sync.sync(duration, REPAINT_CALLBACK);
                     }
 
                     @Override
@@ -159,7 +162,7 @@ public class SwingMediaPanel extends JPanel {
      * @since 1.0
      */
     public void start() {
-        sync = new AVSync();
+        sync = new AVSync(stream);
         streamingThread.start();
     }
 
@@ -194,8 +197,7 @@ public class SwingMediaPanel extends JPanel {
                         case SUBTITLE_TEXT:
                             if (subtitleLines == null)
                                 subtitleLines = new LinkedList<String>();
-                            for (String line : ((TextSubtitle) subtitle).text.split("\\r?\\n"))
-                                subtitleLines.addFirst(line);
+                            subtitleLines.addAll(Arrays.asList(((TextSubtitle) subtitle).text.split("\\r?\\n")));
                             break;
                         case SUBTITLE_DONKEY:
                             if (donkeySubtitles == null) {
@@ -341,6 +343,10 @@ public class SwingMediaPanel extends JPanel {
      * @since 1.0
      */
     public void seek(long to) {
+        // Notify listeners that a seek is occuring
+        for (StreamListener listener : listeners) {
+            listener.onSeek(to);
+        }
         stream.seek(to);
         sync.reset();
     }

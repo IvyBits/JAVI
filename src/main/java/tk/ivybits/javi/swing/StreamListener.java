@@ -38,4 +38,12 @@ public interface StreamListener {
      * @since 1.0
      */
     void onEnd();
+
+    /**
+     * Called before a stream seeks.
+     *
+     * @param to The destination timestamp of the stream, in milliseconds.
+     * @since 1.0
+     */
+    void onSeek(long to);
 }
