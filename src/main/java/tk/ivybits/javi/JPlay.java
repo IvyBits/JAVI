@@ -34,7 +34,7 @@ import java.awt.event.*;
 import java.io.File;
 import java.io.IOException;
 
-import static tk.ivybits.javi.ffmpeg.FFmpeg.*;
+import static tk.ivybits.javi.JAVI.*;
 
 /**
  * Minimalistic media player.
@@ -174,7 +174,8 @@ public class JPlay {
             System.exit(1);
         }
 
-        System.err.printf("Running avcodec-%s, avformat-%s, avutil-%s.\n", AVCODEC_VERSION, AVFORMAT_VERSION, AVUTIL_VERSION);
+        System.err.printf("Using %s\n", JAVI.JAVI_VERSION);
+        System.err.printf("Running avcodec-%s, avformat-%s, avutil-%s\n", AVCODEC_VERSION, AVFORMAT_VERSION, AVUTIL_VERSION);
 
         for (String source : args) {
             play(source);

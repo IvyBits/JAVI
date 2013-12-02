@@ -20,6 +20,7 @@ package tk.ivybits.javi.ffmpeg;
 
 import com.sun.jna.Native;
 import com.sun.jna.Pointer;
+import tk.ivybits.javi.JAVI;
 
 public class LibSWScale {
     public static native Pointer sws_getContext(int scrW, int srcH, int scrFormat, int dstW, int dstH, int dstFormat, int flags, Pointer srcFilter, Pointer dstFilter, Pointer param);
@@ -29,7 +30,7 @@ public class LibSWScale {
     public static native void sws_freeContext(Pointer swsContext);
 
     static {
-        FFmpeg.ensureInitialized();
+        JAVI.initialize();
         Native.register("swscale-2");
     }
 }

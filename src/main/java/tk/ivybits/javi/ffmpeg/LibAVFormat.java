@@ -21,6 +21,7 @@ package tk.ivybits.javi.ffmpeg;
 import com.sun.jna.Native;
 import com.sun.jna.Pointer;
 import com.sun.jna.ptr.PointerByReference;
+import tk.ivybits.javi.JAVI;
 
 public class LibAVFormat {
     public static native int avformat_version();
@@ -44,7 +45,7 @@ public class LibAVFormat {
     public static native void avformat_close_input(PointerByReference s);
 
     static {
-        FFmpeg.ensureInitialized();
+        JAVI.initialize();
         Native.register("avformat-55");
     }
 }

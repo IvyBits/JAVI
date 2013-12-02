@@ -22,6 +22,7 @@ import com.sun.jna.Native;
 import com.sun.jna.Pointer;
 import com.sun.jna.ptr.IntByReference;
 import com.sun.jna.ptr.PointerByReference;
+import tk.ivybits.javi.JAVI;
 import tk.ivybits.javi.ffmpeg.avcodec.AVCodec;
 import tk.ivybits.javi.ffmpeg.avutil.AVFrame;
 
@@ -61,7 +62,7 @@ public class LibAVCodec {
     public static native void avpicture_free(Pointer picture);
 
     static {
-        FFmpeg.ensureInitialized();
+        JAVI.initialize();
         Native.register("avcodec-55");
     }
 }

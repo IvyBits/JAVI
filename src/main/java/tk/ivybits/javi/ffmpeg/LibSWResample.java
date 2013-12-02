@@ -21,6 +21,7 @@ package tk.ivybits.javi.ffmpeg;
 import com.sun.jna.Native;
 import com.sun.jna.Pointer;
 import com.sun.jna.ptr.PointerByReference;
+import tk.ivybits.javi.JAVI;
 
 public class LibSWResample {
     public static native Pointer swr_alloc();
@@ -34,7 +35,7 @@ public class LibSWResample {
     public static native int swr_convert(Pointer s, Pointer out, int out_count, Pointer in, int in_count);
 
     static {
-        FFmpeg.ensureInitialized();
+        JAVI.initialize();
         Native.register("swresample-0");
     }
 }
