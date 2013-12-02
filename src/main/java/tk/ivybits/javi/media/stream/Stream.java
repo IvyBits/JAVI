@@ -21,6 +21,7 @@ package tk.ivybits.javi.media.stream;
 import tk.ivybits.javi.media.Media;
 
 import java.io.Closeable;
+import java.util.Locale;
 
 /**
  * Represents an arbitrary stream in a container.
@@ -39,6 +40,13 @@ public interface Stream extends Closeable {
      * @return A Type. Current possible values are STREAM_VIDEO and STREAM_AUDIO.
      */
     Type type();
+
+    /**
+     * Fetches the locale of this stream.
+     *
+     * @return The locale this stream is designated for, nor null if undefined.
+     */
+    Locale language();
 
     /**
      * Fetches the index of this stream in the parent container.

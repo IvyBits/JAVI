@@ -20,6 +20,10 @@ package tk.ivybits.javi.ffmpeg.avutil;
 
 import com.sun.jna.Pointer;
 import com.sun.jna.PointerType;
+import com.sun.jna.Structure;
+
+import java.util.Arrays;
+import java.util.List;
 
 public class AVDictionary extends PointerType {
     public AVDictionary(Pointer address) {
@@ -28,5 +32,20 @@ public class AVDictionary extends PointerType {
 
     public AVDictionary() {
         super();
+    }
+
+    public static class Entry extends Structure {
+        public String key;
+        public String value;
+
+        public Entry(Pointer address) {
+            super(address);
+            read();
+        }
+
+        @Override
+        protected List getFieldOrder() {
+            return Arrays.asList("key", "value");
+        }
     }
 }

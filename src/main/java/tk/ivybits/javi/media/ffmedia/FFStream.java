@@ -24,7 +24,11 @@ import tk.ivybits.javi.ffmpeg.avformat.AVStream;
 import tk.ivybits.javi.media.Media;
 import tk.ivybits.javi.media.stream.Stream;
 
+import java.util.HashMap;
+import java.util.Locale;
+
 import static tk.ivybits.javi.ffmpeg.LibAVCodec.*;
+import static tk.ivybits.javi.ffmpeg.LibAVUtil.av_dict_get;
 
 /**
  * Represents an arbitrary stream in a container.
@@ -33,7 +37,17 @@ public class FFStream implements Stream {
     public final FFMedia container;
     public final AVStream ffstream;
     public final AVCodec codec;
+    public final Locale language;
     protected boolean closed;
+    private static final HashMap<String, Locale> ISO_3 = new HashMap<String, Locale>();
+
+    {
+        String[] languages = Locale.getISOLanguages();
+        for (String language : languages) {
+            Locale locale = new Locale(language);
+            ISO_3.put(locale.getISO3Language(), locale);
+        }
+    }
 
     FFStream(FFMedia container, AVStream ffstream) {
         this.container = container;
@@ -43,6 +57,7 @@ public class FFStream implements Stream {
             throw new StreamException("unsupported " + type() + " codec: " + ffstream.codec.codec_id);
         }
         ffstream.codec.read();
+        language = ISO_3.get(av_dict_get(ffstream.metadata, "language", null, 0).value);
     }
 
     /**
@@ -59,6 +74,14 @@ public class FFStream implements Stream {
     @Override
     public Stream.Type type() {
         return Stream.Type.values()[ffstream.codec.codec_type];
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public Locale language() {
+        return language;
     }
 
     /**

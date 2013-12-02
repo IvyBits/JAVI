@@ -23,6 +23,7 @@ import com.sun.jna.Pointer;
 import com.sun.jna.ptr.IntByReference;
 import com.sun.jna.ptr.PointerByReference;
 import tk.ivybits.javi.JAVI;
+import tk.ivybits.javi.ffmpeg.avutil.AVDictionary;
 
 public class LibAVUtil {
     public static native int avutil_version();
@@ -38,6 +39,8 @@ public class LibAVUtil {
     public static native int av_samples_get_buffer_size(IntByReference linesize, int nb_channels, int nb_samples, int sample_fmt, int align);
 
     public static native int av_samples_alloc_array_and_samples(PointerByReference audio_data, IntByReference linesize, int nb_channels, int nb_samples, int sample_fmt, int align);
+
+    public static native AVDictionary.Entry av_dict_get(AVDictionary m, String key, AVDictionary.Entry prev, int flags);
 
     static {
         JAVI.initialize();
