@@ -70,17 +70,21 @@ public class JPlay {
                     area = size;
                     video = str;
                 }
-                System.err.printf("\tStream #%s: (%sx%s) - %s (%s) @%.2f FPS\n",
-                        str.index(), str.width(), str.height(), str.codecName(), str.longCodecName(), str.framerate());
+                System.err.printf("\tStream #%s: [%s] (%sx%s) - %s (%s) @%.2f FPS\n",
+                        str.index(), str.language() != null ? str.language().getISO3Country() : "udf",
+                        str.width(), str.height(), str.codecName(), str.longCodecName(), str.framerate());
             }
 
             for (final AudioStream str : media.audioStreams()) {
-                System.err.printf("\tStream #%s: %s - %s (%s)\n",
-                        str.index(), str.audioFormat(), str.codecName(), str.longCodecName());
+                System.err.printf("\tStream #%s: [%s] %s - %s (%s)\n",
+                        str.index(), str.language() != null ? str.language().getISO3Country() : "udf",
+                        str.audioFormat(), str.codecName(), str.longCodecName());
             }
 
             for (final SubtitleStream str : media.subtitleStreams()) {
-                System.err.printf("\tStream #%s: %s (%s)\n", str.index(), str.codecName(), str.longCodecName());
+                System.err.printf("\tStream #%s: [%s] %s (%s)\n",
+                        str.index(), str.language() != null ? str.language().getISO3Country() : "udf",
+                        str.codecName(), str.longCodecName());
             }
 
             if (video != null)
@@ -102,9 +106,11 @@ public class JPlay {
                 }
 
                 private void doSeek(MouseEvent e) {
+                    if (!SwingUtilities.isLeftMouseButton(e))
+                        return;
                     double ratio = e.getX() / (double) videoPanel.getWidth();
                     long position = (long) (length * ratio);
-                    System.err.printf("Seek to %s milliseconds (%s seconds).\n", position, position / 1000.0);
+                    System.err.printf("Seek %s -> %s milliseconds (%.2f seconds).\n", videoPanel.position(), position, position / 1000.0);
                     try {
                         videoPanel.seek(position);
                     } catch (StreamException seekFailed) {
@@ -162,6 +168,11 @@ public class JPlay {
                 @Override
                 public void onEnd() {
                     System.err.println("Playback finished.");
+                }
+
+                @Override
+                public void onSeek(long to) {
+
                 }
             });
             videoPanel.start();
