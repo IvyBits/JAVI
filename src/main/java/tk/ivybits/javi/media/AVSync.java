@@ -1,14 +1,21 @@
 package tk.ivybits.javi.media;
 
+import tk.ivybits.javi.media.stream.MediaStream;
+
 import javax.swing.*;
 import java.awt.event.ActionEvent;
 import java.util.concurrent.locks.LockSupport;
 
 public class AVSync {
+    // If stream goes out of sync by anything larger than this (nano time), seek to catch up instead of sleep
+    private static final int SEEK_THRESHOLD = 2000000000;
     private long lastPts;
     private long lost, frames;
+    private MediaStream stream;
+    private final ActionEvent CALLBACK_EVENT = new ActionEvent(this, -1, "avsync");
 
-    public AVSync() {
+    public AVSync(MediaStream stream) {
+        this.stream = stream;
         reset();
     }
 
@@ -24,13 +31,18 @@ public class AVSync {
         long time = System.nanoTime();
         duration -= time - lastPts;
         if (duration < 0) {
-            // Video is behind audio; skip frame
-            lastPts = time + duration;
+            if (duration < -SEEK_THRESHOLD) {
+                stream.seek(stream.position());
+                reset();
+            } else {
+                // Video is behind audio; skip frame
+                lastPts = time + duration;
+            }
             ++lost;
             return;
         }
         LockSupport.parkNanos(duration);
-        callback.actionPerformed(new ActionEvent(this, -1, "avsync"));
+        callback.actionPerformed(CALLBACK_EVENT);
         lastPts = time + duration;
     }
 
