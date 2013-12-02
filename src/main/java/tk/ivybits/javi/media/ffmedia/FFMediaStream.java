@@ -284,7 +284,7 @@ public class FFMediaStream implements MediaStream {
                     pBGRFrame.data[0].read(0, raster, 0, raster.length);
                     long nano = pFrame.pkt_duration * 1000000000 *
                             videoStream.ffstream.time_base.num / videoStream.ffstream.time_base.den;
-                    time += nano / 1000;
+                    time += nano / 1000000;
                     videoHandler.handle(imageBuffer, nano);
                 }
             } else if (subtitleStream != null && packet.stream_index == subtitleStream.index()) {
@@ -399,7 +399,7 @@ public class FFMediaStream implements MediaStream {
 
     @Override
     public long position() {
-        return 0;
+        return time;
     }
 
     /**
