@@ -21,6 +21,7 @@ package tk.ivybits.javi.media.ffmedia;
 import tk.ivybits.javi.exc.StreamException;
 import tk.ivybits.javi.ffmpeg.avcodec.AVCodec;
 import tk.ivybits.javi.ffmpeg.avformat.AVStream;
+import tk.ivybits.javi.ffmpeg.avutil.AVDictionary;
 import tk.ivybits.javi.media.Media;
 import tk.ivybits.javi.media.stream.Stream;
 
@@ -57,7 +58,8 @@ public class FFStream implements Stream {
             throw new StreamException("unsupported " + type() + " codec: " + ffstream.codec.codec_id);
         }
         ffstream.codec.read();
-        language = ISO_3.get(av_dict_get(ffstream.metadata, "language", null, 0).value);
+        AVDictionary.Entry entry = av_dict_get(ffstream.metadata, "language", null, 0);
+        language = entry != null ? ISO_3.get(entry.value) : null;
     }
 
     /**
