@@ -24,6 +24,7 @@ import tk.ivybits.javi.media.MediaFactory;
 import tk.ivybits.javi.media.stream.AudioStream;
 import tk.ivybits.javi.media.stream.SubtitleStream;
 import tk.ivybits.javi.media.stream.VideoStream;
+import tk.ivybits.javi.natives.Natives;
 import tk.ivybits.javi.swing.StreamListener;
 import tk.ivybits.javi.swing.SwingMediaPanel;
 
@@ -185,7 +186,7 @@ public class JPlay {
             System.exit(1);
         }
 
-        System.err.printf("Using %s\n", JAVI.JAVI_VERSION);
+        System.err.printf("Using %s\n", JAVI_VERSION);
         System.err.printf("Running avcodec-%s, avformat-%s, avutil-%s\n", AVCODEC_VERSION, AVFORMAT_VERSION, AVUTIL_VERSION);
 
         for (String source : args) {
@@ -199,6 +200,7 @@ public class JPlay {
         } catch (ReflectiveOperationException e) {
         } catch (UnsupportedLookAndFeelException e) {
         }
+        Natives.unpack();
         File videoFile = new File(source);
         JPlayFrame frame = new JPlayFrame(videoFile);
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);

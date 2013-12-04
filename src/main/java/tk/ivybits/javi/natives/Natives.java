@@ -31,6 +31,7 @@ public class Natives {
         }
         dllCache = new File(System.getProperty("java.io.tmpdir") + File.separator + "FFmpeg_libs");
         dllCache.mkdirs();
+
         unpack("avutil-55");
         unpack("avcodec-55");
         unpack("avformat-55");
@@ -43,7 +44,7 @@ public class Natives {
                     System.getProperty("jna.library.path") + File.pathSeparator + dllCache.getAbsolutePath());
     }
 
-    public static File unpack(String name) {
+    private static File unpack(String name) {
         String jarPath = getLibraryPath(name);
         File cache = new File(dllCache.getAbsolutePath() + File.separator + jarPath.substring(jarPath.lastIndexOf("/")));
         InputStream in = ClassLoader.getSystemResourceAsStream(jarPath);
@@ -51,7 +52,7 @@ public class Natives {
         try {
             out = new BufferedOutputStream(new FileOutputStream(cache));
         } catch (FileNotFoundException e) {
-            throw new RuntimeException(e);
+            throw new IllegalStateException("failed to unpack " + name, e);
         }
         int len;
         byte[] buf = new byte[65536];
@@ -63,12 +64,12 @@ public class Natives {
             out.close();
             in.close();
         } catch (IOException e) {
-            throw new RuntimeException(e);
+            throw new IllegalStateException("failed to unpack " + name, e);
         }
         return cache;
     }
 
-    public static String getLibraryPath(String name) {
+    private static String getLibraryPath(String name) {
         return String.format(libNameFormat, Platform.is64Bit() ? 64 : 32, name);
     }
 }
