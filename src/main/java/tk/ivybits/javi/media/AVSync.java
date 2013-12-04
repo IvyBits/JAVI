@@ -2,8 +2,6 @@ package tk.ivybits.javi.media;
 
 import tk.ivybits.javi.media.stream.MediaStream;
 
-import javax.swing.*;
-import java.awt.event.ActionEvent;
 import java.util.concurrent.locks.LockSupport;
 
 public class AVSync {
@@ -12,14 +10,13 @@ public class AVSync {
     private long lastPts;
     private long lost, frames;
     private MediaStream stream;
-    private final ActionEvent CALLBACK_EVENT = new ActionEvent(this, -1, "avsync");
 
     public AVSync(MediaStream stream) {
         this.stream = stream;
         reset();
     }
 
-    public void sync(long duration, AbstractAction callback) {
+    public void sync(long duration, Runnable callback) {
         ++frames;
         // Add in duration, which is the time that is spent waiting for the frame to render, so we get
         // the time when this frame is rendered, and set it as the last frame.
@@ -42,7 +39,11 @@ public class AVSync {
             return;
         }
         LockSupport.parkNanos(duration);
-        callback.actionPerformed(CALLBACK_EVENT);
+        try {
+            callback.run();
+        } catch (Exception e) {
+            throw new IllegalStateException("exception raised in callback", e);
+        }
         lastPts = time + duration;
     }
 

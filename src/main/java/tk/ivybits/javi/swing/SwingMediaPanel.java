@@ -37,6 +37,7 @@ import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.util.*;
 import java.util.Timer;
+import java.util.concurrent.Callable;
 
 /**
  * Media component for Swing.
@@ -90,13 +91,12 @@ public class SwingMediaPanel extends JPanel {
                     }
                 })
                 .video(new FrameHandler() {
-                    private final AbstractAction REPAINT_CALLBACK = new AbstractAction() {
-                        public void actionPerformed(ActionEvent e) {
+                    private final Runnable REPAINT_CALLBACK = new Runnable() {
+                        public void run() {
                             // Set our current frame to the passed buffer,
                             // and repaint immediately. Because we do not use repaint(), we
                             // have a guarantee that each frame will be drawn separately. repaint() tends
                             // to squash multiple paints into one, giving a jerkish appearance to the video.
-
                             paintImmediately(getBounds());
                         }
                     };
