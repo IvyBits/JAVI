@@ -3,6 +3,7 @@ package tk.ivybits.javi.natives;
 import com.sun.jna.Platform;
 
 import java.io.*;
+import java.net.URLConnection;
 import java.util.HashMap;
 
 public class Natives {
@@ -51,25 +52,38 @@ public class Natives {
             return libraryMap.get(name);
         String jarPath = getLibraryPath(name);
         File cache = new File(dllCache.getAbsolutePath() + File.separator + jarPath.substring(jarPath.lastIndexOf("/")));
-        System.out.println("Loading: " + jarPath);
-        InputStream in = ClassLoader.getSystemResourceAsStream(jarPath);
-        BufferedOutputStream out;
+        System.out.print("Loading: " + jarPath + "...");
+        URLConnection file;
         try {
-            out = new BufferedOutputStream(new FileOutputStream(cache));
-        } catch (FileNotFoundException e) {
-            throw new IllegalStateException("failed to unpack " + name, e);
-        }
-        int len;
-        byte[] buf = new byte[65536];
-        try {
-            while ((len = in.read(buf)) > -1) {
-                out.write(buf, 0, len);
-            }
-            out.flush();
-            out.close();
-            in.close();
+            file = ClassLoader.getSystemResource(jarPath).openConnection();
         } catch (IOException e) {
             throw new IllegalStateException("failed to unpack " + name, e);
+        }
+        // Compare last updated time with second accuracy. Some platforms can not represent milliseconds.
+        if (!cache.exists() || cache.lastModified() / 1000 != file.getLastModified() / 1000) {
+            InputStream in = ClassLoader.getSystemResourceAsStream(jarPath);
+            BufferedOutputStream out;
+            try {
+                out = new BufferedOutputStream(new FileOutputStream(cache));
+            } catch (FileNotFoundException e) {
+                throw new IllegalStateException("failed to unpack " + name, e);
+            }
+            int len;
+            byte[] buf = new byte[65536];
+            try {
+                while ((len = in.read(buf)) > -1) {
+                    out.write(buf, 0, len);
+                }
+                out.flush();
+                out.close();
+                in.close();
+            } catch (IOException e) {
+                throw new IllegalStateException("failed to unpack " + name, e);
+            }
+            cache.setLastModified(file.getLastModified());
+            System.out.println(" Loaded");
+        } else {
+            System.out.println(" Cached");
         }
         libraryMap.put(name, cache);
         return cache;
