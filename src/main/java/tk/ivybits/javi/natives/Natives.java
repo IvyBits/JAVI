@@ -9,8 +9,11 @@ public class Natives {
     private static String libNameFormat = null;
     private static File dllCache = null;
     private static HashMap<String, File> libraryMap = new HashMap<String, File>();
+    private static boolean initialized = false;
 
     public static void unpack() {
+        if (initialized)
+            return;
         switch (Platform.getOSType()) {
             case Platform.WINDOWS:
                 libNameFormat = "tk/ivybits/javi/natives/windows/%d/%s.dll";
@@ -22,7 +25,7 @@ public class Natives {
                 throw new IllegalStateException("Mac is too proprietary to be allowed.\n" +
                         "O Macintosh!\n" +
                         "Land of incompatibility,\n" +
-                        "Thy face is full, of lack of software!\n" +
+                        "Thy face is full, of the lack of software!\n" +
                         "As thy arm is ready to release, a new SDK!\n" +
                         "Thy developers, is in grief, once more like it always is!\n" +
                         "And thy SDK, is like the moon.\n" +
@@ -36,20 +39,16 @@ public class Natives {
         // The DLLs that other DLLs depends on must be loaded
         unpack("avutil-52"); // All FFmpeg libraries depends on this one
         unpack("avcodec-55"); // avformat depends on this one
+        initialized = true;
     }
 
     public static File getPath(String name) {
-        File file = libraryMap.get(name);
-        if (file == null)
-            return unpack(name);
-        return file;
+        return unpack(name);
     }
 
     public static File unpack(String name) {
-        if (libraryMap.containsKey(name)) {
-            //throw new IllegalStateException("SOMEONE IS DOING SOMETHING BAD");
+        if (libraryMap.containsKey(name))
             return libraryMap.get(name);
-        }
         String jarPath = getLibraryPath(name);
         File cache = new File(dllCache.getAbsolutePath() + File.separator + jarPath.substring(jarPath.lastIndexOf("/")));
         System.out.println("Loading: " + jarPath);
