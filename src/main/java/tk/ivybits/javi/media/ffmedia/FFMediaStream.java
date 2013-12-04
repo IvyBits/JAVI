@@ -107,10 +107,10 @@ public class FFMediaStream implements MediaStream {
             avcodec_free_frame(new PointerByReference(pBGRFrame.getPointer()));
         }
         pBGRFrame = avcodec_alloc_frame();
-        int size = avpicture_get_size(BGR24.ordinal(), stream.width(), stream.height());
+        int size = avpicture_get_size(BGR24.id, stream.width(), stream.height());
 
         Pointer buffer = av_malloc(size);
-        int ret = avpicture_fill(pBGRFrame.getPointer(), buffer, BGR24.ordinal(), stream.width(), stream.height());
+        int ret = avpicture_fill(pBGRFrame.getPointer(), buffer, BGR24.id, stream.width(), stream.height());
         if (ret < 0 || ret != size)
             throw new StreamException("failed to fill frame buffer");
         videoStream = (FFVideoStream) stream;
@@ -169,7 +169,7 @@ public class FFMediaStream implements MediaStream {
 
             pSwsContext = sws_getContext(
                     width, height, vc.pix_fmt,
-                    width, height, BGR24.ordinal(),
+                    width, height, BGR24.id,
                     0, null, null, null);
             vc.read();
         }
