@@ -24,13 +24,19 @@ package tk.ivybits.javi.exc;
  * @since 1.0
  */
 public class StreamException extends RuntimeException {
+    private final int code;
+
     /**
      * Constructs an StreamException with no detail message.
      * A detail message is a String that describes this particular
      * exception.
+     *
+     * @param code The error code (what failed).
+     * @since 1.0
      */
-    public StreamException() {
+    public StreamException(int code) {
         super();
+        this.code = code;
     }
 
     /**
@@ -38,9 +44,22 @@ public class StreamException extends RuntimeException {
      * message.  A detail message is a String that describes this particular
      * exception.
      *
-     * @param err the String that contains a detailed message
+     * @param err  the String that contains a detailed message
+     * @param code The error code (what failed).
+     * @since 1.0
      */
-    public StreamException(String err) {
+    public StreamException(String err, int code) {
         super(err);
+        this.code = code;
+    }
+
+    /**
+     * Fetches the error code.
+     *
+     * @return The error code.
+     * @since 1.0
+     */
+    public int code() {
+        return code;
     }
 }

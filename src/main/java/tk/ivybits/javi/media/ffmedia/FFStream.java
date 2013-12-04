@@ -55,7 +55,7 @@ public class FFStream implements Stream {
         this.ffstream = ffstream;
         codec = avcodec_find_decoder(ffstream.codec.codec_id);
         if (codec == null || avcodec_open2(ffstream.codec.getPointer(), codec.getPointer(), null) < 0) {
-            throw new StreamException("unsupported " + type() + " codec: " + ffstream.codec.codec_id);
+            throw new IllegalArgumentException("unsupported " + type() + " codec: " + ffstream.codec.codec_id);
         }
         ffstream.codec.read();
         AVDictionary.Entry entry = av_dict_get(ffstream.metadata, "language", null, 0);

@@ -112,7 +112,7 @@ public class FFMediaStream implements MediaStream {
         Pointer buffer = av_malloc(size);
         int ret = avpicture_fill(pBGRFrame.getPointer(), buffer, BGR24.id, stream.width(), stream.height());
         if (ret < 0 || ret != size)
-            throw new StreamException("failed to fill frame buffer");
+            throw new StreamException("failed to fill frame buffer: " + ret, ret);
         videoStream = (FFVideoStream) stream;
         videoCodec = videoStream.codec;
         return pre;
@@ -194,7 +194,7 @@ public class FFMediaStream implements MediaStream {
             try {
                 mutex.acquire();
             } catch (InterruptedException e) {
-                throw new StreamException("could not acquire mutex");
+                throw new IllegalStateException("could not acquire frame mutex");
             }
 
             packet.read();
@@ -216,7 +216,7 @@ public class FFMediaStream implements MediaStream {
                     int err = avcodec_decode_audio4(ac.getPointer(), pFrame.getPointer(), frameFinished, packet.getPointer());
 
                     if (err < 0) {
-                        throw new StreamException("error while decoding audio stream: " + err);
+                        throw new StreamException("error while decoding audio stream: " + err, err);
                     } else {
                         read += err;
                     }
@@ -231,13 +231,13 @@ public class FFMediaStream implements MediaStream {
                             err = av_samples_alloc_array_and_samples(dstData, dstLinesize, pFrame.channels,
                                     pFrame.nb_samples, SIGNED_16BIT.ordinal(), 0);
                             if (err < 0) {
-                                throw new StreamException("failed to allocate destination buffer: " + err);
+                                throw new StreamException("failed to allocate destination buffer: " + err, err);
                             }
                             int length = dstLinesize.getValue();
                             err = swr_convert(pSwrContext, dstData.getValue(), length,
                                     pFrame.extended_data, pFrame.nb_samples);
                             if (err < 0)
-                                throw new StreamException("failed to transcode audio: " + err);
+                                throw new StreamException("failed to transcode audio: " + err, err);
                             if (audioBuffer.length < length)
                                 audioBuffer = new byte[length];
                             dstData.getValue().getPointer(0).read(0, audioBuffer, 0, length);
@@ -256,7 +256,7 @@ public class FFMediaStream implements MediaStream {
                 // If the return of avcodec_decode_video2 is negative, an error occurred.
                 // Fun fact: the error is actually the negative of an ASCII string in little-endian order.
                 if (err < 0) {
-                    throw new StreamException("error while decoding video stream: " + err);
+                    throw new StreamException("error while decoding video stream: " + err, err);
                 }
                 if (frameFinished.getValue() != 0) {
                     pFrame.read();
@@ -290,7 +290,7 @@ public class FFMediaStream implements MediaStream {
             } else if (subtitleStream != null && packet.stream_index == subtitleStream.index()) {
                 int err = avcodec_decode_subtitle2(subtitleStream.ffstream.codec.getPointer(), pSubtitle.getPointer(), frameFinished, packet.getPointer());
                 if (err < 0) {
-                    throw new StreamException("error while decoding video stream: " + err);
+                    throw new StreamException("error while decoding video stream: " + err, err);
                 }
                 if (frameFinished.getValue() != 0) {
                     pSubtitle.read();
@@ -367,13 +367,13 @@ public class FFMediaStream implements MediaStream {
     @Override
     public void setPlaying(boolean flag) {
         if (!started)
-            throw new StreamException("stream not started");
+            throw new IllegalStateException("stream not started");
         playing = flag;
         if (!playing)
             try {
                 mutex.acquire();
             } catch (InterruptedException e) {
-                e.printStackTrace();
+                throw new IllegalStateException("failed to aqcuire frame mutex");
             }
         else {
             mutex.release();
@@ -386,14 +386,14 @@ public class FFMediaStream implements MediaStream {
     @Override
     public void seek(long to) {
         if (!started)
-            throw new StreamException("stream not started");
+            throw new IllegalStateException("stream not started");
         if (to < 0)
             throw new IllegalArgumentException("negative position");
         if (to > media.length())
             throw new IllegalArgumentException("position greater then video length");
         int err = av_seek_frame(media.formatContext.getPointer(), -1, to * 1000, 0);
         if (err < 0)
-            throw new StreamException("failed to seek video: error " + err);
+            throw new StreamException("failed to seek video: error " + err, err);
         time = to;
     }
 
