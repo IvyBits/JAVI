@@ -24,6 +24,7 @@ import com.sun.jna.ptr.IntByReference;
 import com.sun.jna.ptr.PointerByReference;
 import tk.ivybits.javi.JAVI;
 import tk.ivybits.javi.ffmpeg.avutil.AVDictionary;
+import tk.ivybits.javi.natives.Natives;
 
 public class LibAVUtil {
     public static native int avutil_version();
@@ -44,6 +45,6 @@ public class LibAVUtil {
 
     static {
         JAVI.initialize();
-        Native.register("avutil-52");
+        Native.register(Natives.getPath("avutil-52").getAbsolutePath());
     }
 }

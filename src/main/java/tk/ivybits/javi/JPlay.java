@@ -200,7 +200,6 @@ public class JPlay {
         } catch (ReflectiveOperationException e) {
         } catch (UnsupportedLookAndFeelException e) {
         }
-        Natives.unpack();
         File videoFile = new File(source);
         JPlayFrame frame = new JPlayFrame(videoFile);
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);

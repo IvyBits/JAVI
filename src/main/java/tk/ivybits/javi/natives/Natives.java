@@ -3,10 +3,12 @@ package tk.ivybits.javi.natives;
 import com.sun.jna.Platform;
 
 import java.io.*;
+import java.util.HashMap;
 
 public class Natives {
     private static String libNameFormat = null;
     private static File dllCache = null;
+    private static HashMap<String, File> libraryMap = new HashMap<String, File>();
 
     public static void unpack() {
         switch (Platform.getOSType()) {
@@ -31,22 +33,26 @@ public class Natives {
         }
         dllCache = new File(System.getProperty("java.io.tmpdir") + File.separator + "FFmpeg_libs");
         dllCache.mkdirs();
-
-        unpack("avutil-55");
-        unpack("avcodec-55");
-        unpack("avformat-55");
-        unpack("swscale-2");
-        unpack("swresample-0");
-        if (System.getProperty("jna.library.path") == null)
-            System.setProperty("jna.library.path", dllCache.getAbsolutePath());
-        else
-            System.setProperty("jna.library.path",
-                    System.getProperty("jna.library.path") + File.pathSeparator + dllCache.getAbsolutePath());
+        // The DLLs that other DLLs depends on must be loaded
+        unpack("avutil-52"); // All FFmpeg libraries depends on this one
+        unpack("avcodec-55"); // avformat depends on this one
     }
 
-    private static File unpack(String name) {
+    public static File getPath(String name) {
+        File file = libraryMap.get(name);
+        if (file == null)
+            return unpack(name);
+        return file;
+    }
+
+    public static File unpack(String name) {
+        if (libraryMap.containsKey(name)) {
+            //throw new IllegalStateException("SOMEONE IS DOING SOMETHING BAD");
+            return libraryMap.get(name);
+        }
         String jarPath = getLibraryPath(name);
         File cache = new File(dllCache.getAbsolutePath() + File.separator + jarPath.substring(jarPath.lastIndexOf("/")));
+        System.out.println("Loading: " + jarPath);
         InputStream in = ClassLoader.getSystemResourceAsStream(jarPath);
         BufferedOutputStream out;
         try {
@@ -66,6 +72,7 @@ public class Natives {
         } catch (IOException e) {
             throw new IllegalStateException("failed to unpack " + name, e);
         }
+        libraryMap.put(name, cache);
         return cache;
     }
 

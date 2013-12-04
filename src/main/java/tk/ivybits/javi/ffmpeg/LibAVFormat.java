@@ -22,6 +22,7 @@ import com.sun.jna.Native;
 import com.sun.jna.Pointer;
 import com.sun.jna.ptr.PointerByReference;
 import tk.ivybits.javi.JAVI;
+import tk.ivybits.javi.natives.Natives;
 
 public class LibAVFormat {
     public static native int avformat_version();
@@ -46,6 +47,6 @@ public class LibAVFormat {
 
     static {
         JAVI.initialize();
-        Native.register("avformat-55");
+        Native.register(Natives.getPath("avformat-55").getAbsolutePath());
     }
 }

@@ -22,6 +22,7 @@ import com.sun.jna.Native;
 import com.sun.jna.Pointer;
 import com.sun.jna.ptr.PointerByReference;
 import tk.ivybits.javi.JAVI;
+import tk.ivybits.javi.natives.Natives;
 
 public class LibSWResample {
     public static native Pointer swr_alloc();
@@ -36,6 +37,6 @@ public class LibSWResample {
 
     static {
         JAVI.initialize();
-        Native.register("swresample-0");
+        Native.register(Natives.getPath("swresample-0").getAbsolutePath());
     }
 }

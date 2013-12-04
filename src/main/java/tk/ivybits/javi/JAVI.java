@@ -21,6 +21,7 @@ package tk.ivybits.javi;
 import tk.ivybits.javi.ffmpeg.LibAVCodec;
 import tk.ivybits.javi.ffmpeg.LibAVFormat;
 import tk.ivybits.javi.ffmpeg.LibAVUtil;
+import tk.ivybits.javi.natives.Natives;
 
 import java.io.IOException;
 import java.net.URL;
@@ -33,13 +34,18 @@ public final class JAVI {
         throw new AssertionError();
     }
 
+    public static final String AVUTIL_VERSION = getVersion(LibAVUtil.avutil_version());
     public static final String AVCODEC_VERSION = getVersion(LibAVCodec.avcodec_version());
     public static final String AVFORMAT_VERSION = getVersion(LibAVFormat.avformat_version());
-    public static final String AVUTIL_VERSION = getVersion(LibAVUtil.avutil_version());
     public static final String JAVI_VERSION = getVersion();
 
+    private static boolean initialized = false;
+
     public static void initialize() {
-        // Ensures one call to static block
+        if (initialized)
+            return;
+        Natives.unpack();
+        initialized = true;
     }
 
     public static void release() {
