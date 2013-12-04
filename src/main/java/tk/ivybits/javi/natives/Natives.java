@@ -13,10 +13,10 @@ public class Natives {
     public static void unpack() {
         switch (Platform.getOSType()) {
             case Platform.WINDOWS:
-                libNameFormat = "windows/%d/%s.dll";
+                libNameFormat = "tk/ivybits/javi/natives/windows/%d/%s.dll";
                 break;
             case Platform.LINUX:
-                libNameFormat = "linux/%d/%s.so";
+                libNameFormat = "tk/ivybits/javi/natives/linux/%d/%s.so";
                 break;
             case Platform.MAC:
                 throw new IllegalStateException("Mac is too proprietary to be allowed.\n" +
