@@ -32,12 +32,11 @@ import tk.ivybits.javi.media.subtitle.*;
 import javax.sound.sampled.*;
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.ActionEvent;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.util.*;
 import java.util.Timer;
-import java.util.concurrent.Callable;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Media component for Swing.
@@ -56,8 +55,8 @@ public class SwingMediaPanel extends JPanel {
     private ArrayList<StreamListener> listeners = new ArrayList<StreamListener>();
     private SourceDataLine sdl;
     private Mixer mixer;
-    private LinkedList<Subtitle> subtitles = new LinkedList<Subtitle>();
-    private Timer timer = new Timer("SwingMediaPanel - Subtitle Timer", true);
+    private final ConcurrentHashMap<Subtitle, Long> subtitles = new ConcurrentHashMap<Subtitle, Long>();
+    private Timer timer = new Timer(true);
     private DonkeyParser lastParser;
     private DonkeyParser.DrawHelper donkeyHelper;
     private AVSync sync;
@@ -70,9 +69,12 @@ public class SwingMediaPanel extends JPanel {
      *              streams.
      * @since 1.0
      */
-    public SwingMediaPanel(final Media media) throws IOException {
+    public SwingMediaPanel(Media media) throws IOException {
         this.media = media;
+        init();
+    }
 
+    private void init() throws IOException {
         stream = media
                 .stream()
                 .audio(new AudioHandler() {
@@ -127,20 +129,25 @@ public class SwingMediaPanel extends JPanel {
                         for (StreamListener listener : listeners) {
                             listener.onEnd();
                         }
+                        try {
+                            streamingThread.join(100);
+                        } catch (InterruptedException e) {
+                        }
+                        streamingThread = null;
                     }
                 })
                 .subtitle(new SubtitleHandler() {
                     @Override
-                    public void handle(final Subtitle subtitle, long start, long end) {
+                    public void handle(final Subtitle subtitle, long start, final long end) {
                         if (start > 0) {
                             timer.schedule(new TimerTask() {
                                 @Override
                                 public void run() {
-                                    subtitles.add(subtitle);
+                                    subtitles.put(subtitle, end);
                                 }
                             }, start);
                         } else {
-                            subtitles.add(subtitle);
+                            subtitles.put(subtitle, end);
                         }
 
                         timer.schedule(new TimerTask() {
@@ -154,6 +161,7 @@ public class SwingMediaPanel extends JPanel {
                 .create();
 
         streamingThread = new Thread(stream);
+        sync = new AVSync(stream);
     }
 
     /**
@@ -161,8 +169,7 @@ public class SwingMediaPanel extends JPanel {
      *
      * @since 1.0
      */
-    public void start() {
-        sync = new AVSync(stream);
+    public void start() throws IOException {
         streamingThread.start();
     }
 
@@ -181,7 +188,7 @@ public class SwingMediaPanel extends JPanel {
 
             if (!subtitles.isEmpty()) {
                 Graphics2D g2d = nextFrame.createGraphics();
-                for (Subtitle subtitle : subtitles) {
+                for (Subtitle subtitle : subtitles.keySet()) {
                     switch (subtitle.type()) {
                         case SUBTITLE_BITMAP:
                             int x = ((BitmapSubtitle) subtitle).x;
@@ -337,12 +344,18 @@ public class SwingMediaPanel extends JPanel {
      * Seeks to a position in the stream.
      *
      * @param to The position to seek to, in milliseconds.
-     * @throws IllegalStateException Thrown if the stream was never started.
-     * @throws tk.ivybits.javi.exc.StreamException
-     *                               Thrown if seek failed.
+     * @throws IllegalStateException               Thrown if the stream was never started.
+     * @throws tk.ivybits.javi.exc.StreamException Thrown if seek failed.
      * @since 1.0
      */
     public void seek(long to) {
+        Long time = position();
+
+        for (Map.Entry<Subtitle, Long> showtime : subtitles.entrySet()) {
+            if (showtime.getValue().compareTo(time) < 0) {
+                subtitles.remove(showtime.getKey());
+            }
+        }
         // Notify listeners that a seek is occuring
         for (StreamListener listener : listeners) {
             listener.onSeek(to);
@@ -439,8 +452,8 @@ public class SwingMediaPanel extends JPanel {
      *
      * @param mixer The mixer to use, or null to disable (mute) audio.
      * @return True if the mixer was successfully set, or false if it was not.
-     *         <b>A mixer may not be set if a <code>LineUnavailableException</code> is thrown when opening a line.</b>
-     *         This is generally caused by the desired mixer not supporting the format the audio stream is encoded in.
+     * <b>A mixer may not be set if a <code>LineUnavailableException</code> is thrown when opening a line.</b>
+     * This is generally caused by the desired mixer not supporting the format the audio stream is encoded in.
      */
     public boolean setMixer(Mixer mixer) {
         // Close audio line, if it exists
