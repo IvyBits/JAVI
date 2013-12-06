@@ -43,6 +43,12 @@ public class LibAVUtil {
 
     public static native AVDictionary.Entry av_dict_get(AVDictionary m, String key, AVDictionary.Entry prev, int flags);
 
+    public static native Pointer av_pix_fmt_desc_get(int pix_fmt);
+
+    public static native int av_get_bits_per_pixel(Pointer pixdesc);
+
+    public static native int av_get_padded_bits_per_pixel(Pointer pixdesc);
+
     static {
         JAVI.initialize();
         Native.register(Natives.getPath("avutil-52").getAbsolutePath());

@@ -1,5 +1,8 @@
 package tk.ivybits.javi.format;
 
+import static tk.ivybits.javi.ffmpeg.LibAVUtil.av_get_bits_per_pixel;
+import static tk.ivybits.javi.ffmpeg.LibAVUtil.av_pix_fmt_desc_get;
+
 /**
  * Pixel formats.
  *
@@ -166,5 +169,9 @@ public enum PixelFormat {
     public final int id;
     PixelFormat(int id) {
         this.id = id;
+    }
+
+    public int bpp() {
+        return av_get_bits_per_pixel(av_pix_fmt_desc_get(id));
     }
 }
