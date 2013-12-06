@@ -50,6 +50,7 @@ import static tk.ivybits.javi.ffmpeg.LibAVCodec.*;
 import static tk.ivybits.javi.ffmpeg.LibAVFormat.av_read_frame;
 import static tk.ivybits.javi.ffmpeg.LibAVFormat.av_seek_frame;
 import static tk.ivybits.javi.ffmpeg.LibAVUtil.av_malloc;
+import static tk.ivybits.javi.ffmpeg.LibC.memcpy;
 import static tk.ivybits.javi.ffmpeg.LibSWScale.sws_scale;
 import static tk.ivybits.javi.format.PixelFormat.BGR24;
 
@@ -202,7 +203,7 @@ public class FFMediaStream implements MediaStream {
                     pFrame.read();
                     if (frameFinished.getValue() != 0) {
                         // Write pFrame.extended_data to the pAudioBuffer
-
+                        memcpy(pAudioBuffer, pFrame.extended_data, audioBuffer.limit());
                         audioHandler.handle(audioBuffer);
                     }
                 }
@@ -225,7 +226,8 @@ public class FFMediaStream implements MediaStream {
                     // We use sws_scale itself to convert a data buffer of an arbitrary pixel format
                     // into our desired format: 3-byte BGR
 
-                    // write pFrame.data[0] to pImageBuffer
+                    memcpy(pImageBuffer, pFrame.data[0], imageBuffer.limit());
+
 
                     // Read the buffer directly into the raster of our image
                     long nano = pFrame.pkt_duration * 1000000000 *
