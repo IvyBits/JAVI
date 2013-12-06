@@ -22,7 +22,6 @@ import java.awt.*;
 import java.util.*;
 import java.util.List;
 
-
 /**
  * Parser for Advanced SubStation Alpha subtitles.
  *
@@ -43,10 +42,10 @@ public class DonkeyParser {
         defaultStyle = new Style();
         defaultStyle.name = "Default";
         defaultStyle.font = new Font(Font.SANS_SERIF, Font.PLAIN, 20);
-        defaultStyle.primaryColor = Color.white;
-        defaultStyle.secondaryColor = Color.white;
-        defaultStyle.outlineColor = Color.black;
-        defaultStyle.backColor = Color.black;
+        defaultStyle.primaryColor = Color.WHITE;
+        defaultStyle.secondaryColor = Color.WHITE;
+        defaultStyle.outlineColor = Color.BLACK;
+        defaultStyle.backColor = Color.BLACK;
         for (String line : header.split("\\r?\\n")) {
             processLine(line);
         }
@@ -84,11 +83,7 @@ public class DonkeyParser {
      * @return Parsed integer.
      */
     protected int parseInt(String number) {
-        if (number.startsWith("&H")) {
-            return Integer.parseInt(number.substring(2), 16);
-        } else {
-            return Integer.parseInt(number);
-        }
+        return Integer.parseInt(number.substring(2), number.startsWith("&H") ? 16 : 10);
     }
 
     /**
@@ -111,9 +106,9 @@ public class DonkeyParser {
             fontStyle &= Font.ITALIC;
         String fontName = getWithDefault(map, "Fontname", Font.SANS_SERIF);
         int fontSize = parseInt(getWithDefault(map, "Fontsize", "16"));
-        if ("Default".equals(name) && "Arial".equals(fontName) && style.primaryColor.getRGB() == 0xFFFFFFFF &&
-                style.secondaryColor.getRGB() == 0xFFFFFFFF && style.outlineColor.getRGB() == 0xFF000000 &&
-                style.backColor.getRGB() == 0xFF000000) {
+        if ("Default".equals(name) && "Arial".equals(fontName) && style.primaryColor == Color.WHITE &&
+                style.secondaryColor == Color.WHITE && style.outlineColor == Color.BLACK &&
+                style.backColor == Color.BLACK) {
             // FFmpeg's default font, for the subtitles converted to Donkey internally
             System.out.println("Hit default font");
             styles.put(name, defaultStyle);
@@ -412,7 +407,7 @@ public class DonkeyParser {
              *
              * @return A collection of lines of subtitles.
              */
-            public Collection<RowInfo> getRows() {
+            public List<RowInfo> getRows() {
                 int y = 0;
 
                 for (RowInfo row : subtitles) {
@@ -440,9 +435,6 @@ public class DonkeyParser {
      */
     public static <K, V> V getWithDefault(Map<K, V> map, K key, V defaultValue) {
         V ret = map.get(key);
-        if (ret == null) {
-            return defaultValue;
-        }
-        return ret;
+        return ret != null ? ret : defaultValue;
     }
 }
