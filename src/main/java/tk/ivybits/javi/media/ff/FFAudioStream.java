@@ -16,31 +16,26 @@
  * <http://www.gnu.org/licenses/>.
  */
 
-package tk.ivybits.javi.media.ffmedia;
+package tk.ivybits.javi.media.ff;
 
 import tk.ivybits.javi.ffmpeg.avformat.AVStream;
-import tk.ivybits.javi.media.stream.VideoStream;
+import tk.ivybits.javi.media.stream.AudioStream;
+
+import javax.sound.sampled.AudioFormat;
 
 /**
  * FFmpeg-backed VideoStream.
  */
-public class FFVideoStream extends FFStream implements VideoStream {
-    FFVideoStream(FFMedia container, AVStream ffstream) {
+public class FFAudioStream extends FFStream implements AudioStream {
+    FFAudioStream(FFMedia container, AVStream ffstream) {
         super(container, ffstream);
     }
 
     @Override
-    public int width() {
-        return ffstream.codec.width;
-    }
-
-    @Override
-    public int height() {
-        return ffstream.codec.height;
-    }
-
-    @Override
-    public double framerate() {
-        return ffstream.r_frame_rate.num / (double) ffstream.r_frame_rate.den;
+    public AudioFormat audioFormat() {
+        return new AudioFormat(ffstream.codec.sample_rate,
+                16,
+                ffstream.codec.channels,
+                true, false);
     }
 }

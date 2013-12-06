@@ -16,7 +16,7 @@
  * <http://www.gnu.org/licenses/>.
  */
 
-package tk.ivybits.javi.media.ffmedia;
+package tk.ivybits.javi.media.ff;
 
 import tk.ivybits.javi.ffmpeg.avformat.AVStream;
 import tk.ivybits.javi.media.stream.SubtitleStream;

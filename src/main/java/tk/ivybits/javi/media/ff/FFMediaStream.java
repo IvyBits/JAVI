@@ -16,7 +16,7 @@
  * <http://www.gnu.org/licenses/>.
  */
 
-package tk.ivybits.javi.media.ffmedia;
+package tk.ivybits.javi.media.ff;
 
 import com.sun.jna.Pointer;
 import com.sun.jna.ptr.IntByReference;
