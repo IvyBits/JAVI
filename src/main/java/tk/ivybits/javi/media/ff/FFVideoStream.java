@@ -19,6 +19,7 @@
 package tk.ivybits.javi.media.ff;
 
 import tk.ivybits.javi.ffmpeg.avformat.AVStream;
+import tk.ivybits.javi.format.PixelFormat;
 import tk.ivybits.javi.media.stream.VideoStream;
 
 /**
@@ -42,5 +43,13 @@ public class FFVideoStream extends FFStream implements VideoStream {
     @Override
     public double framerate() {
         return ffstream.r_frame_rate.num / (double) ffstream.r_frame_rate.den;
+    }
+
+    @Override
+    public PixelFormat pixelFormat() {
+        for (PixelFormat pf : PixelFormat.values())
+            if (pf.id == ffstream.codec.pix_fmt)
+                return pf;
+        throw new IllegalStateException();
     }
 }

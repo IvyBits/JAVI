@@ -19,9 +19,12 @@
 package tk.ivybits.javi.media.ff;
 
 import tk.ivybits.javi.ffmpeg.avformat.AVStream;
+import tk.ivybits.javi.format.SampleFormat;
 import tk.ivybits.javi.media.stream.AudioStream;
 
 import javax.sound.sampled.AudioFormat;
+
+import static tk.ivybits.javi.format.SampleFormat.*;
 
 /**
  * FFmpeg-backed VideoStream.
@@ -32,10 +35,10 @@ public class FFAudioStream extends FFStream implements AudioStream {
     }
 
     @Override
-    public AudioFormat audioFormat() {
-        return new AudioFormat(ffstream.codec.sample_rate,
-                16,
-                ffstream.codec.channels,
-                true, false);
+    public SampleFormat audioFormat() {
+        return new SampleFormat(
+                Encoding.values()[ffstream.codec.sample_fmt],
+                ChannelLayout.values()[(int)(ffstream.codec.channel_layout - 1)],
+                ffstream.codec.sample_rate);
     }
 }

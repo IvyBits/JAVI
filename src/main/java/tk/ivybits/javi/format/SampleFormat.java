@@ -18,21 +18,64 @@
 
 package tk.ivybits.javi.format;
 
+import com.sun.jna.Native;
+
+import javax.sound.sampled.AudioFormat;
+
 /**
  * Sample formats.
  *
  * @version 1.0
  * @since 1.0
  */
-public enum SampleFormat {
-    UNSIGNED_8BIT,
-    SIGNED_16BIT,
-    SIGNED_32BIT,
-    SIGNED_FLOAT,
-    SIGNED_DOUBLE,
-    SIGNED_8BIT_PLANAR,
-    SIGNED_16BIT_PLANAR,
-    SIGNED_32BIT_PLANAR,
-    SIGNED_FLOAT_PLANAR,
-    SIGNED_DOUBLE_PLANAR
+public class SampleFormat {
+    private final Encoding format;
+    private final ChannelLayout layout;
+    private final int frequency;
+
+    public SampleFormat(Encoding format, ChannelLayout layout, int frequency) {
+        this.format = format;
+        this.layout = layout;
+        this.frequency = frequency;
+    }
+
+    public Encoding encoding() {
+        return format;
+    }
+
+    public ChannelLayout channelLayout() {
+        return layout;
+    }
+
+    public int frequency() {
+        return frequency;
+    }
+
+    public static enum ChannelLayout {
+        LEFT,
+        RIGHT,
+        STEREO
+    }
+
+    public static enum Encoding {
+        UNSIGNED_8BIT(8),
+        SIGNED_16BIT(16),
+        SIGNED_32BIT(32),
+        SIGNED_FLOAT(Native.getNativeSize(float.class) * 8),
+        SIGNED_DOUBLE(Native.getNativeSize(double.class) * 8),
+        SIGNED_8BIT_PLANAR(8),
+        SIGNED_16BIT_PLANAR(16),
+        SIGNED_32BIT_PLANAR(32),
+        SIGNED_FLOAT_PLANAR(Native.getNativeSize(float.class) * 8),
+        SIGNED_DOUBLE_PLANAR(Native.getNativeSize(double.class) * 8);
+        private final int bps;
+
+        Encoding(int bps) {
+            this.bps = bps;
+        }
+
+        public int bitsPerSample() {
+            return bps;
+        }
+    }
 }

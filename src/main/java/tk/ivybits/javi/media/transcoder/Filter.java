@@ -16,12 +16,20 @@
  * <http://www.gnu.org/licenses/>.
  */
 
-package tk.ivybits.javi.media.stream;
+package tk.ivybits.javi.media.transcoder;
 
-import tk.ivybits.javi.format.SampleFormat;
+import java.nio.ByteBuffer;
 
-import javax.sound.sampled.AudioFormat;
+public interface Filter {
+    Filter VIDEO_NEGATE = new Filter() {
+        @Override
+        public void apply(ByteBuffer buf) {
+            int l = buf.limit();
+            for (int i = 0; i != l; i++) {
+                buf.put(i, (byte) (255 - (buf.get(i) & 0xFF)));
+            }
+        }
+    };
 
-public interface AudioStream extends Stream {
-    SampleFormat audioFormat();
+    void apply(ByteBuffer buffer);
 }

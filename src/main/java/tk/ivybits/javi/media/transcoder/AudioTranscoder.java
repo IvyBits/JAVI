@@ -16,35 +16,23 @@
  * <http://www.gnu.org/licenses/>.
  */
 
-package tk.ivybits.javi.swing;
+package tk.ivybits.javi.media.transcoder;
 
-import sun.awt.image.WritableRasterNative;
+import tk.ivybits.javi.format.SampleFormat;
 
-import java.awt.image.DataBuffer;
-import java.awt.image.WritableRenderedImage;
 import java.nio.ByteBuffer;
+import java.util.ArrayList;
 
-/**
- * Tudor
- * 2013-12-06
- */
-public class DirectDataBuffer extends DataBuffer {
-    private ByteBuffer buffer;
+public abstract class AudioTranscoder {
+    protected final SampleFormat from;
+    protected final SampleFormat to;
+    protected final ArrayList<Filter> filters;
 
-    protected DirectDataBuffer(ByteBuffer buffer) {
-        super(DataBuffer.TYPE_BYTE, buffer.limit());
-        if (!buffer.isDirect())
-            throw new IllegalArgumentException("ByteBuffer is not direct");
-        this.buffer = buffer;
+    public AudioTranscoder(SampleFormat from, SampleFormat to, ArrayList<Filter> filters) {
+        this.from = from;
+        this.to = to;
+        this.filters = filters;
     }
 
-    @Override
-    public int getElem(int bank, int i) {
-        return buffer.get(i);
-    }
-
-    @Override
-    public void setElem(int bank, int i, int val) {
-
-    }
+    public abstract void transcode(ByteBuffer buffer);
 }
