@@ -18,7 +18,6 @@
 
 package tk.ivybits.javi.media.ffmedia;
 
-import tk.ivybits.javi.exc.StreamException;
 import tk.ivybits.javi.ffmpeg.avcodec.AVCodec;
 import tk.ivybits.javi.ffmpeg.avformat.AVStream;
 import tk.ivybits.javi.ffmpeg.avutil.AVDictionary;
@@ -42,7 +41,7 @@ public class FFStream implements Stream {
     protected boolean closed;
     private static final HashMap<String, Locale> ISO_3 = new HashMap<String, Locale>();
 
-    {
+    static {
         String[] languages = Locale.getISOLanguages();
         for (String language : languages) {
             Locale locale = new Locale(language);
@@ -62,57 +61,36 @@ public class FFStream implements Stream {
         language = entry != null ? ISO_3.get(entry.value) : null;
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public Media container() {
         return container;
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public Stream.Type type() {
         return Stream.Type.values()[ffstream.codec.codec_type];
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public Locale language() {
         return language;
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public int index() {
         return ffstream.index;
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public String codecName() {
         return ffstream.codec.codec.name;
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public String longCodecName() {
         return ffstream.codec.codec.long_name;
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public void close() {
         if (!closed) {

@@ -94,9 +94,6 @@ public class FFMediaStream implements MediaStream {
         donkeyParsers = new DonkeyParser[media.formatContext.nb_streams];
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public VideoStream setVideoStream(VideoStream stream) {
         if (stream.container() != media)
@@ -118,9 +115,6 @@ public class FFMediaStream implements MediaStream {
         return pre;
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public AudioStream setAudioStream(AudioStream stream) {
         if (stream.container() != media)
@@ -131,9 +125,6 @@ public class FFMediaStream implements MediaStream {
         return pre;
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public SubtitleStream setSubtitleStream(SubtitleStream stream) {
         if (stream.container() != media)
@@ -143,13 +134,9 @@ public class FFMediaStream implements MediaStream {
         SubtitleStream pre = subtitleStream;
         subtitleStream = (FFSubtitleStream) stream;
         subtitleCodec = subtitleStream.codec;
-        System.out.println("Subtitle is set");
         return pre;
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public void run() {
         started = playing = true;
@@ -309,7 +296,7 @@ public class FFMediaStream implements MediaStream {
                                     int colour = rect.pict.data[1].getInt(i * 4);
                                     r[i] = (byte) ((colour >> 16) & 0xff);
                                     g[i] = (byte) ((colour >> 8) & 0xff);
-                                    b[i] = (byte) ((colour >> 0) & 0xff);
+                                    b[i] = (byte) ((colour) & 0xff);
                                     a[i] = (byte) ((colour >> 24) & 0xff);
                                 }
                                 IndexColorModel palette = new IndexColorModel(8, rect.nb_colors, r, g, b, a);
@@ -323,7 +310,6 @@ public class FFMediaStream implements MediaStream {
                             case SUBTITLE_TEXT: {
                                 String subtitle = rect.text.getString(0, "UTF-8");
                                 subtitleHandler.handle(new TextSubtitle(subtitle), start, end);
-                                System.out.println(subtitle);
                                 break;
                             }
                             case SUBTITLE_DONKEY: {
@@ -353,17 +339,11 @@ public class FFMediaStream implements MediaStream {
         setPlaying(false);
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public boolean isPlaying() {
         return playing;
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public void setPlaying(boolean flag) {
         if (!started)
@@ -380,9 +360,6 @@ public class FFMediaStream implements MediaStream {
         }
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public void seek(long to) {
         if (!started)
@@ -402,41 +379,26 @@ public class FFMediaStream implements MediaStream {
         return time;
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public void close() {
         avcodec_free_frame(new PointerByReference(pFrame.getPointer()));
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public FFAudioStream getAudioStream() {
         return audioStream;
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public FFVideoStream getVideoStream() {
         return videoStream;
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public FFSubtitleStream getSubtitleStream() {
         return subtitleStream;
     }
 
-    /**
-     * {@inheritDoc}
-     */
     public static class Builder implements MediaStream.Builder {
         public FFMedia media;
         public AudioHandler audioHandler = AudioHandler.NO_HANDLER;
@@ -453,36 +415,24 @@ public class FFMediaStream implements MediaStream {
             this.media = media;
         }
 
-        /**
-         * {@inheritDoc}
-         */
         @Override
         public Builder audio(AudioHandler audioHandler) {
             this.audioHandler = audioHandler;
             return this;
         }
 
-        /**
-         * {@inheritDoc}
-         */
         @Override
         public Builder video(FrameHandler videoHandler) {
             this.videoHandler = videoHandler;
             return this;
         }
 
-        /**
-         * {@inheritDoc}
-         */
         @Override
         public Builder subtitle(SubtitleHandler subtitleHandler) {
             this.subtitleHandler = subtitleHandler;
             return this;
         }
 
-        /**
-         * {@inheritDoc}
-         */
         @Override
         public FFMediaStream create() throws IOException {
             if (audioHandler == null && videoHandler == null && subtitleHandler == null)

@@ -16,30 +16,10 @@
  * <http://www.gnu.org/licenses/>.
  */
 
-package tk.ivybits.javi.media.subtitle;
-
-import tk.ivybits.javi.format.SubtitleType;
-
 /**
- * Class to represent a plain text subtitle exposed by FFmpeg.
+ * Handlers for media decoding.
+ *
+ * @since 1.0
+ * @version 1.0
  */
-public class TextSubtitle implements Subtitle {
-    /**
-     * Subtitle in plain text.
-     */
-    public final String text;
-
-    /**
-     * Creates a plain text subtitle line.
-     *
-     * @param text Subtitle in plain text.
-     */
-    public TextSubtitle(String text) {
-        this.text = text;
-    }
-
-    @Override
-    public SubtitleType type() {
-        return SubtitleType.SUBTITLE_TEXT;
-    }
-}
+package tk.ivybits.javi.media.handler;

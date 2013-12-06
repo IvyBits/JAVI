@@ -79,7 +79,7 @@ public class DonkeyParser {
     /**
      * Parses a SubStation Alpha integer literal.
      *
-     * @param number An integer literal to parse, <code>&H</code> at the beginning means hex.
+     * @param number An integer literal to parse, {@code &H} at the beginning means hex.
      * @return Parsed integer.
      */
     protected int parseInt(String number) {
@@ -110,7 +110,6 @@ public class DonkeyParser {
                 style.secondaryColor == Color.WHITE && style.outlineColor == Color.BLACK &&
                 style.backColor == Color.BLACK) {
             // FFmpeg's default font, for the subtitles converted to Donkey internally
-            System.out.println("Hit default font");
             styles.put(name, defaultStyle);
         } else {
             Font font = new Font(fontName, fontStyle, fontSize);
@@ -170,7 +169,7 @@ public class DonkeyParser {
     /**
      * Gets a helper to draw a subtitle parsed by this parser.
      *
-     * @return A <code>DrawHelper</code>.
+     * @return A {@code DrawHelper}.
      */
     public DrawHelper getDrawHelper() {
         return new DrawHelper();

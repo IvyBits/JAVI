@@ -13,16 +13,26 @@ public abstract class FrameHandler {
      * Handles a frame.
      *
      * @param buffer The buffer to handle.
-     * @param time   The time since the last frame.
+     * @param time   The duration of this frames.
      * @since 1.0
      */
     public abstract void handle(BufferedImage buffer, long time);
 
-    public void end() {
+    /**
+     * Signifies the start of a stream.
+     *
+     * @since 1.0
+     */
+    public void start() {
 
     }
 
-    public void start() {
+    /**
+     * Signifies the end of a stream.
+     *
+     * @since 1.0
+     */
+    public void end() {
 
     }
 }

@@ -71,7 +71,7 @@ public interface MediaStream extends Runnable, Closeable {
     /**
      * Fetches current audio stream.
      *
-     * @return The <code>AudioStream</code> currently in use, or null if none.
+     * @return The {@code AudioStream} currently in use, or null if none.
      * @since 1.0
      */
     AudioStream getAudioStream();
@@ -79,7 +79,7 @@ public interface MediaStream extends Runnable, Closeable {
     /**
      * Fetches current video stream.
      *
-     * @return The <code>VideoStream</code> currently in use, or null if none.
+     * @return The {@code VideoStream} currently in use, or null if none.
      * @since 1.0
      */
     VideoStream getVideoStream();
@@ -87,7 +87,7 @@ public interface MediaStream extends Runnable, Closeable {
     /**
      * Fetches current subtitle stream.
      *
-     * @return The <code>SubtitleStream</code> currently in use, or null if none.
+     * @return The {@code SubtitleStream} currently in use, or null if none.
      */
     SubtitleStream getSubtitleStream();
 
@@ -126,9 +126,6 @@ public interface MediaStream extends Runnable, Closeable {
      */
     long position();
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     void close();
 

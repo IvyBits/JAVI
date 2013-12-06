@@ -9,13 +9,30 @@ public abstract class SubtitleHandler {
         }
     };
 
+    /**
+     * Handles a subtitle.
+     *
+     * @param subtitle The subtitle.
+     * @param start    The timestamp measured from the start of the video indicating when the subtitle should be shown.
+     * @param end      The timestamp measured from the start of the video indicating when the subtitle should be removed from screen.
+     */
     public abstract void handle(Subtitle subtitle, long start, long end);
 
-    public void end() {
+    /**
+     * Signifies the start of a stream.
+     *
+     * @since 1.0
+     */
+    public void start() {
 
     }
 
-    public void start() {
+    /**
+     * Signifies the end of a stream.
+     *
+     * @since 1.0
+     */
+    public void end() {
 
     }
 }

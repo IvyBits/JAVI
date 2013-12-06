@@ -48,7 +48,7 @@ public class BitmapSubtitle implements Subtitle {
     public final BufferedImage image;
 
     /**
-     * Constructs a <code>BitmapSubtitle</code>.
+     * Constructs a {@code BitmapSubtitle}.
      *
      * @param x     x-coordinate to draw the subtitle.
      * @param y     y-coordinate to draw the subtitle.
@@ -60,9 +60,6 @@ public class BitmapSubtitle implements Subtitle {
         this.image = image;
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public SubtitleType type() {
         return SubtitleType.SUBTITLE_BITMAP;

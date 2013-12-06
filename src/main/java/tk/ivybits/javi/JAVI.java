@@ -38,18 +38,27 @@ public final class JAVI {
     public static final String AVCODEC_VERSION = getVersion(LibAVCodec.avcodec_version());
     public static final String AVFORMAT_VERSION = getVersion(LibAVFormat.avformat_version());
     public static final String JAVI_VERSION = getVersion();
-
-    private static boolean initialized = false;
+    private static boolean initialized;
+    private static boolean registered;
 
     public static void initialize() {
         if (initialized)
             return;
-        Natives.unpack();
         initialized = true;
+        if (!registered) {
+            Natives.unpack();
+            LibAVFormat.av_register_all();
+            LibAVCodec.avcodec_register_all();
+            registered = true;
+        } else
+            LibAVFormat.avformat_network_init();
     }
 
     public static void release() {
+        if (!initialized)
+            throw new IllegalStateException("never initialized");
         LibAVFormat.avformat_network_deinit();
+        initialized = false;
     }
 
     private static String getVersion(int version) {
@@ -77,11 +86,5 @@ public final class JAVI {
 
         }
         return "JAVI-unknown";
-    }
-
-    static {
-        LibAVFormat.avformat_network_init();
-        LibAVFormat.av_register_all();
-        LibAVCodec.avcodec_register_all();
     }
 }

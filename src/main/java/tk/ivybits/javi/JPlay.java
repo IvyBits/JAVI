@@ -24,7 +24,6 @@ import tk.ivybits.javi.media.MediaFactory;
 import tk.ivybits.javi.media.stream.AudioStream;
 import tk.ivybits.javi.media.stream.SubtitleStream;
 import tk.ivybits.javi.media.stream.VideoStream;
-import tk.ivybits.javi.natives.Natives;
 import tk.ivybits.javi.swing.StreamListener;
 import tk.ivybits.javi.swing.SwingMediaPanel;
 

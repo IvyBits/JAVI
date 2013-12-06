@@ -15,11 +15,21 @@ public abstract class AudioHandler {
      */
     public abstract void handle(byte[] buffer);
 
-    public void end() {
+    /**
+     * Signifies the start of a stream.
+     *
+     * @since 1.0
+     */
+    public void start() {
 
     }
 
-    public void start() {
+    /**
+     * Signifies the end of a stream.
+     *
+     * @since 1.0
+     */
+    public void end() {
 
     }
 }

@@ -72,9 +72,6 @@ public class DonkeySubtitle implements Subtitle {
         this.line = line;
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public SubtitleType type() {
         return SubtitleType.SUBTITLE_DONKEY;

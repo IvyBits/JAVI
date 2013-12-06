@@ -49,7 +49,7 @@ public class FFMedia implements Media {
     public ArrayList<FFSubtitleStream> subtitleStreams = new ArrayList<FFSubtitleStream>();
 
     /**
-     * Creates a FFMedia object sourced from a <code>File</code>.
+     * Creates a FFMedia object sourced from a {@code File}.
      *
      * @param source The media source.
      * @throws IOException Thrown if the source could not be opened (or doesn't exist)
@@ -60,7 +60,7 @@ public class FFMedia implements Media {
     }
 
     /**
-     * Creates a FFMedia object sourced from a pointing <code>URL</code>.
+     * Creates a FFMedia object sourced from a pointing {@code URL}.
      *
      * @param source The URL of the media source.
      * @throws IOException Thrown if the source could not be opened (or doesn't exist)
@@ -100,41 +100,26 @@ public class FFMedia implements Media {
         }
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public List<? extends VideoStream> videoStreams() {
         return Collections.unmodifiableList(videoStreams);
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public List<? extends AudioStream> audioStreams() {
         return Collections.unmodifiableList(audioStreams);
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public List<? extends SubtitleStream> subtitleStreams() {
         return Collections.unmodifiableList(subtitleStreams);
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public MediaStream.Builder stream() {
         return new FFMediaStream.Builder(this);
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public long length() {
         if (formatContext.duration == Long.MIN_VALUE)
@@ -142,9 +127,6 @@ public class FFMedia implements Media {
         return formatContext.duration / 1000;
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public void close() {
         if (formatContext != null) {

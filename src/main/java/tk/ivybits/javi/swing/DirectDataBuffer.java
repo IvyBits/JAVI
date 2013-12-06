@@ -16,30 +16,35 @@
  * <http://www.gnu.org/licenses/>.
  */
 
-package tk.ivybits.javi.media.subtitle;
+package tk.ivybits.javi.swing;
 
-import tk.ivybits.javi.format.SubtitleType;
+import sun.awt.image.WritableRasterNative;
+
+import java.awt.image.DataBuffer;
+import java.awt.image.WritableRenderedImage;
+import java.nio.ByteBuffer;
 
 /**
- * Class to represent a plain text subtitle exposed by FFmpeg.
+ * Tudor
+ * 2013-12-06
  */
-public class TextSubtitle implements Subtitle {
-    /**
-     * Subtitle in plain text.
-     */
-    public final String text;
+public class DirectDataBuffer extends DataBuffer {
+    private ByteBuffer buffer;
 
-    /**
-     * Creates a plain text subtitle line.
-     *
-     * @param text Subtitle in plain text.
-     */
-    public TextSubtitle(String text) {
-        this.text = text;
+    protected DirectDataBuffer(ByteBuffer buffer) {
+        super(DataBuffer.TYPE_BYTE, buffer.limit());
+        if (!buffer.isDirect())
+            throw new IllegalArgumentException("ByteBuffer is not direct");
+        this.buffer = buffer;
     }
 
     @Override
-    public SubtitleType type() {
-        return SubtitleType.SUBTITLE_TEXT;
+    public int getElem(int bank, int i) {
+        return buffer.get(i);
+    }
+
+    @Override
+    public void setElem(int bank, int i, int val) {
+
     }
 }
