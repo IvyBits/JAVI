@@ -1,12 +1,15 @@
 package tk.ivybits.javi.media.handler;
 
+import com.sun.jna.Pointer;
+import tk.ivybits.javi.media.transcoder.SafeByteBuffer;
+
 import java.awt.image.BufferedImage;
 import java.nio.ByteBuffer;
 
 public abstract class FrameHandler {
     public static final FrameHandler NO_HANDLER = new FrameHandler() {
         @Override
-        public void handle(ByteBuffer buffer, long time) {
+        public void handle(Pointer buffers, int[] lineSizes, long time) {
         }
     };
 
@@ -17,7 +20,7 @@ public abstract class FrameHandler {
      * @param time   The duration of this frames.
      * @since 1.0
      */
-    public abstract void handle(ByteBuffer buffer, long time);
+    public abstract void handle(Pointer buffers, int[] lineSizes, long time);
 
     /**
      * Signifies the start of a stream.

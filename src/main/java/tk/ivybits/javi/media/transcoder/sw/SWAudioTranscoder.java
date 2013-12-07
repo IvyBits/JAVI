@@ -49,7 +49,7 @@ public class SWAudioTranscoder extends AudioTranscoder {
     @Override
     public void transcode(ByteBuffer buffer) {
 
-        for (Filter f : filters)
-            f.apply(buffer);
+        /*for (Filter f : filters)
+            f.apply(buffer);*/
     }
 }

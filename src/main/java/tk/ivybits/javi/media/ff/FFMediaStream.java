@@ -38,6 +38,7 @@ import tk.ivybits.javi.media.stream.VideoStream;
 import tk.ivybits.javi.media.subtitle.BitmapSubtitle;
 import tk.ivybits.javi.media.subtitle.DonkeyParser;
 import tk.ivybits.javi.media.subtitle.TextSubtitle;
+import tk.ivybits.javi.media.transcoder.SafeByteBuffer;
 
 import java.awt.image.BufferedImage;
 import java.awt.image.DataBufferByte;
@@ -147,14 +148,14 @@ public class FFMediaStream implements MediaStream {
         AVCodecContext ac = audioStream != null ? audioStream.ffstream.codec : null;
         AVCodecContext vc = videoStream != null ? videoStream.ffstream.codec : null;
 
-        ByteBuffer imageBuffer = null;
+        /*ByteBuffer imageBuffer = null;
         Pointer pImageBuffer = null;
         if (videoStream != null) {
             imageBuffer = ByteBuffer.allocateDirect(videoStream.width() * videoStream.height() *
                     (videoStream.pixelFormat().bpp() / 8));
             pImageBuffer = Native.getDirectBufferPointer(imageBuffer);
             vc.read();
-        }
+        }*/
 
         ByteBuffer audioBuffer = null;
         Pointer pAudioBuffer = null;
@@ -226,14 +227,14 @@ public class FFMediaStream implements MediaStream {
                     // We use sws_scale itself to convert a data buffer of an arbitrary pixel format
                     // into our desired format: 3-byte BGR
 
-                    memcpy(pImageBuffer, pFrame.data[0], imageBuffer.limit());
+                    //memcpy(pImageBuffer, pFrame.data[0], imageBuffer.limit());
 
 
                     // Read the buffer directly into the raster of our image
                     long nano = pFrame.pkt_duration * 1000000000 *
                             videoStream.ffstream.time_base.num / videoStream.ffstream.time_base.den;
                     time += nano / 1000000;
-                    videoHandler.handle(imageBuffer, nano);
+                    videoHandler.handle(pFrame.getPointer(), pFrame.linesize, nano);
                 }
             } else if (subtitleStream != null && packet.stream_index == subtitleStream.index()) {
                 int err = avcodec_decode_subtitle2(subtitleStream.ffstream.codec.getPointer(), pSubtitle.getPointer(), frameFinished, packet.getPointer());

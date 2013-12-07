@@ -18,6 +18,7 @@
 
 package tk.ivybits.javi.swing;
 
+import com.sun.jna.Pointer;
 import tk.ivybits.javi.format.PixelFormat;
 import tk.ivybits.javi.format.SampleFormat;
 import tk.ivybits.javi.media.AVSync;
@@ -32,6 +33,7 @@ import tk.ivybits.javi.media.stream.VideoStream;
 import tk.ivybits.javi.media.subtitle.*;
 import tk.ivybits.javi.media.transcoder.AudioTranscoder;
 import tk.ivybits.javi.media.transcoder.FrameTranscoder;
+import tk.ivybits.javi.media.transcoder.SafeByteBuffer;
 import tk.ivybits.javi.media.transcoder.Transcoder;
 
 import javax.sound.sampled.*;
@@ -99,7 +101,7 @@ public class SwingMediaPanel extends JPanel {
                     }
                     @Override
                     public void handle(ByteBuffer buffer) {
-                        if (sdl == null) {// Audio failed to initialize; ignore this buffer
+                        if (true || sdl == null) {// Audio failed to initialize; ignore this buffer
                             return;
                         }
                         if(heap.length < buffer.limit()) {
@@ -126,6 +128,7 @@ public class SwingMediaPanel extends JPanel {
                             paintImmediately(getBounds());
                         }
                     };
+                    private SafeByteBuffer buffer;
 
                     @Override
                     public void start() {
@@ -133,6 +136,8 @@ public class SwingMediaPanel extends JPanel {
                         int width = vs.width();
                         int height = vs.height();
                         nextFrame = new BufferedImage(width, height, BufferedImage.TYPE_3BYTE_BGR);
+                        buffer = SafeByteBuffer.allocate(((DataBufferByte) nextFrame.getRaster().getDataBuffer()).getData().length);
+                        //buffer = ByteBuffer.allocateDirect(((DataBufferByte) nextFrame.getRaster().getDataBuffer()).getData().length);
                         transcoder = Transcoder.frame()
                                 .from(width, height, vs.pixelFormat())
                                 .to(PixelFormat.BGR24).create();
@@ -144,8 +149,11 @@ public class SwingMediaPanel extends JPanel {
                     }
 
                     @Override
-                    public void handle(ByteBuffer buffer, long duration) {
-                        transcoder.transcode(buffer).get(((DataBufferByte) nextFrame.getRaster().getDataBuffer()).getData());
+                    public void handle(Pointer buffers, int[] lineSizes, long duration) {
+                        transcoder.transcode(buffers, lineSizes, buffer);
+                        //dst.flip();
+                        //System.out.println(dst.size() + ">>" + ((DataBufferByte) nextFrame.getRaster().getDataBuffer()).getData().length);
+                        buffer.pointer().read(0, ((DataBufferByte) nextFrame.getRaster().getDataBuffer()).getData(), 0, ((DataBufferByte) nextFrame.getRaster().getDataBuffer()).getData().length);
                         sync.sync(duration, REPAINT_CALLBACK);
                     }
 

@@ -39,7 +39,7 @@ public class Transcoder {
             if (dstWidth == 0)
                 dstWidth = srcWidth;
             if (dstHeight == 0)
-                dstHeight = srcWidth;
+                dstHeight = srcHeight;
             this.srcPixelFormat = srcPixelFormat;
             return this;
         }
