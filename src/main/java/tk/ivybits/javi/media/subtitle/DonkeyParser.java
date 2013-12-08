@@ -83,7 +83,11 @@ public class DonkeyParser {
      * @return Parsed integer.
      */
     protected int parseInt(String number) {
-        return Integer.parseInt(number.substring(2), number.startsWith("&H") ? 16 : 10);
+        if (number.startsWith("&H")) {
+            return Integer.parseInt(number.substring(2), 16);
+        } else {
+            return Integer.parseInt(number);
+        }
     }
 
     /**
