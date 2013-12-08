@@ -51,6 +51,11 @@ public class SampleFormat {
         return frequency;
     }
 
+    @Override
+    public String toString() {
+        return format + "(" + layout + ") @ " + frequency + "Hz";
+    }
+
     public static enum ChannelLayout {
         LEFT,
         RIGHT,
