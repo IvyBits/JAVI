@@ -47,6 +47,46 @@ public class FFStream implements Stream {
             Locale locale = new Locale(language);
             ISO_3.put(locale.getISO3Language(), locale);
         }
+        // Aliases... Why can't people just be consistent
+        ISO_3.put("alb", ISO_3.get("sqi"));
+        ISO_3.put("arm", ISO_3.get("hye"));
+        ISO_3.put("baq", ISO_3.get("eus"));
+        ISO_3.put("tib", ISO_3.get("bod"));
+        ISO_3.put("bur", ISO_3.get("mya"));
+        ISO_3.put("cze", ISO_3.get("ces"));
+        ISO_3.put("chi", ISO_3.get("zho"));
+        ISO_3.put("wel", ISO_3.get("cym"));
+        ISO_3.put("cze", ISO_3.get("ces"));
+        ISO_3.put("ger", ISO_3.get("deu"));
+        ISO_3.put("dut", ISO_3.get("nld"));
+        ISO_3.put("gre", ISO_3.get("ell"));
+        ISO_3.put("baq", ISO_3.get("eus"));
+        ISO_3.put("per", ISO_3.get("fas"));
+        ISO_3.put("fre", ISO_3.get("fra"));
+        ISO_3.put("fre", ISO_3.get("fra"));
+        ISO_3.put("geo", ISO_3.get("kat"));
+        ISO_3.put("ger", ISO_3.get("deu"));
+        ISO_3.put("gre", ISO_3.get("ell"));
+        ISO_3.put("arm", ISO_3.get("hye"));
+        ISO_3.put("ice", ISO_3.get("isl"));
+        ISO_3.put("geo", ISO_3.get("kat"));
+        ISO_3.put("mac", ISO_3.get("mkd"));
+        ISO_3.put("mao", ISO_3.get("mri"));
+        ISO_3.put("may", ISO_3.get("msa"));
+        ISO_3.put("mac", ISO_3.get("mkd"));
+        ISO_3.put("mao", ISO_3.get("mri"));
+        ISO_3.put("may", ISO_3.get("msa"));
+        ISO_3.put("bur", ISO_3.get("mya"));
+        ISO_3.put("dut", ISO_3.get("nld"));
+        ISO_3.put("per", ISO_3.get("fas"));
+        ISO_3.put("rum", ISO_3.get("ron"));
+        ISO_3.put("rum", ISO_3.get("ron"));
+        ISO_3.put("slo", ISO_3.get("slk"));
+        ISO_3.put("slo", ISO_3.get("slk"));
+        ISO_3.put("alb", ISO_3.get("sqi"));
+        ISO_3.put("tib", ISO_3.get("bod"));
+        ISO_3.put("wel", ISO_3.get("cym"));
+        ISO_3.put("chi", ISO_3.get("zho"));
     }
 
     FFStream(FFMedia container, AVStream ffstream) {

@@ -70,20 +70,23 @@ public class JPlay {
                     area = size;
                     video = str;
                 }
-                System.err.printf("\tStream #%s: [%s] (%sx%s) - %s (%s) @%.2f FPS\n",
-                        str.index(), str.language() != null ? str.language().getISO3Country() : "udf",
+                System.err.printf("\tStream #%s: [%s,%s] (%sx%s) - %s (%s) @%.2f FPS\n",
+                        str.index(), str.language() != null ? str.language().getISO3Language() : "und",
+                        str.language() != null ? str.language().getLanguage() : "und",
                         str.width(), str.height(), str.codecName(), str.longCodecName(), str.framerate());
             }
 
             for (final AudioStream str : media.audioStreams()) {
-                System.err.printf("\tStream #%s: [%s] %s - %s (%s)\n",
-                        str.index(), str.language() != null ? str.language().getISO3Country() : "udf",
+                System.err.printf("\tStream #%s: [%s,%s] %s - %s (%s)\n",
+                        str.index(), str.language() != null ? str.language().getISO3Language() : "und",
+                        str.language() != null ? str.language().getLanguage() : "und",
                         str.audioFormat(), str.codecName(), str.longCodecName());
             }
 
             for (final SubtitleStream str : media.subtitleStreams()) {
-                System.err.printf("\tStream #%s: [%s] %s (%s)\n",
-                        str.index(), str.language() != null ? str.language().getISO3Country() : "udf",
+                System.err.printf("\tStream #%s: [%s,%s] %s (%s)\n",
+                        str.index(), str.language() != null ? str.language().getISO3Language() : "und",
+                        str.language() != null ? str.language().getLanguage() : "und",
                         str.codecName(), str.longCodecName());
             }
 
