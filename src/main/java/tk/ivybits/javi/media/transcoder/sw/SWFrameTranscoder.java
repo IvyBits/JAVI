@@ -32,7 +32,9 @@ import java.util.List;
 
 import static tk.ivybits.javi.ffmpeg.LibAVCodec.avpicture_fill;
 import static tk.ivybits.javi.ffmpeg.LibAVCodec.avpicture_get_size;
+import static tk.ivybits.javi.ffmpeg.LibAVUtil.av_free;
 import static tk.ivybits.javi.ffmpeg.LibAVUtil.av_image_fill_linesizes;
+import static tk.ivybits.javi.ffmpeg.LibAVUtil.av_malloc;
 import static tk.ivybits.javi.ffmpeg.LibSWScale.sws_getContext;
 import static tk.ivybits.javi.ffmpeg.LibSWScale.sws_scale;
 
@@ -42,10 +44,9 @@ import static tk.ivybits.javi.ffmpeg.LibSWScale.sws_scale;
  */
 public class SWFrameTranscoder extends FrameTranscoder {
     private Pointer swsContext;
-    private AVPicture dstPicture = new AVPicture(), srcPicture = new AVPicture();
+    private AVPicture dstPicture = new AVPicture();
     private ByteBuffer destination;
     private Pointer pDestination;
-    private int[] lineSizes = new int[4];
 
     public SWFrameTranscoder(int srcWidth, int srcHeight, PixelFormat srcPixelFormat,
                              int dstWidth, int dstHeight, PixelFormat dstPixelFormat,
@@ -57,34 +58,39 @@ public class SWFrameTranscoder extends FrameTranscoder {
                 0, null, null, null);
         destination = ByteBuffer.allocateDirect((int) getBufferSize());
         pDestination = Native.getDirectBufferPointer(destination);
-        av_image_fill_linesizes(lineSizes, dstPixelFormat.id, dstWidth);
-        System.out.println(Arrays.toString(lineSizes));
     }
 
     @Override
     public Frame transcode(Frame buffer) {
         destination.position(0);
-        avpicture_fill(dstPicture.getPointer(), Native.getDirectBufferPointer(destination), dstPixelFormat.id, dstWidth, dstHeight);
+        avpicture_fill(dstPicture.getPointer(), pDestination, dstPixelFormat.id, dstWidth, dstHeight);
         dstPicture.read();
-        avpicture_fill(srcPicture.getPointer(), Native.getDirectBufferPointer(buffer), srcPixelFormat.id, srcWidth, srcHeight);
-        srcPicture.read();
-        System.out.println("<<<" + Arrays.toString(srcPicture.linesize));
-        sws_scale(swsContext, srcPicture.getPointer(), srcPicture.linesize, 0, srcHeight, dstPicture.getPointer(), dstPicture.linesize);
 
-        for (Filter f : filters)
-            f.apply(destination);
-        return destination;
-    }
-    /*
-        public void transcode(Pointer buffers, int[] lineSizes, SafeByteBuffer buffer) {
-        avpicture_fill(picture.getPointer(), buffer.pointer(), dstPixelFormat.id, dstWidth, dstHeight);
-        picture.read();
-        sws_scale(swsContext, buffers, lineSizes, 0, srcHeight, picture.getPointer(), picture.linesize);
+        Pointer pointers = av_malloc(Native.POINTER_SIZE * 8);
+        pointers.clear(Native.POINTER_SIZE * 8);
+        int[] lineSizes = new int[8];
 
+        int i = 0;
+        for (Frame.Plane plane : buffer) {
+            pointers.setPointer(Native.POINTER_SIZE * i, Native.getDirectBufferPointer(plane.buffer()));
+            lineSizes[i++] = plane.linesize();
+        }
+
+        sws_scale(swsContext, pointers, lineSizes, 0, srcHeight, dstPicture.getPointer(), dstPicture.linesize);
+        av_free(pointers);
+
+        i = 0;
+        for (; i < dstPicture.linesize.length && dstPicture.linesize[i] != 0; ++i);
+        Frame.Plane[] planes = new Frame.Plane[i];
+        for (int p = 0; p != i; p++) {
+            int l = dstPicture.linesize[p];
+            planes[p] = new Frame.Plane(Native.getDirectByteBuffer(Pointer.nativeValue(dstPicture.data[p]), l * dstHeight), l);
+        }
+        Frame result = new Frame(planes);
         for (Filter f : filters)
-            f.apply(buffer.get());
+            f.apply(result);
+        return result;
     }
-     */
 
     @Override
     public long getBufferSize() {

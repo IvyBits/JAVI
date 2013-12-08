@@ -18,18 +18,23 @@
 
 package tk.ivybits.javi.media.transcoder;
 
+import tk.ivybits.javi.media.stream.Frame;
+
 import java.nio.ByteBuffer;
 
 public interface Filter {
     Filter VIDEO_NEGATE = new Filter() {
         @Override
-        public void apply(ByteBuffer buf) {
-            int l = buf.limit();
-            for (int i = 0; i != l; i++) {
-                buf.put(i, (byte) (255 - (buf.get(i) & 0xFF)));
+        public void apply(Frame frame) {
+            for (Frame.Plane plane : frame) {
+                ByteBuffer buf = plane.buffer();
+                int l = buf.limit();
+                for (int i = 0; i != l; i++) {
+                    buf.put(i, (byte) (255 - (buf.get(i) & 0xFF)));
+                }
             }
         }
     };
 
-    void apply(ByteBuffer buffer);
+    void apply(Frame buffer);
 }
