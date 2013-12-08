@@ -69,7 +69,8 @@ public class SwingMediaPanel extends JPanel {
     private DonkeyParser lastParser;
     private DonkeyParser.DrawHelper donkeyHelper;
     private AVSync sync;
-    private static final AudioFormat TARGET_AUDIO_FORMAT = new AudioFormat(44100, 16, 2, true, false);;
+    private static final AudioFormat TARGET_AUDIO_FORMAT = new AudioFormat(44100, 16, 2, true, false);
+    ;
 
     /**
      * Creates a new SwingMediaPanel component.
@@ -90,21 +91,23 @@ public class SwingMediaPanel extends JPanel {
                 .audio(new AudioHandler() {
                     private AudioTranscoder transcoder;
                     private byte[] heap = new byte[0];
+
                     @Override
                     public void start() {
-                            transcoder = Transcoder.audio()
-                                    .from(stream.getAudioStream().audioFormat())
-                                    .to(new SampleFormat(SampleFormat.Encoding.SIGNED_16BIT,
-                                            SampleFormat.ChannelLayout.STEREO,
-                                            44100))
-                                    .create();
+                        transcoder = Transcoder.audio()
+                                .from(stream.getAudioStream().audioFormat())
+                                .to(new SampleFormat(SampleFormat.Encoding.SIGNED_16BIT,
+                                        SampleFormat.ChannelLayout.STEREO,
+                                        44100))
+                                .create();
                     }
+
                     @Override
                     public void handle(ByteBuffer buffer) {
                         if (true || sdl == null) {// Audio failed to initialize; ignore this buffer
                             return;
                         }
-                        if(heap.length < buffer.limit()) {
+                        if (heap.length < buffer.limit()) {
                             heap = new byte[buffer.limit()];
                         }
                         buffer.get(heap);
@@ -128,7 +131,7 @@ public class SwingMediaPanel extends JPanel {
                             paintImmediately(getBounds());
                         }
                     };
-                    private SafeByteBuffer buffer;
+                    private DataBufferByte raster;
 
                     @Override
                     public void start() {
@@ -136,11 +139,11 @@ public class SwingMediaPanel extends JPanel {
                         int width = vs.width();
                         int height = vs.height();
                         nextFrame = new BufferedImage(width, height, BufferedImage.TYPE_3BYTE_BGR);
-                        buffer = SafeByteBuffer.allocate(((DataBufferByte) nextFrame.getRaster().getDataBuffer()).getData().length);
-                        //buffer = ByteBuffer.allocateDirect(((DataBufferByte) nextFrame.getRaster().getDataBuffer()).getData().length);
+                        raster = (DataBufferByte) nextFrame.getRaster().getDataBuffer();
                         transcoder = Transcoder.frame()
                                 .from(width, height, vs.pixelFormat())
-                                .to(PixelFormat.BGR24).create();
+                                .to(PixelFormat.BGR24)
+                                .create();
                         sync.reset();
                         // Notify all listeners that our stream has started
                         for (StreamListener listener : listeners) {
@@ -149,11 +152,10 @@ public class SwingMediaPanel extends JPanel {
                     }
 
                     @Override
-                    public void handle(Pointer buffers, int[] lineSizes, long duration) {
-                        transcoder.transcode(buffers, lineSizes, buffer);
-                        //dst.flip();
-                        //System.out.println(dst.size() + ">>" + ((DataBufferByte) nextFrame.getRaster().getDataBuffer()).getData().length);
-                        buffer.pointer().read(0, ((DataBufferByte) nextFrame.getRaster().getDataBuffer()).getData(), 0, ((DataBufferByte) nextFrame.getRaster().getDataBuffer()).getData().length);
+                    public void handle(ByteBuffer buffer, long duration) {
+                        ByteBuffer out = transcoder.transcode(buffer);
+                        //System.out.println(out.position() + ":" + out.capacity() + " > " + out.limit() + " > " + raster.getData().length);
+                        out.get(raster.getData());
                         sync.sync(duration, REPAINT_CALLBACK);
                     }
 

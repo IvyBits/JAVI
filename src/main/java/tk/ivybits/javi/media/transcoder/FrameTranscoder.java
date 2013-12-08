@@ -45,7 +45,7 @@ public abstract class FrameTranscoder {
         this.filters = filters;
     }
 
-    public abstract void transcode(Pointer buffers, int[] lineSizes, SafeByteBuffer buf);
+    public abstract ByteBuffer transcode(ByteBuffer buffer);
 
     public abstract long getBufferSize();
 }

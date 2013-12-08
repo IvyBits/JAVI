@@ -29,6 +29,7 @@ import tk.ivybits.javi.media.transcoder.FrameTranscoder;
 import tk.ivybits.javi.media.transcoder.SafeByteBuffer;
 
 import java.nio.ByteBuffer;
+import java.util.Arrays;
 import java.util.List;
 
 import static tk.ivybits.javi.ffmpeg.LibAVCodec.avpicture_alloc;
@@ -37,6 +38,7 @@ import static tk.ivybits.javi.ffmpeg.LibAVCodec.avpicture_get_size;
 import static tk.ivybits.javi.ffmpeg.LibC.memcpy;
 import static tk.ivybits.javi.ffmpeg.LibSWScale.sws_getContext;
 import static tk.ivybits.javi.ffmpeg.LibSWScale.sws_scale;
+import static tk.ivybits.javi.ffmpeg.LibAVUtil.*;
 
 /**
  * @version 1.0
@@ -44,7 +46,10 @@ import static tk.ivybits.javi.ffmpeg.LibSWScale.sws_scale;
  */
 public class SWFrameTranscoder extends FrameTranscoder {
     private Pointer swsContext;
-    private AVPicture picture = new AVPicture();
+    private AVPicture dstPicture = new AVPicture(), srcPicture = new AVPicture();
+    private ByteBuffer destination;
+    private Pointer pDestination;
+    private int[] lineSizes = new int[4];
 
     public SWFrameTranscoder(int srcWidth, int srcHeight, PixelFormat srcPixelFormat,
                              int dstWidth, int dstHeight, PixelFormat dstPixelFormat,
@@ -54,10 +59,28 @@ public class SWFrameTranscoder extends FrameTranscoder {
                 srcWidth, srcHeight, srcPixelFormat.id,
                 dstWidth, dstHeight, dstPixelFormat.id,
                 0, null, null, null);
+        destination = ByteBuffer.allocateDirect((int) getBufferSize());
+        pDestination = Native.getDirectBufferPointer(destination);
+        av_image_fill_linesizes(lineSizes, dstPixelFormat.id, dstWidth);
+        System.out.println(Arrays.toString(lineSizes));
     }
 
     @Override
-    public void transcode(Pointer buffers, int[] lineSizes, SafeByteBuffer buffer) {
+    public ByteBuffer transcode(ByteBuffer buffer) {
+        destination.position(0);
+        avpicture_fill(dstPicture.getPointer(), Native.getDirectBufferPointer(destination), dstPixelFormat.id, dstWidth, dstHeight);
+        dstPicture.read();
+        avpicture_fill(srcPicture.getPointer(), Native.getDirectBufferPointer(buffer), srcPixelFormat.id, srcWidth, srcHeight);
+        srcPicture.read();
+        System.out.println("<<<"+Arrays.toString(srcPicture.linesize));
+        sws_scale(swsContext, srcPicture.getPointer(), srcPicture.linesize, 0, srcHeight, dstPicture.getPointer(), dstPicture.linesize);
+
+        for (Filter f : filters)
+            f.apply(destination);
+        return destination;
+    }
+    /*
+        public void transcode(Pointer buffers, int[] lineSizes, SafeByteBuffer buffer) {
         avpicture_fill(picture.getPointer(), buffer.pointer(), dstPixelFormat.id, dstWidth, dstHeight);
         picture.read();
         sws_scale(swsContext, buffers, lineSizes, 0, srcHeight, picture.getPointer(), picture.linesize);
@@ -65,6 +88,7 @@ public class SWFrameTranscoder extends FrameTranscoder {
         for (Filter f : filters)
             f.apply(buffer.get());
     }
+     */
 
     @Override
     public long getBufferSize() {

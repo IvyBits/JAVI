@@ -23,6 +23,7 @@ import com.sun.jna.Pointer;
 import com.sun.jna.ptr.IntByReference;
 import com.sun.jna.ptr.PointerByReference;
 import tk.ivybits.javi.exc.StreamException;
+import tk.ivybits.javi.ffmpeg.LibC;
 import tk.ivybits.javi.ffmpeg.avcodec.*;
 import tk.ivybits.javi.ffmpeg.avutil.AVFrame;
 import tk.ivybits.javi.format.SampleFormat;
@@ -45,6 +46,7 @@ import java.awt.image.DataBufferByte;
 import java.awt.image.IndexColorModel;
 import java.io.IOException;
 import java.nio.ByteBuffer;
+import java.util.Arrays;
 import java.util.concurrent.Semaphore;
 
 import static tk.ivybits.javi.ffmpeg.LibAVCodec.*;
@@ -144,18 +146,14 @@ public class FFMediaStream implements MediaStream {
         IntByReference frameFinished = new IntByReference();
         AVPacket packet = new AVPacket();
         av_init_packet(packet.getPointer());
-        int width = 0, height = 0;
         AVCodecContext ac = audioStream != null ? audioStream.ffstream.codec : null;
         AVCodecContext vc = videoStream != null ? videoStream.ffstream.codec : null;
 
-        /*ByteBuffer imageBuffer = null;
-        Pointer pImageBuffer = null;
+        int imageBufferSize = 0;
         if (videoStream != null) {
-            imageBuffer = ByteBuffer.allocateDirect(videoStream.width() * videoStream.height() *
-                    (videoStream.pixelFormat().bpp() / 8));
-            pImageBuffer = Native.getDirectBufferPointer(imageBuffer);
+            imageBufferSize = avpicture_get_size(videoStream.pixelFormat().id, videoStream.width(), videoStream.height());
             vc.read();
-        }*/
+        }
 
         ByteBuffer audioBuffer = null;
         Pointer pAudioBuffer = null;
@@ -234,7 +232,9 @@ public class FFMediaStream implements MediaStream {
                     long nano = pFrame.pkt_duration * 1000000000 *
                             videoStream.ffstream.time_base.num / videoStream.ffstream.time_base.den;
                     time += nano / 1000000;
-                    videoHandler.handle(pFrame.getPointer(), pFrame.linesize, nano);
+                    System.out.println(">>>" + Arrays.toString(pFrame.linesize));
+                    videoHandler.handle(Native.getDirectByteBuffer(Pointer.nativeValue(pFrame.data[0]),
+                            imageBufferSize), nano);
                 }
             } else if (subtitleStream != null && packet.stream_index == subtitleStream.index()) {
                 int err = avcodec_decode_subtitle2(subtitleStream.ffstream.codec.getPointer(), pSubtitle.getPointer(), frameFinished, packet.getPointer());

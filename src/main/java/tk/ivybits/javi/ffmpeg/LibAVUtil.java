@@ -49,6 +49,8 @@ public class LibAVUtil {
 
     public static native int av_get_padded_bits_per_pixel(Pointer pixdesc);
 
+    public static native int av_image_fill_linesizes(int[] linesizes, int pix_fmt, int width);
+
     static {
         JAVI.initialize();
         Native.register(Natives.getPath("avutil-52").getAbsolutePath());
