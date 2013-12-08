@@ -46,4 +46,6 @@ public abstract class FrameTranscoder {
     }
 
     public abstract void transcode(Pointer buffers, int[] lineSizes, SafeByteBuffer buf);
+
+    public abstract long getBufferSize();
 }

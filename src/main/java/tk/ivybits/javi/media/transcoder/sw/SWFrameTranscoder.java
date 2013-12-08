@@ -65,4 +65,9 @@ public class SWFrameTranscoder extends FrameTranscoder {
         for (Filter f : filters)
             f.apply(buffer.get());
     }
+
+    @Override
+    public long getBufferSize() {
+        return avpicture_get_size(dstPixelFormat.id, dstWidth, dstHeight);
+    }
 }
