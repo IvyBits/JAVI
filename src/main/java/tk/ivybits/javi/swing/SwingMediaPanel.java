@@ -18,7 +18,6 @@
 
 package tk.ivybits.javi.swing;
 
-import com.sun.jna.Pointer;
 import tk.ivybits.javi.format.PixelFormat;
 import tk.ivybits.javi.format.SampleFormat;
 import tk.ivybits.javi.media.AVSync;
@@ -26,14 +25,11 @@ import tk.ivybits.javi.media.Media;
 import tk.ivybits.javi.media.handler.AudioHandler;
 import tk.ivybits.javi.media.handler.FrameHandler;
 import tk.ivybits.javi.media.handler.SubtitleHandler;
-import tk.ivybits.javi.media.stream.AudioStream;
-import tk.ivybits.javi.media.stream.MediaStream;
-import tk.ivybits.javi.media.stream.SubtitleStream;
-import tk.ivybits.javi.media.stream.VideoStream;
+import tk.ivybits.javi.media.stream.*;
+import tk.ivybits.javi.media.stream.Frame;
 import tk.ivybits.javi.media.subtitle.*;
 import tk.ivybits.javi.media.transcoder.AudioTranscoder;
 import tk.ivybits.javi.media.transcoder.FrameTranscoder;
-import tk.ivybits.javi.media.transcoder.SafeByteBuffer;
 import tk.ivybits.javi.media.transcoder.Transcoder;
 
 import javax.sound.sampled.*;
@@ -152,10 +148,9 @@ public class SwingMediaPanel extends JPanel {
                     }
 
                     @Override
-                    public void handle(ByteBuffer buffer, long duration) {
-                        ByteBuffer out = transcoder.transcode(buffer);
-                        //System.out.println(out.position() + ":" + out.capacity() + " > " + out.limit() + " > " + raster.getData().length);
-                        out.get(raster.getData());
+                    public void handle(Frame buffer, long duration) {
+                        Frame out = transcoder.transcode(buffer);
+                        out.plane(0).buffer().get(raster.getData());
                         sync.sync(duration, REPAINT_CALLBACK);
                     }
 

@@ -23,7 +23,6 @@ import com.sun.jna.Pointer;
 import com.sun.jna.ptr.IntByReference;
 import com.sun.jna.ptr.PointerByReference;
 import tk.ivybits.javi.exc.StreamException;
-import tk.ivybits.javi.ffmpeg.LibC;
 import tk.ivybits.javi.ffmpeg.avcodec.*;
 import tk.ivybits.javi.ffmpeg.avutil.AVFrame;
 import tk.ivybits.javi.format.SampleFormat;
@@ -32,14 +31,10 @@ import tk.ivybits.javi.media.Media;
 import tk.ivybits.javi.media.handler.AudioHandler;
 import tk.ivybits.javi.media.handler.FrameHandler;
 import tk.ivybits.javi.media.handler.SubtitleHandler;
-import tk.ivybits.javi.media.stream.AudioStream;
-import tk.ivybits.javi.media.stream.MediaStream;
-import tk.ivybits.javi.media.stream.SubtitleStream;
-import tk.ivybits.javi.media.stream.VideoStream;
+import tk.ivybits.javi.media.stream.*;
 import tk.ivybits.javi.media.subtitle.BitmapSubtitle;
 import tk.ivybits.javi.media.subtitle.DonkeyParser;
 import tk.ivybits.javi.media.subtitle.TextSubtitle;
-import tk.ivybits.javi.media.transcoder.SafeByteBuffer;
 
 import java.awt.image.BufferedImage;
 import java.awt.image.DataBufferByte;
@@ -54,8 +49,8 @@ import static tk.ivybits.javi.ffmpeg.LibAVFormat.av_read_frame;
 import static tk.ivybits.javi.ffmpeg.LibAVFormat.av_seek_frame;
 import static tk.ivybits.javi.ffmpeg.LibAVUtil.av_malloc;
 import static tk.ivybits.javi.ffmpeg.LibC.memcpy;
-import static tk.ivybits.javi.ffmpeg.LibSWScale.sws_scale;
 import static tk.ivybits.javi.format.PixelFormat.BGR24;
+import static tk.ivybits.javi.media.stream.Frame.Plane;
 
 /**
  * FFmpeg MediaStream implementation.
@@ -232,9 +227,15 @@ public class FFMediaStream implements MediaStream {
                     long nano = pFrame.pkt_duration * 1000000000 *
                             videoStream.ffstream.time_base.num / videoStream.ffstream.time_base.den;
                     time += nano / 1000000;
-                    System.out.println(">>>" + Arrays.toString(pFrame.linesize));
-                    videoHandler.handle(Native.getDirectByteBuffer(Pointer.nativeValue(pFrame.data[0]),
-                            imageBufferSize), nano);
+
+                    int i = 0;
+                    for (; i < pFrame.linesize.length && pFrame.linesize[i] != 0; i++) ;
+                    Plane[] planes = new Plane[i];
+                    for(int p = 0; p != i; p++) {
+                        int l = pFrame.linesize[p];
+                        planes[p] = new Plane(Native.getDirectByteBuffer(Pointer.nativeValue(pFrame.data[p]), l * pFrame.height), l);
+                    }
+                    videoHandler.handle(new Frame(planes), nano);
                 }
             } else if (subtitleStream != null && packet.stream_index == subtitleStream.index()) {
                 int err = avcodec_decode_subtitle2(subtitleStream.ffstream.codec.getPointer(), pSubtitle.getPointer(), frameFinished, packet.getPointer());

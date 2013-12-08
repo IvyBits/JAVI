@@ -20,6 +20,7 @@ package tk.ivybits.javi.media.transcoder;
 
 import com.sun.jna.Pointer;
 import tk.ivybits.javi.format.PixelFormat;
+import tk.ivybits.javi.media.stream.Frame;
 
 import java.nio.ByteBuffer;
 import java.util.List;
@@ -45,7 +46,7 @@ public abstract class FrameTranscoder {
         this.filters = filters;
     }
 
-    public abstract ByteBuffer transcode(ByteBuffer buffer);
+    public abstract Frame transcode(Frame buffer);
 
     public abstract long getBufferSize();
 }

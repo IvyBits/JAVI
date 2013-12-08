@@ -20,25 +20,21 @@ package tk.ivybits.javi.media.transcoder.sw;
 
 import com.sun.jna.Native;
 import com.sun.jna.Pointer;
-import tk.ivybits.javi.ffmpeg.LibAVCodec;
 import tk.ivybits.javi.ffmpeg.avcodec.AVPicture;
-import tk.ivybits.javi.ffmpeg.avutil.AVFrame;
 import tk.ivybits.javi.format.PixelFormat;
+import tk.ivybits.javi.media.stream.Frame;
 import tk.ivybits.javi.media.transcoder.Filter;
 import tk.ivybits.javi.media.transcoder.FrameTranscoder;
-import tk.ivybits.javi.media.transcoder.SafeByteBuffer;
 
 import java.nio.ByteBuffer;
 import java.util.Arrays;
 import java.util.List;
 
-import static tk.ivybits.javi.ffmpeg.LibAVCodec.avpicture_alloc;
 import static tk.ivybits.javi.ffmpeg.LibAVCodec.avpicture_fill;
 import static tk.ivybits.javi.ffmpeg.LibAVCodec.avpicture_get_size;
-import static tk.ivybits.javi.ffmpeg.LibC.memcpy;
+import static tk.ivybits.javi.ffmpeg.LibAVUtil.av_image_fill_linesizes;
 import static tk.ivybits.javi.ffmpeg.LibSWScale.sws_getContext;
 import static tk.ivybits.javi.ffmpeg.LibSWScale.sws_scale;
-import static tk.ivybits.javi.ffmpeg.LibAVUtil.*;
 
 /**
  * @version 1.0
@@ -66,13 +62,13 @@ public class SWFrameTranscoder extends FrameTranscoder {
     }
 
     @Override
-    public ByteBuffer transcode(ByteBuffer buffer) {
+    public Frame transcode(Frame buffer) {
         destination.position(0);
         avpicture_fill(dstPicture.getPointer(), Native.getDirectBufferPointer(destination), dstPixelFormat.id, dstWidth, dstHeight);
         dstPicture.read();
         avpicture_fill(srcPicture.getPointer(), Native.getDirectBufferPointer(buffer), srcPixelFormat.id, srcWidth, srcHeight);
         srcPicture.read();
-        System.out.println("<<<"+Arrays.toString(srcPicture.linesize));
+        System.out.println("<<<" + Arrays.toString(srcPicture.linesize));
         sws_scale(swsContext, srcPicture.getPointer(), srcPicture.linesize, 0, srcHeight, dstPicture.getPointer(), dstPicture.linesize);
 
         for (Filter f : filters)
