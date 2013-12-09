@@ -25,8 +25,8 @@ import com.sun.jna.ptr.PointerByReference;
 import tk.ivybits.javi.exc.StreamException;
 import tk.ivybits.javi.format.SampleFormat;
 import tk.ivybits.javi.media.stream.Frame;
-import tk.ivybits.javi.media.transcoder.AudioTranscoder;
 import tk.ivybits.javi.media.transcoder.Filter;
+import tk.ivybits.javi.media.transcoder.Transcoder;
 
 import java.util.ArrayList;
 
@@ -38,14 +38,19 @@ import static tk.ivybits.javi.format.SampleFormat.Encoding.isPlanar;
  * @version 1.0
  * @since 1.0
  */
-public class SWAudioTranscoder extends AudioTranscoder {
+public class SWAudioTranscoder implements Transcoder {
     private Pointer swrContext;
-    private PointerByReference dstData = null;
+    private PointerByReference dstData = new PointerByReference();
     private IntByReference dstLinesize = new IntByReference();
     private int maxSamples = 0;
+    protected final SampleFormat from;
+    protected final SampleFormat to;
+    protected final ArrayList<Filter> filters;
 
     public SWAudioTranscoder(SampleFormat from, SampleFormat to, ArrayList<Filter> filters) {
-        super(from, to, filters);
+        this.from = from;
+        this.to = to;
+        this.filters = filters;
         swrContext = swr_alloc_set_opts(
                 null,
                 to.channelLayout().ordinal() + 1, to.encoding().ordinal(), to.frequency(),
@@ -58,12 +63,7 @@ public class SWAudioTranscoder extends AudioTranscoder {
     public Frame transcode(Frame buffer) {
         int err;
         if (maxSamples < buffer.samples()) {
-            if (dstData != null) {
-                av_freep(new PointerByReference(dstData.getValue().getPointer(0)));
-                av_freep(dstData);
-            } else
-                dstData = new PointerByReference();
-
+            close();
             err = av_samples_alloc_array_and_samples(dstData, dstLinesize, to.channels(), buffer.samples(), to.encoding().ordinal(), 0);
             if (err < 0) {
                 throw new StreamException("failed to allocate destination buffer: " + err, err);
@@ -92,5 +92,13 @@ public class SWAudioTranscoder extends AudioTranscoder {
         for (Filter f : filters)
             f.apply(result);
         return result;
+    }
+
+    @Override
+    public void close() {
+        if (dstData.getValue() != null) {
+            av_freep(new PointerByReference(dstData.getValue().getPointer(0)));
+            av_freep(dstData);
+        }
     }
 }

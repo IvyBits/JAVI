@@ -24,16 +24,14 @@ import tk.ivybits.javi.ffmpeg.avcodec.AVPicture;
 import tk.ivybits.javi.format.PixelFormat;
 import tk.ivybits.javi.media.stream.Frame;
 import tk.ivybits.javi.media.transcoder.Filter;
-import tk.ivybits.javi.media.transcoder.FrameTranscoder;
+import tk.ivybits.javi.media.transcoder.Transcoder;
 
 import java.nio.ByteBuffer;
-import java.util.Arrays;
 import java.util.List;
 
 import static tk.ivybits.javi.ffmpeg.LibAVCodec.avpicture_fill;
 import static tk.ivybits.javi.ffmpeg.LibAVCodec.avpicture_get_size;
 import static tk.ivybits.javi.ffmpeg.LibAVUtil.av_free;
-import static tk.ivybits.javi.ffmpeg.LibAVUtil.av_image_fill_linesizes;
 import static tk.ivybits.javi.ffmpeg.LibAVUtil.av_malloc;
 import static tk.ivybits.javi.ffmpeg.LibSWScale.sws_getContext;
 import static tk.ivybits.javi.ffmpeg.LibSWScale.sws_scale;
@@ -42,21 +40,36 @@ import static tk.ivybits.javi.ffmpeg.LibSWScale.sws_scale;
  * @version 1.0
  * @since 1.0
  */
-public class SWFrameTranscoder extends FrameTranscoder {
+public class SWFrameTranscoder implements Transcoder {
     private Pointer swsContext;
     private AVPicture dstPicture = new AVPicture();
     private ByteBuffer destination;
     private Pointer pDestination;
+    protected final int srcWidth;
+    protected final int srcHeight;
+    protected final PixelFormat srcPixelFormat;
+    protected final int dstWidth;
+    protected final int dstHeight;
+    protected final PixelFormat dstPixelFormat;
+    protected final List<Filter> filters;
+
 
     public SWFrameTranscoder(int srcWidth, int srcHeight, PixelFormat srcPixelFormat,
                              int dstWidth, int dstHeight, PixelFormat dstPixelFormat,
-                             List<Filter> filter) {
-        super(srcWidth, srcHeight, srcPixelFormat, dstWidth, dstHeight, dstPixelFormat, filter);
+                             List<Filter> filters) {
+        this.srcWidth = srcWidth;
+        this.srcHeight = srcHeight;
+        this.srcPixelFormat = srcPixelFormat;
+        this.dstWidth = dstWidth;
+        this.dstHeight = dstHeight;
+        this.dstPixelFormat = dstPixelFormat;
+        this.filters = filters;
+
         swsContext = sws_getContext(
                 srcWidth, srcHeight, srcPixelFormat.id,
                 dstWidth, dstHeight, dstPixelFormat.id,
                 0, null, null, null);
-        destination = ByteBuffer.allocateDirect((int) getBufferSize());
+        destination = ByteBuffer.allocateDirect(avpicture_get_size(dstPixelFormat.id, dstWidth, dstHeight));
         pDestination = Native.getDirectBufferPointer(destination);
     }
 
@@ -80,7 +93,7 @@ public class SWFrameTranscoder extends FrameTranscoder {
         av_free(pointers);
 
         i = 0;
-        for (; i < dstPicture.linesize.length && dstPicture.linesize[i] != 0; ++i);
+        for (; i < dstPicture.linesize.length && dstPicture.linesize[i] != 0; ++i) ;
         Frame.Plane[] planes = new Frame.Plane[i];
         for (int p = 0; p != i; p++) {
             int l = dstPicture.linesize[p];
@@ -93,7 +106,7 @@ public class SWFrameTranscoder extends FrameTranscoder {
     }
 
     @Override
-    public long getBufferSize() {
-        return avpicture_get_size(dstPixelFormat.id, dstWidth, dstHeight);
+    public void close() {
+
     }
 }

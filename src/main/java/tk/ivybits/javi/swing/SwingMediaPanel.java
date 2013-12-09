@@ -27,10 +27,9 @@ import tk.ivybits.javi.media.handler.SubtitleHandler;
 import tk.ivybits.javi.media.stream.*;
 import tk.ivybits.javi.media.stream.Frame;
 import tk.ivybits.javi.media.subtitle.*;
-import tk.ivybits.javi.media.transcoder.AudioTranscoder;
 import tk.ivybits.javi.media.transcoder.Filter;
-import tk.ivybits.javi.media.transcoder.FrameTranscoder;
 import tk.ivybits.javi.media.transcoder.Transcoder;
+import tk.ivybits.javi.media.transcoder.TranscoderFactory;
 
 import javax.sound.sampled.*;
 import javax.swing.*;
@@ -88,12 +87,12 @@ public class SwingMediaPanel extends JPanel {
         stream = media
                 .stream()
                 .audio(new AudioHandler() {
-                    private AudioTranscoder transcoder;
+                    private Transcoder transcoder;
                     private byte[] heap = new byte[0];
 
                     @Override
                     public void start() {
-                        transcoder = Transcoder.audio()
+                        transcoder = TranscoderFactory.audio()
                                 .from(stream.getAudioStream().audioFormat())
                                 .to(new SampleFormat(
                                         SIGNED_16BIT,
@@ -125,7 +124,7 @@ public class SwingMediaPanel extends JPanel {
                     }
                 })
                 .video(new FrameHandler() {
-                    private FrameTranscoder transcoder;
+                    private Transcoder transcoder;
                     private final Runnable REPAINT_CALLBACK = new Runnable() {
                         public void run() {
                             // Set our current frame to the passed buffer,
@@ -146,10 +145,9 @@ public class SwingMediaPanel extends JPanel {
                         int height = vs.height();
                         nextFrame = new BufferedImage(width, height, BufferedImage.TYPE_3BYTE_BGR);
                         raster = (DataBufferByte) nextFrame.getRaster().getDataBuffer();
-                        transcoder = Transcoder.frame()
+                        transcoder = TranscoderFactory.frame()
                                 .from(width, height, vs.pixelFormat())
                                 .to(BGR24)
-                                .filter(Filter.VIDEO_NEGATE)
                                 .create();
                         sync.reset();
                         // Notify all listeners that our stream has started
