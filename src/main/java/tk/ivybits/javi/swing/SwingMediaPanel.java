@@ -18,7 +18,6 @@
 
 package tk.ivybits.javi.swing;
 
-import tk.ivybits.javi.format.PixelFormat;
 import tk.ivybits.javi.format.SampleFormat;
 import tk.ivybits.javi.media.AVSync;
 import tk.ivybits.javi.media.Media;
@@ -42,6 +41,10 @@ import java.nio.ByteBuffer;
 import java.util.*;
 import java.util.Timer;
 import java.util.concurrent.ConcurrentHashMap;
+
+import static tk.ivybits.javi.format.PixelFormat.BGR24;
+import static tk.ivybits.javi.format.SampleFormat.ChannelLayout.*;
+import static tk.ivybits.javi.format.SampleFormat.Encoding.*;
 
 /**
  * Media component for Swing.
@@ -92,21 +95,24 @@ public class SwingMediaPanel extends JPanel {
                     public void start() {
                         transcoder = Transcoder.audio()
                                 .from(stream.getAudioStream().audioFormat())
-                                .to(new SampleFormat(SampleFormat.Encoding.SIGNED_16BIT,
-                                        SampleFormat.ChannelLayout.STEREO,
-                                        44100))
+                                .to(new SampleFormat(
+                                        SIGNED_16BIT,
+                                        STEREO,
+                                        44100,
+                                        2))
                                 .create();
                     }
 
                     @Override
-                    public void handle(ByteBuffer buffer) {
-                        if (true || sdl == null) {// Audio failed to initialize; ignore this buffer
+                    public void handle(Frame buffer) {
+                        if (sdl == null) {// Audio failed to initialize; ignore this buffer
                             return;
                         }
-                        if (heap.length < buffer.limit()) {
-                            heap = new byte[buffer.limit()];
+                        ByteBuffer pcm = transcoder.transcode(buffer).plane(0).buffer();
+                        if (heap.length < pcm.limit()) {
+                            heap = new byte[pcm.limit()];
                         }
-                        buffer.get(heap);
+                        pcm.get(heap);
                         int written = 0;
                         // sdl.write is not guaranteed to write our entire buffer.
                         // Therefore, we keep writing until out buffer has been fully
@@ -138,7 +144,7 @@ public class SwingMediaPanel extends JPanel {
                         raster = (DataBufferByte) nextFrame.getRaster().getDataBuffer();
                         transcoder = Transcoder.frame()
                                 .from(width, height, vs.pixelFormat())
-                                .to(PixelFormat.BGR24)
+                                .to(BGR24)
                                 .create();
                         sync.reset();
                         // Notify all listeners that our stream has started
@@ -149,8 +155,8 @@ public class SwingMediaPanel extends JPanel {
 
                     @Override
                     public void handle(Frame buffer, long duration) {
-                        Frame out = transcoder.transcode(buffer);
-                        out.plane(0).buffer().get(raster.getData());
+                        buffer = transcoder.transcode(buffer);
+                        buffer.plane(0).buffer().get(raster.getData());
                         sync.sync(duration, REPAINT_CALLBACK);
                     }
 

@@ -50,6 +50,7 @@ import static tk.ivybits.javi.ffmpeg.LibAVFormat.av_seek_frame;
 import static tk.ivybits.javi.ffmpeg.LibAVUtil.av_malloc;
 import static tk.ivybits.javi.ffmpeg.LibC.memcpy;
 import static tk.ivybits.javi.format.PixelFormat.BGR24;
+import static tk.ivybits.javi.format.SampleFormat.Encoding.*;
 import static tk.ivybits.javi.media.stream.Frame.Plane;
 
 /**
@@ -144,19 +145,10 @@ public class FFMediaStream implements MediaStream {
         AVCodecContext ac = audioStream != null ? audioStream.ffstream.codec : null;
         AVCodecContext vc = videoStream != null ? videoStream.ffstream.codec : null;
 
-        int imageBufferSize = 0;
         if (videoStream != null) {
-            imageBufferSize = avpicture_get_size(videoStream.pixelFormat().id, videoStream.width(), videoStream.height());
             vc.read();
         }
-
-        ByteBuffer audioBuffer = null;
-        Pointer pAudioBuffer = null;
         if (audioStream != null) {
-            SampleFormat sf = audioStream.audioFormat();
-            audioBuffer = ByteBuffer.allocateDirect(sf.encoding().bitsPerSample() / 8 *
-                    (sf.channelLayout() == SampleFormat.ChannelLayout.STEREO ? 2 : 1) * 64);
-            pAudioBuffer = Native.getDirectBufferPointer(audioBuffer);
             ac.read();
         }
         audioHandler.start();
@@ -196,9 +188,15 @@ public class FFMediaStream implements MediaStream {
 
                     pFrame.read();
                     if (frameFinished.getValue() != 0) {
-                        // Write pFrame.extended_data to the pAudioBuffer
-                        memcpy(pAudioBuffer, pFrame.extended_data, audioBuffer.limit());
-                        audioHandler.handle(audioBuffer);
+                        int linesize = pFrame.linesize[0];
+                        Plane[] planes = new Plane[isPlanar(audioStream.audioFormat().encoding()) ? pFrame.channels : 1];
+
+                        for(int p = 0; p != planes.length; p++) {
+                            planes[p] = new Plane(Native.getDirectByteBuffer(
+                                    Pointer.nativeValue(pFrame.extended_data.getPointer(p * Pointer.SIZE)),
+                                    linesize), linesize);
+                        }
+                        audioHandler.handle(new Frame(planes, pFrame.nb_samples));
                     }
                 }
             } else if (videoStream != null && packet.stream_index == videoStream.index()) {

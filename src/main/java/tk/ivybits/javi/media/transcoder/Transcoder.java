@@ -67,7 +67,7 @@ public class Transcoder {
 
     public static class AudioTranscoderBuilder {
         private SampleFormat from, to;
-        private ArrayList<Filter> filters;
+        private ArrayList<Filter> filters = new ArrayList<Filter>();
 
         public AudioTranscoderBuilder from(SampleFormat from) {
             this.from = from;

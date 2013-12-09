@@ -19,6 +19,7 @@
 package tk.ivybits.javi.media.transcoder;
 
 import tk.ivybits.javi.format.SampleFormat;
+import tk.ivybits.javi.media.stream.Frame;
 
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
@@ -34,5 +35,5 @@ public abstract class AudioTranscoder {
         this.filters = filters;
     }
 
-    public abstract void transcode(ByteBuffer buffer);
+    public abstract Frame transcode(Frame buffer);
 }

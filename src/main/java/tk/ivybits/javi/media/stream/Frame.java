@@ -45,10 +45,17 @@ public class Frame implements Iterable<Frame.Plane> {
             return linesize;
         }
     }
+
     private final Plane[] planes;
+    private final int samples;
 
     public Frame(Plane[] planes) {
+        this(planes, 1);
+    }
+
+    public Frame(Plane[] planes, int samples) {
         this.planes = planes;
+        this.samples = samples;
     }
 
     public Plane plane(int p) {
@@ -57,6 +64,10 @@ public class Frame implements Iterable<Frame.Plane> {
 
     public int planes() {
         return planes.length;
+    }
+
+    public int samples() {
+        return samples;
     }
 
     @Override

@@ -18,16 +18,21 @@
 
 package tk.ivybits.javi.media.transcoder.sw;
 
+import com.sun.jna.Native;
 import com.sun.jna.Pointer;
+import com.sun.jna.ptr.IntByReference;
+import com.sun.jna.ptr.PointerByReference;
+import tk.ivybits.javi.exc.StreamException;
 import tk.ivybits.javi.format.SampleFormat;
+import tk.ivybits.javi.media.stream.Frame;
 import tk.ivybits.javi.media.transcoder.AudioTranscoder;
 import tk.ivybits.javi.media.transcoder.Filter;
 
-import java.nio.ByteBuffer;
 import java.util.ArrayList;
 
-import static tk.ivybits.javi.ffmpeg.LibSWResample.swr_alloc_set_opts;
-import static tk.ivybits.javi.ffmpeg.LibSWResample.swr_init;
+import static tk.ivybits.javi.ffmpeg.LibAVUtil.*;
+import static tk.ivybits.javi.ffmpeg.LibSWResample.*;
+import static tk.ivybits.javi.format.SampleFormat.Encoding.isPlanar;
 
 /**
  * @version 1.0
@@ -47,9 +52,37 @@ public class SWAudioTranscoder extends AudioTranscoder {
     }
 
     @Override
-    public void transcode(ByteBuffer buffer) {
+    public Frame transcode(Frame buffer) {
+        PointerByReference dstData = new PointerByReference();
+        IntByReference dstLinesize = new IntByReference();
+        int err = av_samples_alloc_array_and_samples(dstData, dstLinesize, to.channels(),
+                buffer.samples(), to.encoding().ordinal() , 0);
+        if (err < 0) {
+            throw new StreamException("failed to allocate destination buffer: " + err, err);
+        }
 
-        /*for (Filter f : filters)
-            f.apply(buffer);*/
+        Pointer extended_data = av_malloc(buffer.planes() * Pointer.SIZE);
+        for (int i = 0; i != buffer.planes(); i++) {
+            extended_data.setPointer(Native.POINTER_SIZE * i, Native.getDirectBufferPointer(buffer.plane(i).buffer()));
+        }
+        av_free(extended_data);
+
+        int length = dstLinesize.getValue();
+        err = swr_convert(swrContext, dstData.getValue(), length,
+                extended_data, buffer.samples());
+        if (err < 0)
+            throw new StreamException("failed to transcode audio: " + err, err);
+
+        Frame.Plane[] planes = new Frame.Plane[isPlanar(to.encoding()) ? to.channels() : 1];
+
+        for (int p = 0; p != planes.length; p++) {
+            planes[p] = new Frame.Plane(Native.getDirectByteBuffer(
+                    Pointer.nativeValue(dstData.getValue().getPointer(p * Pointer.SIZE)),
+                    length), length);
+        }
+        Frame result = new Frame(planes);
+        for (Filter f : filters)
+            f.apply(result);
+        return result;
     }
 }

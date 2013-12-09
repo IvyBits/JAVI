@@ -32,11 +32,13 @@ public class SampleFormat {
     private final Encoding format;
     private final ChannelLayout layout;
     private final int frequency;
+    private final int channels;
 
-    public SampleFormat(Encoding format, ChannelLayout layout, int frequency) {
+    public SampleFormat(Encoding format, ChannelLayout layout, int frequency, int channels) {
         this.format = format;
         this.layout = layout;
         this.frequency = frequency;
+        this.channels = channels;
     }
 
     public Encoding encoding() {
@@ -54,6 +56,10 @@ public class SampleFormat {
     @Override
     public String toString() {
         return format + "(" + layout + ") @ " + frequency + "Hz";
+    }
+
+    public int channels() {
+        return channels;
     }
 
     public static enum ChannelLayout {
@@ -81,6 +87,10 @@ public class SampleFormat {
 
         public int bitsPerSample() {
             return bps;
+        }
+
+        public static boolean isPlanar(Encoding enc) {
+            return enc.ordinal() >= SIGNED_8BIT_PLANAR.ordinal();
         }
     }
 }

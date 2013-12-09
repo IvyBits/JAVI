@@ -22,23 +22,25 @@ import tk.ivybits.javi.ffmpeg.avformat.AVStream;
 import tk.ivybits.javi.format.SampleFormat;
 import tk.ivybits.javi.media.stream.AudioStream;
 
-import javax.sound.sampled.AudioFormat;
-
-import static tk.ivybits.javi.format.SampleFormat.*;
+import static tk.ivybits.javi.format.SampleFormat.ChannelLayout;
+import static tk.ivybits.javi.format.SampleFormat.Encoding;
 
 /**
  * FFmpeg-backed VideoStream.
  */
 public class FFAudioStream extends FFStream implements AudioStream {
+    private final SampleFormat sampleFormat;
+
     FFAudioStream(FFMedia container, AVStream ffstream) {
         super(container, ffstream);
+        sampleFormat = new SampleFormat(
+                Encoding.values()[ffstream.codec.sample_fmt],
+                ChannelLayout.values()[(int) (ffstream.codec.channel_layout - 1)],
+                ffstream.codec.sample_rate, ffstream.codec.channels);
     }
 
     @Override
     public SampleFormat audioFormat() {
-        return new SampleFormat(
-                Encoding.values()[ffstream.codec.sample_fmt],
-                ChannelLayout.values()[(int)(ffstream.codec.channel_layout - 1)],
-                ffstream.codec.sample_rate);
+        return sampleFormat;
     }
 }
