@@ -28,6 +28,7 @@ import tk.ivybits.javi.media.stream.*;
 import tk.ivybits.javi.media.stream.Frame;
 import tk.ivybits.javi.media.subtitle.*;
 import tk.ivybits.javi.media.transcoder.AudioTranscoder;
+import tk.ivybits.javi.media.transcoder.Filter;
 import tk.ivybits.javi.media.transcoder.FrameTranscoder;
 import tk.ivybits.javi.media.transcoder.Transcoder;
 
@@ -43,8 +44,8 @@ import java.util.Timer;
 import java.util.concurrent.ConcurrentHashMap;
 
 import static tk.ivybits.javi.format.PixelFormat.BGR24;
-import static tk.ivybits.javi.format.SampleFormat.ChannelLayout.*;
-import static tk.ivybits.javi.format.SampleFormat.Encoding.*;
+import static tk.ivybits.javi.format.SampleFormat.ChannelLayout.STEREO;
+import static tk.ivybits.javi.format.SampleFormat.Encoding.SIGNED_16BIT;
 
 /**
  * Media component for Swing.
@@ -68,8 +69,7 @@ public class SwingMediaPanel extends JPanel {
     private DonkeyParser lastParser;
     private DonkeyParser.DrawHelper donkeyHelper;
     private AVSync sync;
-    private static final AudioFormat TARGET_AUDIO_FORMAT = new AudioFormat(44100, 16, 2, true, false);
-    ;
+    private AudioFormat targetAudioFormat;
 
     /**
      * Creates a new SwingMediaPanel component.
@@ -98,7 +98,7 @@ public class SwingMediaPanel extends JPanel {
                                 .to(new SampleFormat(
                                         SIGNED_16BIT,
                                         STEREO,
-                                        44100,
+                                        (int) targetAudioFormat.getSampleRate(),
                                         2))
                                 .create();
                     }
@@ -109,16 +109,18 @@ public class SwingMediaPanel extends JPanel {
                             return;
                         }
                         ByteBuffer pcm = transcoder.transcode(buffer).plane(0).buffer();
-                        if (heap.length < pcm.limit()) {
-                            heap = new byte[pcm.limit()];
+
+                        int len = pcm.capacity();
+                        if (heap.length < len) {
+                            heap = new byte[len];
                         }
-                        pcm.get(heap);
+                        pcm.get(heap, 0, len);
                         int written = 0;
                         // sdl.write is not guaranteed to write our entire buffer.
                         // Therefore, we keep writing until out buffer has been fully
                         // written, to prevent audio skips
-                        while (written < heap.length) {
-                            written += sdl.write(heap, written, heap.length);
+                        while (written < len) {
+                            written += sdl.write(heap, written, len);
                         }
                     }
                 })
@@ -138,6 +140,8 @@ public class SwingMediaPanel extends JPanel {
                     @Override
                     public void start() {
                         VideoStream vs = stream.getVideoStream();
+                        if (vs == null)
+                            return;
                         int width = vs.width();
                         int height = vs.height();
                         nextFrame = new BufferedImage(width, height, BufferedImage.TYPE_3BYTE_BGR);
@@ -145,6 +149,7 @@ public class SwingMediaPanel extends JPanel {
                         transcoder = Transcoder.frame()
                                 .from(width, height, vs.pixelFormat())
                                 .to(BGR24)
+                                .filter(Filter.VIDEO_NEGATE)
                                 .create();
                         sync.reset();
                         // Notify all listeners that our stream has started
@@ -429,7 +434,7 @@ public class SwingMediaPanel extends JPanel {
         AudioStream previous = stream.setAudioStream(audioStream);
 
         // Desired attributes
-        DataLine.Info lineInfo = new DataLine.Info(SourceDataLine.class, TARGET_AUDIO_FORMAT);
+        DataLine.Info lineInfo = new DataLine.Info(SourceDataLine.class, targetAudioFormat);
         // If all else fails after this, at the very least we close the current line, if any
         setMixer(null);
         // Iterate over all mixers and select one that supports out audio stream's format
@@ -510,10 +515,11 @@ public class SwingMediaPanel extends JPanel {
             return true;
         }
         try {
-            sdl = AudioSystem.getSourceDataLine(TARGET_AUDIO_FORMAT, mixer.getMixerInfo());
+            sdl = AudioSystem.getSourceDataLine(targetAudioFormat, mixer.getMixerInfo());
             // Attempt to use a large buffer, such that sdl.write has a lower
             // chance of blocking
-            sdl.open(TARGET_AUDIO_FORMAT, 512000);
+            targetAudioFormat = new AudioFormat(stream.getAudioStream().audioFormat().frequency(), 16, 2, true, false);
+            sdl.open(targetAudioFormat, 512000);
         } catch (LineUnavailableException failed) {
             return false;
         }

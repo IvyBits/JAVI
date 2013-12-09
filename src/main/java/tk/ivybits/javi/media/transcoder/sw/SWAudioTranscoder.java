@@ -40,6 +40,9 @@ import static tk.ivybits.javi.format.SampleFormat.Encoding.isPlanar;
  */
 public class SWAudioTranscoder extends AudioTranscoder {
     private Pointer swrContext;
+    private PointerByReference dstData = null;
+    private IntByReference dstLinesize = new IntByReference();
+    private int maxSamples = 0;
 
     public SWAudioTranscoder(SampleFormat from, SampleFormat to, ArrayList<Filter> filters) {
         super(from, to, filters);
@@ -53,34 +56,39 @@ public class SWAudioTranscoder extends AudioTranscoder {
 
     @Override
     public Frame transcode(Frame buffer) {
-        PointerByReference dstData = new PointerByReference();
-        IntByReference dstLinesize = new IntByReference();
-        int err = av_samples_alloc_array_and_samples(dstData, dstLinesize, to.channels(),
-                buffer.samples(), to.encoding().ordinal() , 0);
-        if (err < 0) {
-            throw new StreamException("failed to allocate destination buffer: " + err, err);
+        int err;
+        if (maxSamples < buffer.samples()) {
+            if (dstData != null) {
+                av_freep(new PointerByReference(dstData.getValue().getPointer(0)));
+                av_freep(dstData);
+            } else
+                dstData = new PointerByReference();
+
+            err = av_samples_alloc_array_and_samples(dstData, dstLinesize, to.channels(), buffer.samples(), to.encoding().ordinal(), 0);
+            if (err < 0) {
+                throw new StreamException("failed to allocate destination buffer: " + err, err);
+            }
         }
 
         Pointer extended_data = av_malloc(buffer.planes() * Pointer.SIZE);
         for (int i = 0; i != buffer.planes(); i++) {
             extended_data.setPointer(Native.POINTER_SIZE * i, Native.getDirectBufferPointer(buffer.plane(i).buffer()));
         }
-        av_free(extended_data);
 
         int length = dstLinesize.getValue();
-        err = swr_convert(swrContext, dstData.getValue(), length,
-                extended_data, buffer.samples());
+        err = swr_convert(swrContext, dstData.getValue(), length, extended_data, buffer.samples());
+
+        av_free(extended_data);
         if (err < 0)
             throw new StreamException("failed to transcode audio: " + err, err);
 
         Frame.Plane[] planes = new Frame.Plane[isPlanar(to.encoding()) ? to.channels() : 1];
 
         for (int p = 0; p != planes.length; p++) {
-            planes[p] = new Frame.Plane(Native.getDirectByteBuffer(
-                    Pointer.nativeValue(dstData.getValue().getPointer(p * Pointer.SIZE)),
-                    length), length);
+            planes[p] = new Frame.Plane(dstData.getValue().getPointer(p * Pointer.SIZE).getByteBuffer(0, length), length);
         }
-        Frame result = new Frame(planes);
+
+        Frame result = new Frame(planes, buffer.samples());
         for (Filter f : filters)
             f.apply(result);
         return result;

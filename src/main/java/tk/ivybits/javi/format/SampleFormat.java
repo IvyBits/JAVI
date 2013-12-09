@@ -18,10 +18,6 @@
 
 package tk.ivybits.javi.format;
 
-import com.sun.jna.Native;
-
-import javax.sound.sampled.AudioFormat;
-
 /**
  * Sample formats.
  *
@@ -72,13 +68,13 @@ public class SampleFormat {
         UNSIGNED_8BIT(8),
         SIGNED_16BIT(16),
         SIGNED_32BIT(32),
-        SIGNED_FLOAT(Native.getNativeSize(float.class) * 8),
-        SIGNED_DOUBLE(Native.getNativeSize(double.class) * 8),
+        SIGNED_FLOAT(32),
+        SIGNED_DOUBLE(64),
         SIGNED_8BIT_PLANAR(8),
         SIGNED_16BIT_PLANAR(16),
         SIGNED_32BIT_PLANAR(32),
-        SIGNED_FLOAT_PLANAR(Native.getNativeSize(float.class) * 8),
-        SIGNED_DOUBLE_PLANAR(Native.getNativeSize(double.class) * 8);
+        SIGNED_FLOAT_PLANAR(32),
+        SIGNED_DOUBLE_PLANAR(64);
         private final int bps;
 
         Encoding(int bps) {

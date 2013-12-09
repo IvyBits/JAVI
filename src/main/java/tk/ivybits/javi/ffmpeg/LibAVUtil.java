@@ -32,6 +32,7 @@ public class LibAVUtil {
     public static native Pointer av_malloc(int size);
 
     public static native void av_free(Pointer ram);
+    public static native void av_freep(PointerByReference ram);
 
     public static native int av_log_get_level();
 
