@@ -224,6 +224,8 @@ public class FFMediaStream implements MediaStream {
                     // Read the buffer directly into the raster of our image
                     long nano = pFrame.pkt_duration * 1000000000 *
                             videoStream.ffstream.time_base.num / videoStream.ffstream.time_base.den;
+                    if (nano == 0)
+                        nano = (long) ((1000 / videoStream.framerate()) * 1000000);
                     time += nano / 1000000;
 
                     int i = 0;
