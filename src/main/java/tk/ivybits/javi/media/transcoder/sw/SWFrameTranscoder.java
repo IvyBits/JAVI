@@ -53,7 +53,6 @@ public class SWFrameTranscoder implements Transcoder {
     protected final PixelFormat dstPixelFormat;
     protected final List<Filter> filters;
 
-
     public SWFrameTranscoder(int srcWidth, int srcHeight, PixelFormat srcPixelFormat,
                              int dstWidth, int dstHeight, PixelFormat dstPixelFormat,
                              List<Filter> filters) {

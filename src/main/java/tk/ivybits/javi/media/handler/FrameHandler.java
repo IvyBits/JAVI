@@ -1,11 +1,6 @@
 package tk.ivybits.javi.media.handler;
 
-import com.sun.jna.Pointer;
 import tk.ivybits.javi.media.stream.Frame;
-import tk.ivybits.javi.media.transcoder.SafeByteBuffer;
-
-import java.awt.image.BufferedImage;
-import java.nio.ByteBuffer;
 
 public abstract class FrameHandler {
     public static final FrameHandler NO_HANDLER = new FrameHandler() {
