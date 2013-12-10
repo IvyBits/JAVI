@@ -18,21 +18,20 @@
 
 package tk.ivybits.javi.media.ff;
 
+import com.sun.jna.Native;
 import com.sun.jna.Pointer;
 import com.sun.jna.ptr.IntByReference;
 import com.sun.jna.ptr.PointerByReference;
 import tk.ivybits.javi.exc.StreamException;
 import tk.ivybits.javi.ffmpeg.avcodec.*;
 import tk.ivybits.javi.ffmpeg.avutil.AVFrame;
+import tk.ivybits.javi.format.SampleFormat;
 import tk.ivybits.javi.format.SubtitleType;
 import tk.ivybits.javi.media.Media;
 import tk.ivybits.javi.media.handler.AudioHandler;
 import tk.ivybits.javi.media.handler.FrameHandler;
 import tk.ivybits.javi.media.handler.SubtitleHandler;
-import tk.ivybits.javi.media.stream.AudioStream;
-import tk.ivybits.javi.media.stream.MediaStream;
-import tk.ivybits.javi.media.stream.SubtitleStream;
-import tk.ivybits.javi.media.stream.VideoStream;
+import tk.ivybits.javi.media.stream.*;
 import tk.ivybits.javi.media.subtitle.BitmapSubtitle;
 import tk.ivybits.javi.media.subtitle.DonkeyParser;
 import tk.ivybits.javi.media.subtitle.TextSubtitle;
@@ -41,18 +40,18 @@ import java.awt.image.BufferedImage;
 import java.awt.image.DataBufferByte;
 import java.awt.image.IndexColorModel;
 import java.io.IOException;
+import java.nio.ByteBuffer;
+import java.util.Arrays;
 import java.util.concurrent.Semaphore;
 
 import static tk.ivybits.javi.ffmpeg.LibAVCodec.*;
 import static tk.ivybits.javi.ffmpeg.LibAVFormat.av_read_frame;
 import static tk.ivybits.javi.ffmpeg.LibAVFormat.av_seek_frame;
 import static tk.ivybits.javi.ffmpeg.LibAVUtil.av_malloc;
-import static tk.ivybits.javi.ffmpeg.LibAVUtil.av_samples_alloc_array_and_samples;
-import static tk.ivybits.javi.ffmpeg.LibSWResample.*;
-import static tk.ivybits.javi.ffmpeg.LibSWScale.sws_getContext;
-import static tk.ivybits.javi.ffmpeg.LibSWScale.sws_scale;
+import static tk.ivybits.javi.ffmpeg.LibC.memcpy;
 import static tk.ivybits.javi.format.PixelFormat.BGR24;
-import static tk.ivybits.javi.format.SampleFormat.SIGNED_16BIT;
+import static tk.ivybits.javi.format.SampleFormat.Encoding.*;
+import static tk.ivybits.javi.media.stream.Frame.Plane;
 
 /**
  * FFmpeg MediaStream implementation.
@@ -143,34 +142,13 @@ public class FFMediaStream implements MediaStream {
         IntByReference frameFinished = new IntByReference();
         AVPacket packet = new AVPacket();
         av_init_packet(packet.getPointer());
-        int width = 0, height = 0;
         AVCodecContext ac = audioStream != null ? audioStream.ffstream.codec : null;
         AVCodecContext vc = videoStream != null ? videoStream.ffstream.codec : null;
 
-        Pointer pSwsContext = null;
-        BufferedImage imageBuffer = null;
         if (videoStream != null) {
-            width = videoStream.width();
-            height = videoStream.height();
-            imageBuffer = new BufferedImage(width, height, BufferedImage.TYPE_3BYTE_BGR);
-
-            pSwsContext = sws_getContext(
-                    width, height, vc.pix_fmt,
-                    width, height, BGR24.id,
-                    0, null, null, null);
             vc.read();
         }
-
-        Pointer pSwrContext = null;
-        byte[] audioBuffer = null;
         if (audioStream != null) {
-            audioBuffer = new byte[16 * ac.channels * 64]; // Estimate common size
-
-            pSwrContext = swr_alloc_set_opts(
-                    null, 3, SIGNED_16BIT.ordinal(),
-                    ac.sample_rate, ac.channel_layout, ac.sample_fmt,
-                    ac.sample_rate, 0, null);
-            swr_init(pSwrContext);
             ac.read();
         }
         audioHandler.start();
@@ -210,31 +188,15 @@ public class FFMediaStream implements MediaStream {
 
                     pFrame.read();
                     if (frameFinished.getValue() != 0) {
-                        // We output signed 16 bit PCM data: we only need to convert if it is
-                        // not in the format already
-                        if (ac.sample_fmt != SIGNED_16BIT.ordinal()) {
-                            PointerByReference dstData = new PointerByReference();
-                            IntByReference dstLinesize = new IntByReference();
-                            err = av_samples_alloc_array_and_samples(dstData, dstLinesize, pFrame.channels,
-                                    pFrame.nb_samples, SIGNED_16BIT.ordinal(), 0);
-                            if (err < 0) {
-                                throw new StreamException("failed to allocate destination buffer: " + err, err);
-                            }
-                            int length = dstLinesize.getValue();
-                            err = swr_convert(pSwrContext, dstData.getValue(), length,
-                                    pFrame.extended_data, pFrame.nb_samples);
-                            if (err < 0)
-                                throw new StreamException("failed to transcode audio: " + err, err);
-                            if (audioBuffer.length < length)
-                                audioBuffer = new byte[length];
-                            dstData.getValue().getPointer(0).read(0, audioBuffer, 0, length);
-                        } else {
-                            int length = pFrame.linesize[0];
-                            if (audioBuffer.length < length)
-                                audioBuffer = new byte[length];
-                            pFrame.data[0].read(0, audioBuffer, 0, length);
+                        int linesize = pFrame.linesize[0];
+                        Plane[] planes = new Plane[isPlanar(audioStream.audioFormat().encoding()) ? pFrame.channels : 1];
+
+                        for(int p = 0; p != planes.length; p++) {
+                            planes[p] = new Plane(Native.getDirectByteBuffer(
+                                    Pointer.nativeValue(pFrame.extended_data.getPointer(p * Pointer.SIZE)),
+                                    linesize), linesize);
                         }
-                        audioHandler.handle(audioBuffer);
+                        audioHandler.handle(new Frame(planes, pFrame.nb_samples));
                     }
                 }
             } else if (videoStream != null && packet.stream_index == videoStream.index()) {
@@ -256,23 +218,24 @@ public class FFMediaStream implements MediaStream {
                     // We use sws_scale itself to convert a data buffer of an arbitrary pixel format
                     // into our desired format: 3-byte BGR
 
-                    sws_scale(pSwsContext, pFrame.getPointer(), pFrame.linesize, 0, height, pBGRFrame.getPointer(), pBGRFrame.linesize);
-                    // Only data and linesize were changed in the sws_scale call: we only need update them
-                    pBGRFrame.readField("data");
-                    pBGRFrame.readField("linesize");
-                    // A handle may be of arbitrary size: size is not required to be constant.
-                    // If you decided to encode your files such that size changes, it is
-                    // you who will feel the pain of reallocating the buffers.
-                    // You have been warned.
-                    if (imageBuffer.getWidth() != width || imageBuffer.getHeight() != height)
-                        imageBuffer = new BufferedImage(width, height, BufferedImage.TYPE_3BYTE_BGR);
+                    //memcpy(pImageBuffer, pFrame.data[0], imageBuffer.limit());
+
+
                     // Read the buffer directly into the raster of our image
-                    byte[] raster = ((DataBufferByte) imageBuffer.getRaster().getDataBuffer()).getData();
-                    pBGRFrame.data[0].read(0, raster, 0, raster.length);
                     long nano = pFrame.pkt_duration * 1000000000 *
                             videoStream.ffstream.time_base.num / videoStream.ffstream.time_base.den;
+                    if (nano == 0)
+                        nano = (long) ((1000 / videoStream.framerate()) * 1000000);
                     time += nano / 1000000;
-                    videoHandler.handle(imageBuffer, nano);
+
+                    int i = 0;
+                    for (; i < pFrame.linesize.length && pFrame.linesize[i] != 0; i++) ;
+                    Plane[] planes = new Plane[i];
+                    for(int p = 0; p != i; p++) {
+                        int l = pFrame.linesize[p];
+                        planes[p] = new Plane(Native.getDirectByteBuffer(Pointer.nativeValue(pFrame.data[p]), l * pFrame.height), l);
+                    }
+                    videoHandler.handle(new Frame(planes), nano);
                 }
             } else if (subtitleStream != null && packet.stream_index == subtitleStream.index()) {
                 int err = avcodec_decode_subtitle2(subtitleStream.ffstream.codec.getPointer(), pSubtitle.getPointer(), frameFinished, packet.getPointer());

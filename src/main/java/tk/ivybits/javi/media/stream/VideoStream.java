@@ -18,6 +18,8 @@
 
 package tk.ivybits.javi.media.stream;
 
+import tk.ivybits.javi.format.PixelFormat;
+
 public interface VideoStream extends Stream {
     /**
      * Fetches video stream width.
@@ -40,4 +42,6 @@ public interface VideoStream extends Stream {
     int height();
 
     double framerate();
+
+    PixelFormat pixelFormat();
 }

@@ -24,15 +24,69 @@ package tk.ivybits.javi.format;
  * @version 1.0
  * @since 1.0
  */
-public enum SampleFormat {
-    UNSIGNED_8BIT,
-    SIGNED_16BIT,
-    SIGNED_32BIT,
-    SIGNED_FLOAT,
-    SIGNED_DOUBLE,
-    SIGNED_8BIT_PLANAR,
-    SIGNED_16BIT_PLANAR,
-    SIGNED_32BIT_PLANAR,
-    SIGNED_FLOAT_PLANAR,
-    SIGNED_DOUBLE_PLANAR
+public class SampleFormat {
+    private final Encoding format;
+    private final ChannelLayout layout;
+    private final int frequency;
+    private final int channels;
+
+    public SampleFormat(Encoding format, ChannelLayout layout, int frequency, int channels) {
+        this.format = format;
+        this.layout = layout;
+        this.frequency = frequency;
+        this.channels = channels;
+    }
+
+    public Encoding encoding() {
+        return format;
+    }
+
+    public ChannelLayout channelLayout() {
+        return layout;
+    }
+
+    public int frequency() {
+        return frequency;
+    }
+
+    @Override
+    public String toString() {
+        return format + "(" + layout + ") @ " + frequency + "Hz";
+    }
+
+    public int channels() {
+        return channels;
+    }
+
+    public static enum ChannelLayout {
+        LEFT,
+        RIGHT,
+        STEREO
+    }
+
+    public static enum Encoding {
+        UNSIGNED_8BIT(8),
+        SIGNED_16BIT(16),
+        SIGNED_32BIT(32),
+        SIGNED_FLOAT(32),
+        SIGNED_DOUBLE(64),
+        SIGNED_8BIT_PLANAR(8),
+        SIGNED_16BIT_PLANAR(16),
+        SIGNED_32BIT_PLANAR(32),
+        SIGNED_FLOAT_PLANAR(32),
+        SIGNED_DOUBLE_PLANAR(64);
+        private final int bps;
+
+        Encoding(int bps) {
+            this.bps = bps;
+        }
+
+        public int bitsPerSample() {
+            return bps;
+        }
+
+        public static boolean isPlanar(Encoding enc) {
+            return enc.ordinal() >= SIGNED_8BIT_PLANAR.ordinal();
+        }
+    }
 }

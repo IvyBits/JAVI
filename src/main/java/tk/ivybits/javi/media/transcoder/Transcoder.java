@@ -16,12 +16,16 @@
  * <http://www.gnu.org/licenses/>.
  */
 
-package tk.ivybits.javi.media.stream;
+package tk.ivybits.javi.media.transcoder;
 
-import tk.ivybits.javi.format.SampleFormat;
+import tk.ivybits.javi.media.stream.Frame;
 
-import javax.sound.sampled.AudioFormat;
+import java.io.Closeable;
 
-public interface AudioStream extends Stream {
-    SampleFormat audioFormat();
+/**
+ * @version 1.0
+ * @since 1.0
+ */
+public interface Transcoder extends Closeable {
+    Frame transcode(Frame buffer);
 }

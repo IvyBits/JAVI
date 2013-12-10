@@ -32,6 +32,7 @@ public class LibAVUtil {
     public static native Pointer av_malloc(int size);
 
     public static native void av_free(Pointer ram);
+    public static native void av_freep(PointerByReference ram);
 
     public static native int av_log_get_level();
 
@@ -42,6 +43,14 @@ public class LibAVUtil {
     public static native int av_samples_alloc_array_and_samples(PointerByReference audio_data, IntByReference linesize, int nb_channels, int nb_samples, int sample_fmt, int align);
 
     public static native AVDictionary.Entry av_dict_get(AVDictionary m, String key, AVDictionary.Entry prev, int flags);
+
+    public static native Pointer av_pix_fmt_desc_get(int pix_fmt);
+
+    public static native int av_get_bits_per_pixel(Pointer pixdesc);
+
+    public static native int av_get_padded_bits_per_pixel(Pointer pixdesc);
+
+    public static native int av_image_fill_linesizes(int[] linesizes, int pix_fmt, int width);
 
     static {
         JAVI.initialize();

@@ -1,11 +1,11 @@
 package tk.ivybits.javi.media.handler;
 
-import java.awt.image.BufferedImage;
+import tk.ivybits.javi.media.stream.Frame;
 
 public abstract class FrameHandler {
     public static final FrameHandler NO_HANDLER = new FrameHandler() {
         @Override
-        public void handle(BufferedImage buffer, long time) {
+        public void handle(Frame buffer, long time) {
         }
     };
 
@@ -16,7 +16,7 @@ public abstract class FrameHandler {
      * @param time   The duration of this frames.
      * @since 1.0
      */
-    public abstract void handle(BufferedImage buffer, long time);
+    public abstract void handle(Frame buffer, long time);
 
     /**
      * Signifies the start of a stream.

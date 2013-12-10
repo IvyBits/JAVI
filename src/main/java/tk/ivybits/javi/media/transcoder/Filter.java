@@ -16,35 +16,25 @@
  * <http://www.gnu.org/licenses/>.
  */
 
-package tk.ivybits.javi.swing;
+package tk.ivybits.javi.media.transcoder;
 
-import sun.awt.image.WritableRasterNative;
+import tk.ivybits.javi.media.stream.Frame;
 
-import java.awt.image.DataBuffer;
-import java.awt.image.WritableRenderedImage;
 import java.nio.ByteBuffer;
 
-/**
- * Tudor
- * 2013-12-06
- */
-public class DirectDataBuffer extends DataBuffer {
-    private ByteBuffer buffer;
+public interface Filter {
+    Filter VIDEO_NEGATE = new Filter() {
+        @Override
+        public void apply(Frame frame) {
+            for (Frame.Plane plane : frame) {
+                ByteBuffer buf = plane.buffer();
+                int l = buf.limit();
+                for (int i = 0; i != l; i++) {
+                    buf.put(i, (byte) (255 - (buf.get(i) & 0xFF)));
+                }
+            }
+        }
+    };
 
-    protected DirectDataBuffer(ByteBuffer buffer) {
-        super(DataBuffer.TYPE_BYTE, buffer.limit());
-        if (!buffer.isDirect())
-            throw new IllegalArgumentException("ByteBuffer is not direct");
-        this.buffer = buffer;
-    }
-
-    @Override
-    public int getElem(int bank, int i) {
-        return buffer.get(i);
-    }
-
-    @Override
-    public void setElem(int bank, int i, int val) {
-
-    }
+    void apply(Frame buffer);
 }
