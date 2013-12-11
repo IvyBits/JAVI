@@ -25,7 +25,6 @@ import com.sun.jna.ptr.PointerByReference;
 import tk.ivybits.javi.exc.StreamException;
 import tk.ivybits.javi.ffmpeg.avcodec.*;
 import tk.ivybits.javi.ffmpeg.avutil.AVFrame;
-import tk.ivybits.javi.format.SampleFormat;
 import tk.ivybits.javi.format.SubtitleType;
 import tk.ivybits.javi.media.Media;
 import tk.ivybits.javi.media.handler.AudioHandler;
@@ -40,16 +39,12 @@ import java.awt.image.BufferedImage;
 import java.awt.image.DataBufferByte;
 import java.awt.image.IndexColorModel;
 import java.io.IOException;
-import java.nio.ByteBuffer;
-import java.util.Arrays;
 import java.util.concurrent.Semaphore;
 
 import static tk.ivybits.javi.ffmpeg.LibAVCodec.*;
 import static tk.ivybits.javi.ffmpeg.LibAVFormat.av_read_frame;
 import static tk.ivybits.javi.ffmpeg.LibAVFormat.av_seek_frame;
-import static tk.ivybits.javi.ffmpeg.LibAVUtil.av_malloc;
-import static tk.ivybits.javi.ffmpeg.LibC.memcpy;
-import static tk.ivybits.javi.format.PixelFormat.BGR24;
+import static tk.ivybits.javi.ffmpeg.LibAVUtil.av_frame_unref;
 import static tk.ivybits.javi.format.SampleFormat.Encoding.*;
 import static tk.ivybits.javi.media.stream.Frame.Plane;
 
@@ -180,13 +175,14 @@ public class FFMediaStream implements MediaStream {
                         int linesize = pFrame.linesize[0];
                         Plane[] planes = new Plane[isPlanar(audioStream.audioFormat().encoding()) ? pFrame.channels : 1];
 
-                        for(int p = 0; p != planes.length; p++) {
+                        for (int p = 0; p != planes.length; p++) {
                             planes[p] = new Plane(Native.getDirectByteBuffer(
                                     Pointer.nativeValue(pFrame.extended_data.getPointer(p * Pointer.SIZE)),
                                     linesize), linesize);
                         }
                         audioHandler.handle(new Frame(planes, pFrame.nb_samples));
                     }
+                    av_frame_unref(pFrame);
                 }
             } else if (videoStream != null && packet.stream_index == videoStream.index()) {
                 // Decode the media into our pFrame
@@ -208,11 +204,12 @@ public class FFMediaStream implements MediaStream {
                     int i = 0;
                     for (; i < pFrame.linesize.length && pFrame.linesize[i] != 0; i++) ;
                     Plane[] planes = new Plane[i];
-                    for(int p = 0; p != i; p++) {
+                    for (int p = 0; p != i; p++) {
                         int l = pFrame.linesize[p];
                         planes[p] = new Plane(Native.getDirectByteBuffer(Pointer.nativeValue(pFrame.data[p]), l * pFrame.height), l);
                     }
                     videoHandler.handle(new Frame(planes), nano);
+                    av_frame_unref(pFrame);
                 }
             } else if (subtitleStream != null && packet.stream_index == subtitleStream.index()) {
                 int err = avcodec_decode_subtitle2(subtitleStream.ffstream.codec.getPointer(), pSubtitle.getPointer(), frameFinished, packet.getPointer());
@@ -267,6 +264,7 @@ public class FFMediaStream implements MediaStream {
                             }
                         }
                     }
+                    av_frame_unref(pFrame);
                 }
             }
             // Free the packet that av_read_frame allocated

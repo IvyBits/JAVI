@@ -24,6 +24,7 @@ import com.sun.jna.ptr.IntByReference;
 import com.sun.jna.ptr.PointerByReference;
 import tk.ivybits.javi.JAVI;
 import tk.ivybits.javi.ffmpeg.avutil.AVDictionary;
+import tk.ivybits.javi.ffmpeg.avutil.AVFrame;
 import tk.ivybits.javi.natives.Natives;
 
 public class LibAVUtil {
@@ -51,6 +52,8 @@ public class LibAVUtil {
     public static native int av_get_padded_bits_per_pixel(Pointer pixdesc);
 
     public static native int av_image_fill_linesizes(int[] linesizes, int pix_fmt, int width);
+
+    public static native void av_frame_unref(AVFrame.ByReference frame);
 
     static {
         JAVI.initialize();
