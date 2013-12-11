@@ -141,7 +141,7 @@ public class FFMediaStream implements MediaStream {
         _outer:
         while (av_read_frame(media.formatContext.getPointer(), packet.getPointer()) >= 0) {
             try {
-                mutex.acquire();
+                mutex.acquire(); // This mutex is for pausing
             } catch (InterruptedException e) {
                 throw new IllegalStateException("could not acquire frame mutex");
             }
@@ -194,12 +194,13 @@ public class FFMediaStream implements MediaStream {
                 }
                 if (frameFinished.getValue() != 0) {
                     pFrame.read();
-                    // Read the buffer directly into the raster of our image
-                    long nano = pFrame.pkt_duration * 1000000000 *
+                    long duration = pFrame.pkt_duration * 1000000000 *
                             videoStream.ffstream.time_base.num / videoStream.ffstream.time_base.den;
-                    if (nano == 0)
-                        nano = (long) ((1000 / videoStream.framerate()) * 1000000);
-                    time += nano / 1000000;
+
+                    if (duration == 0) // Some videos have duration of zero. Assume average frame length
+                        duration = (long) ((1000 / videoStream.framerate()) * 1000000);
+
+                    time += duration / 1000000;
 
                     int i = 0;
                     for (; i < pFrame.linesize.length && pFrame.linesize[i] != 0; i++) ;
@@ -208,7 +209,7 @@ public class FFMediaStream implements MediaStream {
                         int l = pFrame.linesize[p];
                         planes[p] = new Plane(Native.getDirectByteBuffer(Pointer.nativeValue(pFrame.data[p]), l * pFrame.height), l);
                     }
-                    videoHandler.handle(new Frame(planes), nano);
+                    videoHandler.handle(new Frame(planes), duration);
                     av_frame_unref(pFrame);
                 }
             } else if (subtitleStream != null && packet.stream_index == subtitleStream.index()) {
@@ -231,10 +232,10 @@ public class FFMediaStream implements MediaStream {
                                         b = new byte[rect.nb_colors], a = new byte[rect.nb_colors];
                                 for (int i = 0; i < rect.nb_colors; ++i) {
                                     int colour = rect.pict.data[1].getInt(i * 4);
-                                    r[i] = (byte) ((colour >> 16) & 0xff);
-                                    g[i] = (byte) ((colour >> 8) & 0xff);
-                                    b[i] = (byte) ((colour) & 0xff);
-                                    a[i] = (byte) ((colour >> 24) & 0xff);
+                                    r[i] = (byte) (colour >> 16);
+                                    g[i] = (byte) (colour >> 8);
+                                    b[i] = (byte) (colour);
+                                    a[i] = (byte) (colour >> 24);
                                 }
                                 IndexColorModel palette = new IndexColorModel(8, rect.nb_colors, r, g, b, a);
                                 BufferedImage result = new BufferedImage(rect.w, rect.h, BufferedImage.TYPE_BYTE_INDEXED, palette);
@@ -254,7 +255,6 @@ public class FFMediaStream implements MediaStream {
                                     if (subtitleStream.ffstream.codec.subtitle_header_size <= 0)
                                         throw new IllegalStateException("subtitle without header");
                                     String header = subtitleStream.ffstream.codec.subtitle_header.getString(0, "UTF-8");
-                                    //System.out.println(header);
                                     DonkeyParser parser = new DonkeyParser(header);
                                     donkeyParsers[packet.stream_index] = parser;
                                 }
