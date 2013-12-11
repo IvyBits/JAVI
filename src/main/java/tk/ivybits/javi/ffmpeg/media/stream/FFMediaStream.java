@@ -16,13 +16,12 @@
  * <http://www.gnu.org/licenses/>.
  */
 
-package tk.ivybits.javi.media.ff;
+package tk.ivybits.javi.ffmpeg.media.stream;
 
 import com.sun.jna.Native;
 import com.sun.jna.Pointer;
 import com.sun.jna.ptr.IntByReference;
 import com.sun.jna.ptr.PointerByReference;
-import tk.ivybits.javi.exc.StreamException;
 import tk.ivybits.javi.ffmpeg.avcodec.*;
 import tk.ivybits.javi.ffmpeg.avutil.AVFrame;
 import tk.ivybits.javi.format.SubtitleType;

@@ -25,7 +25,6 @@ import com.sun.jna.ptr.PointerByReference;
 import tk.ivybits.javi.JAVI;
 import tk.ivybits.javi.ffmpeg.avutil.AVDictionary;
 import tk.ivybits.javi.ffmpeg.avutil.AVFrame;
-import tk.ivybits.javi.natives.Natives;
 
 public class LibAVUtil {
     public static native int avutil_version();
