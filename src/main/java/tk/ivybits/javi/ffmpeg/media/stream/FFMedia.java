@@ -16,7 +16,7 @@
  * <http://www.gnu.org/licenses/>.
  */
 
-package tk.ivybits.javi.media.ff;
+package tk.ivybits.javi.ffmpeg.media.stream;
 
 import com.sun.jna.Pointer;
 import com.sun.jna.ptr.PointerByReference;

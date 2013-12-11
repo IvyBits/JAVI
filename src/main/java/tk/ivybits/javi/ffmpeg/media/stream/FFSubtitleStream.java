@@ -16,10 +16,13 @@
  * <http://www.gnu.org/licenses/>.
  */
 
-/**
- * Classes for debugging JNA bindings.
- *
- * @since 1.0
- * @version 1.0
- */
-package tk.ivybits.javi.debug;
+package tk.ivybits.javi.ffmpeg.media.stream;
+
+import tk.ivybits.javi.ffmpeg.avformat.AVStream;
+import tk.ivybits.javi.media.stream.SubtitleStream;
+
+public class FFSubtitleStream extends FFStream implements SubtitleStream {
+    FFSubtitleStream(FFMedia container, AVStream ffstream) {
+        super(container, ffstream);
+    }
+}

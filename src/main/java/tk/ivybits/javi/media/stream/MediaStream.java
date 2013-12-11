@@ -18,7 +18,6 @@
 
 package tk.ivybits.javi.media.stream;
 
-import tk.ivybits.javi.exc.StreamException;
 import tk.ivybits.javi.media.handler.AudioHandler;
 import tk.ivybits.javi.media.handler.FrameHandler;
 import tk.ivybits.javi.media.handler.SubtitleHandler;

@@ -18,7 +18,7 @@
 
 package tk.ivybits.javi.media;
 
-import tk.ivybits.javi.media.ff.FFMedia;
+import tk.ivybits.javi.ffmpeg.media.stream.FFMedia;
 
 import java.io.File;
 import java.io.IOException;

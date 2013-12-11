@@ -18,7 +18,7 @@
 
 package tk.ivybits.javi;
 
-import tk.ivybits.javi.exc.StreamException;
+import tk.ivybits.javi.media.stream.StreamException;
 import tk.ivybits.javi.media.Media;
 import tk.ivybits.javi.media.MediaFactory;
 import tk.ivybits.javi.media.stream.AudioStream;

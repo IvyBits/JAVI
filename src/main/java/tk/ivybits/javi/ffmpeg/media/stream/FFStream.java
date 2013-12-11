@@ -16,7 +16,7 @@
  * <http://www.gnu.org/licenses/>.
  */
 
-package tk.ivybits.javi.media.ff;
+package tk.ivybits.javi.ffmpeg.media.stream;
 
 import tk.ivybits.javi.ffmpeg.avcodec.AVCodec;
 import tk.ivybits.javi.ffmpeg.avformat.AVStream;

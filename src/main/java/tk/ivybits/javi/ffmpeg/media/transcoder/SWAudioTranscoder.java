@@ -16,13 +16,13 @@
  * <http://www.gnu.org/licenses/>.
  */
 
-package tk.ivybits.javi.media.transcoder.sw;
+package tk.ivybits.javi.ffmpeg.media.transcoder;
 
 import com.sun.jna.Native;
 import com.sun.jna.Pointer;
 import com.sun.jna.ptr.IntByReference;
 import com.sun.jna.ptr.PointerByReference;
-import tk.ivybits.javi.exc.StreamException;
+import tk.ivybits.javi.media.stream.StreamException;
 import tk.ivybits.javi.format.SampleFormat;
 import tk.ivybits.javi.media.stream.Frame;
 import tk.ivybits.javi.media.transcoder.Filter;

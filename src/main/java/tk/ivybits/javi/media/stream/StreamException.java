@@ -16,7 +16,7 @@
  * <http://www.gnu.org/licenses/>.
  */
 
-package tk.ivybits.javi.exc;
+package tk.ivybits.javi.media.stream;
 
 /**
  * Signals that an error has occured while streaming.

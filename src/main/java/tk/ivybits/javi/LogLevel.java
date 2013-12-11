@@ -16,7 +16,7 @@
  * <http://www.gnu.org/licenses/>.
  */
 
-package tk.ivybits.javi.log;
+package tk.ivybits.javi;
 
 import tk.ivybits.javi.ffmpeg.LibAVUtil;
 

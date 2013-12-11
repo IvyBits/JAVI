@@ -21,7 +21,7 @@ package tk.ivybits.javi;
 import tk.ivybits.javi.ffmpeg.LibAVCodec;
 import tk.ivybits.javi.ffmpeg.LibAVFormat;
 import tk.ivybits.javi.ffmpeg.LibAVUtil;
-import tk.ivybits.javi.natives.Natives;
+import tk.ivybits.javi.ffmpeg.Natives;
 
 import java.io.IOException;
 import java.net.URL;

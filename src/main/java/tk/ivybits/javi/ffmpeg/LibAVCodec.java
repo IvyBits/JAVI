@@ -25,7 +25,6 @@ import com.sun.jna.ptr.PointerByReference;
 import tk.ivybits.javi.JAVI;
 import tk.ivybits.javi.ffmpeg.avcodec.AVCodec;
 import tk.ivybits.javi.ffmpeg.avutil.AVFrame;
-import tk.ivybits.javi.natives.Natives;
 
 public class LibAVCodec {
     public static native int avcodec_version();

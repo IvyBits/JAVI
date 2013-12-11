@@ -27,7 +27,6 @@ import tk.ivybits.javi.media.handler.SubtitleHandler;
 import tk.ivybits.javi.media.stream.*;
 import tk.ivybits.javi.media.stream.Frame;
 import tk.ivybits.javi.media.subtitle.*;
-import tk.ivybits.javi.media.transcoder.Filter;
 import tk.ivybits.javi.media.transcoder.Transcoder;
 import tk.ivybits.javi.media.transcoder.TranscoderFactory;
 
@@ -390,7 +389,7 @@ public class SwingMediaPanel extends JPanel {
      *
      * @param to The position to seek to, in milliseconds.
      * @throws IllegalStateException               Thrown if the stream was never started.
-     * @throws tk.ivybits.javi.exc.StreamException Thrown if seek failed.
+     * @throws tk.ivybits.javi.media.stream.StreamException Thrown if seek failed.
      * @since 1.0
      */
     public void seek(long to) {

@@ -16,7 +16,7 @@
  * <http://www.gnu.org/licenses/>.
  */
 
-package tk.ivybits.javi.media.transcoder.sw;
+package tk.ivybits.javi.ffmpeg.media.transcoder;
 
 import com.sun.jna.Native;
 import com.sun.jna.Pointer;

@@ -16,13 +16,12 @@
  * <http://www.gnu.org/licenses/>.
  */
 
-package tk.ivybits.javi.media.ff;
-
-import tk.ivybits.javi.ffmpeg.avformat.AVStream;
-import tk.ivybits.javi.media.stream.SubtitleStream;
-
-public class FFSubtitleStream extends FFStream implements SubtitleStream {
-    FFSubtitleStream(FFMedia container, AVStream ffstream) {
-        super(container, ffstream);
-    }
-}
+/**
+ * Media and stream implementations using FFmpeg.
+ * <p/>
+ * <b>Should not be used directly. Very volatile.</b>
+ *
+ * @since 1.0
+ * @version 1.0
+ */
+package tk.ivybits.javi.ffmpeg.media.stream;

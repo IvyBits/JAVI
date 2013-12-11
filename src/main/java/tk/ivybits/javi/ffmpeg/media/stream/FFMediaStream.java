@@ -16,16 +16,15 @@
  * <http://www.gnu.org/licenses/>.
  */
 
-package tk.ivybits.javi.media.ff;
+package tk.ivybits.javi.ffmpeg.media.stream;
 
 import com.sun.jna.Native;
 import com.sun.jna.Pointer;
 import com.sun.jna.ptr.IntByReference;
 import com.sun.jna.ptr.PointerByReference;
-import tk.ivybits.javi.exc.StreamException;
+import tk.ivybits.javi.media.stream.StreamException;
 import tk.ivybits.javi.ffmpeg.avcodec.*;
 import tk.ivybits.javi.ffmpeg.avutil.AVFrame;
-import tk.ivybits.javi.format.SampleFormat;
 import tk.ivybits.javi.format.SubtitleType;
 import tk.ivybits.javi.media.Media;
 import tk.ivybits.javi.media.handler.AudioHandler;
@@ -40,15 +39,12 @@ import java.awt.image.BufferedImage;
 import java.awt.image.DataBufferByte;
 import java.awt.image.IndexColorModel;
 import java.io.IOException;
-import java.nio.ByteBuffer;
-import java.util.Arrays;
 import java.util.concurrent.Semaphore;
 
 import static tk.ivybits.javi.ffmpeg.LibAVCodec.*;
 import static tk.ivybits.javi.ffmpeg.LibAVFormat.av_read_frame;
 import static tk.ivybits.javi.ffmpeg.LibAVFormat.av_seek_frame;
 import static tk.ivybits.javi.ffmpeg.LibAVUtil.av_malloc;
-import static tk.ivybits.javi.ffmpeg.LibC.memcpy;
 import static tk.ivybits.javi.format.PixelFormat.BGR24;
 import static tk.ivybits.javi.format.SampleFormat.Encoding.*;
 import static tk.ivybits.javi.media.stream.Frame.Plane;

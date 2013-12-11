@@ -20,8 +20,8 @@ package tk.ivybits.javi.media.transcoder;
 
 import tk.ivybits.javi.format.PixelFormat;
 import tk.ivybits.javi.format.SampleFormat;
-import tk.ivybits.javi.media.transcoder.sw.SWAudioTranscoder;
-import tk.ivybits.javi.media.transcoder.sw.SWFrameTranscoder;
+import tk.ivybits.javi.ffmpeg.media.transcoder.SWAudioTranscoder;
+import tk.ivybits.javi.ffmpeg.media.transcoder.SWFrameTranscoder;
 
 import java.util.ArrayList;
 import java.util.Arrays;

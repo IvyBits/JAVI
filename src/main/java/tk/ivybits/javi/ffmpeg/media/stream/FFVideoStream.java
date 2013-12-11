@@ -16,31 +16,40 @@
  * <http://www.gnu.org/licenses/>.
  */
 
-package tk.ivybits.javi.media.ff;
+package tk.ivybits.javi.ffmpeg.media.stream;
 
 import tk.ivybits.javi.ffmpeg.avformat.AVStream;
-import tk.ivybits.javi.format.SampleFormat;
-import tk.ivybits.javi.media.stream.AudioStream;
-
-import static tk.ivybits.javi.format.SampleFormat.ChannelLayout;
-import static tk.ivybits.javi.format.SampleFormat.Encoding;
+import tk.ivybits.javi.format.PixelFormat;
+import tk.ivybits.javi.media.stream.VideoStream;
 
 /**
  * FFmpeg-backed VideoStream.
  */
-public class FFAudioStream extends FFStream implements AudioStream {
-    private final SampleFormat sampleFormat;
-
-    FFAudioStream(FFMedia container, AVStream ffstream) {
+public class FFVideoStream extends FFStream implements VideoStream {
+    FFVideoStream(FFMedia container, AVStream ffstream) {
         super(container, ffstream);
-        sampleFormat = new SampleFormat(
-                Encoding.values()[ffstream.codec.sample_fmt],
-                ChannelLayout.values()[(int) (ffstream.codec.channel_layout - 1)],
-                ffstream.codec.sample_rate, ffstream.codec.channels);
     }
 
     @Override
-    public SampleFormat audioFormat() {
-        return sampleFormat;
+    public int width() {
+        return ffstream.codec.width;
+    }
+
+    @Override
+    public int height() {
+        return ffstream.codec.height;
+    }
+
+    @Override
+    public double framerate() {
+        return ffstream.r_frame_rate.num / (double) ffstream.r_frame_rate.den;
+    }
+
+    @Override
+    public PixelFormat pixelFormat() {
+        for (PixelFormat pf : PixelFormat.values())
+            if (pf.id == ffstream.codec.pix_fmt)
+                return pf;
+        throw new IllegalStateException();
     }
 }
