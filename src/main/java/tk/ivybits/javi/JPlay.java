@@ -199,8 +199,8 @@ public class JPlay {
     public static void play(String source) throws IOException {
         try {
             UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
-        } catch (ReflectiveOperationException e) {
-        } catch (UnsupportedLookAndFeelException e) {
+        } catch (ReflectiveOperationException ignored) {
+        } catch (UnsupportedLookAndFeelException ignored) {
         }
         File videoFile = new File(source);
         JPlayFrame frame = new JPlayFrame(videoFile);

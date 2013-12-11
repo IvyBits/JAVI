@@ -78,11 +78,11 @@ public final class JAVI {
                             main.getValue("Implementation-Title"),
                             main.getValue("Implementation-Version"),
                             main.getValue("Specification-Version"));
-                } catch (IOException E) {
+                } catch (IOException ignored) {
 
                 }
             }
-        } catch (Exception e) {
+        } catch (Exception ignored) {
 
         }
         return "JAVI-unknown";

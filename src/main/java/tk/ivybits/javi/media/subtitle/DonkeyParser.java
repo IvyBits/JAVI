@@ -136,7 +136,6 @@ public class DonkeyParser {
             return;
         String command = line.substring(0, colon);
         String data = line.substring(colon + 1).trim();
-        //System.out.println("Parsed: Command: " + command + ", Data: " + data);
         if (command.equals("ScriptType")) version = data;
         else if (command.equals("Format")) processFormat(data);
         else if (command.equals("Style")) processStyle(data);

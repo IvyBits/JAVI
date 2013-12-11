@@ -138,7 +138,6 @@ public class FFMediaStream implements MediaStream {
         audioHandler.start();
         videoHandler.start();
         subtitleHandler.start();
-        _outer:
         while (av_read_frame(media.formatContext.getPointer(), packet.getPointer()) >= 0) {
             try {
                 mutex.acquire(); // This mutex is for pausing

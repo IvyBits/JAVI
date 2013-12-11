@@ -27,7 +27,6 @@ import tk.ivybits.javi.media.handler.SubtitleHandler;
 import tk.ivybits.javi.media.stream.*;
 import tk.ivybits.javi.media.stream.Frame;
 import tk.ivybits.javi.media.subtitle.*;
-import tk.ivybits.javi.media.transcoder.Filter;
 import tk.ivybits.javi.media.transcoder.Transcoder;
 import tk.ivybits.javi.media.transcoder.TranscoderFactory;
 
@@ -176,7 +175,7 @@ public class SwingMediaPanel extends JPanel {
                         }
                         try {
                             streamingThread.join(100);
-                        } catch (InterruptedException e) {
+                        } catch (InterruptedException ignored) {
                         }
                         streamingThread = null;
                     }
@@ -343,7 +342,7 @@ public class SwingMediaPanel extends JPanel {
         super.removeNotify();
         try {
             streamingThread.join(100);
-        } catch (InterruptedException death) {
+        } catch (InterruptedException ignored) {
 
         }
         // Close data lines

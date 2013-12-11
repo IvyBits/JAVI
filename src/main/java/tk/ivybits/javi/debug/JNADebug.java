@@ -43,7 +43,7 @@ public class JNADebug {
                 Structure victim = (Structure) struct.newInstance();
                 StructureUtilities.printFields(victim);
                 System.out.println();
-            } catch (Exception e) {
+            } catch (Exception ignored) {
             }
         }
     }

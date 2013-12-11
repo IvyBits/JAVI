@@ -34,7 +34,7 @@ public class NativeSizes {
                 StructureUtilities.printFieldsC(victim, System.out);
                 System.out.println("puts(\"\");");
                 System.out.println();
-            } catch (Exception e) {
+            } catch (Exception ignored) {
             }
         }
         System.out.println("}");
