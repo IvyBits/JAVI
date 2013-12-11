@@ -65,6 +65,7 @@ public class SWAudioTranscoder implements Transcoder {
         if (maxSamples < buffer.samples()) {
             close();
             err = av_samples_alloc_array_and_samples(dstData, dstLinesize, to.channels(), buffer.samples(), to.encoding().ordinal(), 0);
+            maxSamples = buffer.samples();
             if (err < 0) {
                 throw new StreamException("failed to allocate destination buffer: " + err, err);
             }

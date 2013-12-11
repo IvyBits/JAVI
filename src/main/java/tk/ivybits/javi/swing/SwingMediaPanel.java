@@ -175,7 +175,7 @@ public class SwingMediaPanel extends JPanel {
                         }
                         try {
                             streamingThread.join(100);
-                        } catch (InterruptedException e) {
+                        } catch (InterruptedException ignored) {
                         }
                         streamingThread = null;
                     }
@@ -342,7 +342,7 @@ public class SwingMediaPanel extends JPanel {
         super.removeNotify();
         try {
             streamingThread.join(100);
-        } catch (InterruptedException death) {
+        } catch (InterruptedException ignored) {
 
         }
         // Close data lines

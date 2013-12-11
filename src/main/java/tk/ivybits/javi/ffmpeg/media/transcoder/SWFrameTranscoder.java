@@ -33,6 +33,7 @@ import static tk.ivybits.javi.ffmpeg.LibAVCodec.avpicture_fill;
 import static tk.ivybits.javi.ffmpeg.LibAVCodec.avpicture_get_size;
 import static tk.ivybits.javi.ffmpeg.LibAVUtil.av_free;
 import static tk.ivybits.javi.ffmpeg.LibAVUtil.av_malloc;
+import static tk.ivybits.javi.ffmpeg.LibSWScale.sws_freeContext;
 import static tk.ivybits.javi.ffmpeg.LibSWScale.sws_getContext;
 import static tk.ivybits.javi.ffmpeg.LibSWScale.sws_scale;
 
@@ -106,6 +107,7 @@ public class SWFrameTranscoder implements Transcoder {
 
     @Override
     public void close() {
-
+        sws_freeContext(swsContext);
+        swsContext = null;
     }
 }

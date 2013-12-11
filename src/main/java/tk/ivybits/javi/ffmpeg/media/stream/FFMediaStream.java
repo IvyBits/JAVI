@@ -16,13 +16,13 @@
  * <http://www.gnu.org/licenses/>.
  */
 
-package tk.ivybits.javi.ffmpeg.media.stream;
+package tk.ivybits.javi.media.ff;
 
 import com.sun.jna.Native;
 import com.sun.jna.Pointer;
 import com.sun.jna.ptr.IntByReference;
 import com.sun.jna.ptr.PointerByReference;
-import tk.ivybits.javi.media.stream.StreamException;
+import tk.ivybits.javi.exc.StreamException;
 import tk.ivybits.javi.ffmpeg.avcodec.*;
 import tk.ivybits.javi.ffmpeg.avutil.AVFrame;
 import tk.ivybits.javi.format.SubtitleType;
@@ -44,9 +44,8 @@ import java.util.concurrent.Semaphore;
 import static tk.ivybits.javi.ffmpeg.LibAVCodec.*;
 import static tk.ivybits.javi.ffmpeg.LibAVFormat.av_read_frame;
 import static tk.ivybits.javi.ffmpeg.LibAVFormat.av_seek_frame;
-import static tk.ivybits.javi.ffmpeg.LibAVUtil.av_malloc;
-import static tk.ivybits.javi.format.PixelFormat.BGR24;
-import static tk.ivybits.javi.format.SampleFormat.Encoding.*;
+import static tk.ivybits.javi.ffmpeg.LibAVUtil.av_frame_unref;
+import static tk.ivybits.javi.format.SampleFormat.Encoding.isPlanar;
 import static tk.ivybits.javi.media.stream.Frame.Plane;
 
 /**
@@ -66,7 +65,6 @@ public class FFMediaStream implements MediaStream {
     public FFVideoStream videoStream;
     public FFSubtitleStream subtitleStream;
 
-    public AVFrame.ByReference pBGRFrame;
     public AVFrame.ByReference pFrame;
 
     public DonkeyParser[] donkeyParsers;
@@ -95,16 +93,6 @@ public class FFMediaStream implements MediaStream {
             throw new IllegalArgumentException("stream not from same container");
         VideoStream pre = videoStream;
 
-        if (pBGRFrame != null) {
-            avcodec_free_frame(new PointerByReference(pBGRFrame.getPointer()));
-        }
-        pBGRFrame = avcodec_alloc_frame();
-        int size = avpicture_get_size(BGR24.id, stream.width(), stream.height());
-
-        Pointer buffer = av_malloc(size);
-        int ret = avpicture_fill(pBGRFrame.getPointer(), buffer, BGR24.id, stream.width(), stream.height());
-        if (ret < 0 || ret != size)
-            throw new StreamException("failed to fill frame buffer: " + ret, ret);
         videoStream = (FFVideoStream) stream;
         videoCodec = videoStream.codec;
         return pre;
@@ -150,10 +138,9 @@ public class FFMediaStream implements MediaStream {
         audioHandler.start();
         videoHandler.start();
         subtitleHandler.start();
-        _outer:
         while (av_read_frame(media.formatContext.getPointer(), packet.getPointer()) >= 0) {
             try {
-                mutex.acquire();
+                mutex.acquire(); // This mutex is for pausing
             } catch (InterruptedException e) {
                 throw new IllegalStateException("could not acquire frame mutex");
             }
@@ -187,13 +174,14 @@ public class FFMediaStream implements MediaStream {
                         int linesize = pFrame.linesize[0];
                         Plane[] planes = new Plane[isPlanar(audioStream.audioFormat().encoding()) ? pFrame.channels : 1];
 
-                        for(int p = 0; p != planes.length; p++) {
+                        for (int p = 0; p != planes.length; p++) {
                             planes[p] = new Plane(Native.getDirectByteBuffer(
                                     Pointer.nativeValue(pFrame.extended_data.getPointer(p * Pointer.SIZE)),
                                     linesize), linesize);
                         }
                         audioHandler.handle(new Frame(planes, pFrame.nb_samples));
                     }
+                    av_frame_unref(pFrame);
                 }
             } else if (videoStream != null && packet.stream_index == videoStream.index()) {
                 // Decode the media into our pFrame
@@ -205,33 +193,23 @@ public class FFMediaStream implements MediaStream {
                 }
                 if (frameFinished.getValue() != 0) {
                     pFrame.read();
-                    // Don't kill us for this.
-                    // Normally, sws_scale accepts a pointer to AVFrame.data
-                    // However, getting such a pointer is non-trivial.
-                    // Since data is the first member of the AVFrame structure, we may actually pass
-                    // a pointer to the struct instead, because by definition, a pointer to a struct
-                    // points to the first member of the struct.
-                    // We use sws_scale itself to convert a data buffer of an arbitrary pixel format
-                    // into our desired format: 3-byte BGR
-
-                    //memcpy(pImageBuffer, pFrame.data[0], imageBuffer.limit());
-
-
-                    // Read the buffer directly into the raster of our image
-                    long nano = pFrame.pkt_duration * 1000000000 *
+                    long duration = pFrame.pkt_duration * 1000000000 *
                             videoStream.ffstream.time_base.num / videoStream.ffstream.time_base.den;
-                    if (nano == 0)
-                        nano = (long) ((1000 / videoStream.framerate()) * 1000000);
-                    time += nano / 1000000;
+
+                    if (duration == 0) // Some videos have duration of zero. Assume average frame length
+                        duration = (long) ((1000 / videoStream.framerate()) * 1000000);
+
+                    time += duration / 1000000;
 
                     int i = 0;
                     for (; i < pFrame.linesize.length && pFrame.linesize[i] != 0; i++) ;
                     Plane[] planes = new Plane[i];
-                    for(int p = 0; p != i; p++) {
+                    for (int p = 0; p != i; p++) {
                         int l = pFrame.linesize[p];
                         planes[p] = new Plane(Native.getDirectByteBuffer(Pointer.nativeValue(pFrame.data[p]), l * pFrame.height), l);
                     }
-                    videoHandler.handle(new Frame(planes), nano);
+                    videoHandler.handle(new Frame(planes), duration);
+                    av_frame_unref(pFrame);
                 }
             } else if (subtitleStream != null && packet.stream_index == subtitleStream.index()) {
                 int err = avcodec_decode_subtitle2(subtitleStream.ffstream.codec.getPointer(), pSubtitle.getPointer(), frameFinished, packet.getPointer());
@@ -253,10 +231,10 @@ public class FFMediaStream implements MediaStream {
                                         b = new byte[rect.nb_colors], a = new byte[rect.nb_colors];
                                 for (int i = 0; i < rect.nb_colors; ++i) {
                                     int colour = rect.pict.data[1].getInt(i * 4);
-                                    r[i] = (byte) ((colour >> 16) & 0xff);
-                                    g[i] = (byte) ((colour >> 8) & 0xff);
-                                    b[i] = (byte) ((colour) & 0xff);
-                                    a[i] = (byte) ((colour >> 24) & 0xff);
+                                    r[i] = (byte) (colour >> 16);
+                                    g[i] = (byte) (colour >> 8);
+                                    b[i] = (byte) (colour);
+                                    a[i] = (byte) (colour >> 24);
                                 }
                                 IndexColorModel palette = new IndexColorModel(8, rect.nb_colors, r, g, b, a);
                                 BufferedImage result = new BufferedImage(rect.w, rect.h, BufferedImage.TYPE_BYTE_INDEXED, palette);
@@ -276,7 +254,6 @@ public class FFMediaStream implements MediaStream {
                                     if (subtitleStream.ffstream.codec.subtitle_header_size <= 0)
                                         throw new IllegalStateException("subtitle without header");
                                     String header = subtitleStream.ffstream.codec.subtitle_header.getString(0, "UTF-8");
-                                    //System.out.println(header);
                                     DonkeyParser parser = new DonkeyParser(header);
                                     donkeyParsers[packet.stream_index] = parser;
                                 }
@@ -286,6 +263,7 @@ public class FFMediaStream implements MediaStream {
                             }
                         }
                     }
+                    av_frame_unref(pFrame);
                 }
             }
             // Free the packet that av_read_frame allocated
@@ -308,13 +286,13 @@ public class FFMediaStream implements MediaStream {
         if (!started)
             throw new IllegalStateException("stream not started");
         playing = flag;
-        if (!playing)
+        if (!playing) {
             try {
                 mutex.acquire();
             } catch (InterruptedException e) {
-                throw new IllegalStateException("failed to aqcuire frame mutex");
+                throw new IllegalStateException("failed to acquire frame mutex");
             }
-        else {
+        } else {
             mutex.release();
         }
     }
