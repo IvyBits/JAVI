@@ -45,7 +45,7 @@ import static tk.ivybits.javi.ffmpeg.LibAVCodec.*;
 import static tk.ivybits.javi.ffmpeg.LibAVFormat.av_read_frame;
 import static tk.ivybits.javi.ffmpeg.LibAVFormat.av_seek_frame;
 import static tk.ivybits.javi.ffmpeg.LibAVUtil.av_frame_unref;
-import static tk.ivybits.javi.format.SampleFormat.Encoding.*;
+import static tk.ivybits.javi.format.SampleFormat.Encoding.isPlanar;
 import static tk.ivybits.javi.media.stream.Frame.Plane;
 
 /**
@@ -287,13 +287,13 @@ public class FFMediaStream implements MediaStream {
         if (!started)
             throw new IllegalStateException("stream not started");
         playing = flag;
-        if (!playing)
+        if (!playing) {
             try {
                 mutex.acquire();
             } catch (InterruptedException e) {
-                throw new IllegalStateException("failed to aqcuire frame mutex");
+                throw new IllegalStateException("failed to acquire frame mutex");
             }
-        else {
+        } else {
             mutex.release();
         }
     }
