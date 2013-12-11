@@ -70,7 +70,6 @@ public class FFMediaStream implements MediaStream {
     public FFVideoStream videoStream;
     public FFSubtitleStream subtitleStream;
 
-    public AVFrame.ByReference pBGRFrame;
     public AVFrame.ByReference pFrame;
 
     public DonkeyParser[] donkeyParsers;
@@ -99,16 +98,6 @@ public class FFMediaStream implements MediaStream {
             throw new IllegalArgumentException("stream not from same container");
         VideoStream pre = videoStream;
 
-        if (pBGRFrame != null) {
-            avcodec_free_frame(new PointerByReference(pBGRFrame.getPointer()));
-        }
-        pBGRFrame = avcodec_alloc_frame();
-        int size = avpicture_get_size(BGR24.id, stream.width(), stream.height());
-
-        Pointer buffer = av_malloc(size);
-        int ret = avpicture_fill(pBGRFrame.getPointer(), buffer, BGR24.id, stream.width(), stream.height());
-        if (ret < 0 || ret != size)
-            throw new StreamException("failed to fill frame buffer: " + ret, ret);
         videoStream = (FFVideoStream) stream;
         videoCodec = videoStream.codec;
         return pre;
@@ -209,18 +198,6 @@ public class FFMediaStream implements MediaStream {
                 }
                 if (frameFinished.getValue() != 0) {
                     pFrame.read();
-                    // Don't kill us for this.
-                    // Normally, sws_scale accepts a pointer to AVFrame.data
-                    // However, getting such a pointer is non-trivial.
-                    // Since data is the first member of the AVFrame structure, we may actually pass
-                    // a pointer to the struct instead, because by definition, a pointer to a struct
-                    // points to the first member of the struct.
-                    // We use sws_scale itself to convert a data buffer of an arbitrary pixel format
-                    // into our desired format: 3-byte BGR
-
-                    //memcpy(pImageBuffer, pFrame.data[0], imageBuffer.limit());
-
-
                     // Read the buffer directly into the raster of our image
                     long nano = pFrame.pkt_duration * 1000000000 *
                             videoStream.ffstream.time_base.num / videoStream.ffstream.time_base.den;
