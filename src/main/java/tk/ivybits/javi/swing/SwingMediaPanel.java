@@ -340,11 +340,12 @@ public class SwingMediaPanel extends JPanel {
     @Override
     public void removeNotify() {
         super.removeNotify();
-        try {
-            streamingThread.join(100);
-        } catch (InterruptedException ignored) {
+        if (streamingThread != null)
+            try {
+                streamingThread.join(100);
+            } catch (InterruptedException ignored) {
 
-        }
+            }
         // Close data lines
         setMixer(null);
         stream.close();
