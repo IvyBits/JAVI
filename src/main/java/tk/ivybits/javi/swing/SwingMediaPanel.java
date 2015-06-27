@@ -16,19 +16,20 @@
  * <http://www.gnu.org/licenses/>.
  */
 
-package tk.ivybits.javi.swing;
+package ca.xyene.javi.swing;
 
-import tk.ivybits.javi.format.SampleFormat;
-import tk.ivybits.javi.media.AVSync;
-import tk.ivybits.javi.media.Media;
-import tk.ivybits.javi.media.handler.AudioHandler;
-import tk.ivybits.javi.media.handler.FrameHandler;
-import tk.ivybits.javi.media.handler.SubtitleHandler;
-import tk.ivybits.javi.media.stream.*;
-import tk.ivybits.javi.media.stream.Frame;
-import tk.ivybits.javi.media.subtitle.*;
-import tk.ivybits.javi.media.transcoder.Transcoder;
-import tk.ivybits.javi.media.transcoder.TranscoderFactory;
+import ca.xyene.javi.format.PixelFormat;
+import ca.xyene.javi.media.handler.AudioHandler;
+import ca.xyene.javi.media.stream.*;
+import ca.xyene.javi.media.stream.Frame;
+import ca.xyene.javi.media.subtitle.*;
+import ca.xyene.javi.format.SampleFormat;
+import ca.xyene.javi.media.AVSync;
+import ca.xyene.javi.media.Media;
+import ca.xyene.javi.media.handler.FrameHandler;
+import ca.xyene.javi.media.handler.SubtitleHandler;
+import ca.xyene.javi.media.transcoder.Transcoder;
+import ca.xyene.javi.media.transcoder.TranscoderFactory;
 
 import javax.sound.sampled.*;
 import javax.swing.*;
@@ -41,13 +42,12 @@ import java.util.*;
 import java.util.Timer;
 import java.util.concurrent.ConcurrentHashMap;
 
-import static tk.ivybits.javi.format.PixelFormat.BGR24;
-import static tk.ivybits.javi.format.SampleFormat.ChannelLayout.STEREO;
-import static tk.ivybits.javi.format.SampleFormat.Encoding.SIGNED_16BIT;
+import static ca.xyene.javi.format.SampleFormat.ChannelLayout.STEREO;
+import static ca.xyene.javi.format.SampleFormat.Encoding.SIGNED_16BIT;
 
 /**
  * Media component for Swing.
- * <p/>
+ * <p>
  * Uses JavaSound's {@link javax.sound.sampled.SourceDataLine} to output audio, and paints outside of the EDT to
  * minimize overhead. Handles audio-video sync.
  *
@@ -102,7 +102,7 @@ public class SwingMediaPanel extends JPanel {
                     }
 
                     @Override
-                    public void handle(Frame buffer) {
+                    public void handle(ca.xyene.javi.media.stream.Frame buffer) {
                         if (sdl == null) {// Audio failed to initialize; ignore this buffer
                             return;
                         }
@@ -117,8 +117,12 @@ public class SwingMediaPanel extends JPanel {
                         // sdl.write is not guaranteed to write our entire buffer.
                         // Therefore, we keep writing until out buffer has been fully
                         // written, to prevent audio skips
-                        while (written < len) {
-                            written += sdl.write(heap, written, len);
+                        if (sdl.available() < len) {
+                            System.out.println("Falling behind: " + sdl.available());
+                        } else {
+                            while (written < len) {
+                                written += sdl.write(heap, written, len);
+                            }
                         }
                     }
                 })
@@ -130,7 +134,7 @@ public class SwingMediaPanel extends JPanel {
                             // and repaint immediately. Because we do not use repaint(), we
                             // have a guarantee that each frame will be drawn separately. repaint() tends
                             // to squash multiple paints into one, giving a jerkish appearance to the video.
-                            paintImmediately(getBounds());
+                            doRepaint();
                         }
                     };
                     private DataBufferByte raster;
@@ -146,7 +150,7 @@ public class SwingMediaPanel extends JPanel {
                         raster = (DataBufferByte) nextFrame.getRaster().getDataBuffer();
                         transcoder = TranscoderFactory.frame()
                                 .from(width, height, vs.pixelFormat())
-                                .to(BGR24)
+                                .to(PixelFormat.BGR24)
                                 .create();
                         sync.reset();
                         // Notify all listeners that our stream has started
@@ -215,6 +219,10 @@ public class SwingMediaPanel extends JPanel {
      */
     public void start() throws IOException {
         streamingThread.start();
+    }
+
+    protected void doRepaint() {
+        paintImmediately(getBounds());
     }
 
     /**
@@ -389,8 +397,8 @@ public class SwingMediaPanel extends JPanel {
      * Seeks to a position in the stream.
      *
      * @param to The position to seek to, in milliseconds.
-     * @throws IllegalStateException               Thrown if the stream was never started.
-     * @throws tk.ivybits.javi.media.stream.StreamException Thrown if seek failed.
+     * @throws IllegalStateException                      Thrown if the stream was never started.
+     * @throws ca.xyene.javi.media.stream.StreamException Thrown if seek failed.
      * @since 1.0
      */
     public void seek(long to) {
