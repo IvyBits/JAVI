@@ -11,7 +11,7 @@ Automatically generated documentation for JAVI in Javadoc format can be found at
 
 Usage
 -----
-###With Swing
+### With Swing
 JAVI integrates seamlessly with Swing through the `SwingMediaPanel`.
 ```java
 File videoFile = ...
@@ -39,7 +39,7 @@ It's that simple!
 <br/>
 You may also be interested in [JPlay](https://github.com/IvyBits/JAVI/blob/master/src/main/java/tk/ivybits/javi/JPlay.java), a one-class media player demonstrating the usage of JAVI.
 
-###With your graphics library of choice
+### With your graphics library of choice
 `SwingMediaPanel` handles a bit of the backend, but if you wish to use a graphics library other than Swing, you'll need to utilise `MediaStream`.
 
 ```java
